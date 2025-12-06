@@ -4,6 +4,8 @@
 
 #define OSC_MINIMUM_PACKET_BYTES  8
 
+
+
 OscMessage::OscMessage(const std::string& address)
 	: m_address(address), m_type(","), m_readonly(false)
 {

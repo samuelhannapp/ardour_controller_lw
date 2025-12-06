@@ -1,4 +1,15 @@
 #include "osc_controller.hpp"
+
+
+//this is global data from the callback for windows..., what a pain...
+#ifdef _WIN64
+struct midi_message_struct{
+	unsigned char data[3];
+};
+std::vector<midi_message_struct> midi_data;
+void CALLBACK MidiInProc(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
+#endif
+
 osc_controller::osc_controller(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out)
 {
 	this->plugin_multiplexer.initialize_plugin_multiplexer();
@@ -10,7 +21,10 @@ osc_controller::osc_controller(std::string destination_ip_address, unsigned int 
 	this->mackie_sender_receiver.initialize_mackie_display_formated();
 
     this->ardour_sender_receiver.initialize_udp(destination_ip_address, udp_port_in, udp_port_out);
-	this->mackie_sender_receiver.initialize_midi(2, 2);
+	//linux midi in out is allways the same number for one device
+	//this->mackie_sender_receiver.initialize_midi(2, 2);
+	//windows midi in out is not the same number for one device...
+	this->mackie_sender_receiver.initialize_midi(0, 1);
 
     std::thread mackie_control_thread(&osc_controller::midi_receive_thread, this);
 	mackie_control_thread.detach();
@@ -20,7 +34,7 @@ osc_controller::osc_controller(std::string destination_ip_address, unsigned int 
 
 	this->ardour_sender_receiver.init_osc_controller();
 }
-
+#ifdef __linux__
 void osc_controller::udp_sender_receiver::initialize_udp(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out)
 {
 	struct hostent* h;
@@ -53,6 +67,55 @@ void osc_controller::udp_sender_receiver::initialize_udp(std::string destination
 		//exit (EXIT_FAILURE);
 	}
 }
+#endif
+
+#ifdef _WIN64
+void osc_controller::udp_sender_receiver::initialize_udp(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out)
+{
+			int result = 0;
+				WSADATA wsaData;
+				// @TODO: Skip if other connections are open
+				result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+				if (result != 0) {
+					std::cout << "WSAStartup failed";
+					return;
+				}
+
+			// Get localhost as a native network address
+			sockaddr_in m_localAddress;
+			m_localAddress.sin_family = AF_INET;
+			m_localAddress.sin_addr.s_addr = INADDR_ANY;
+			m_localAddress.sin_port = htons(udp_port_in);
+
+			// Get the destination as a native network address
+			m_destinationAddress.sin_family = AF_INET;
+			result = inet_pton(AF_INET, destination_ip_address.c_str(), &m_destinationAddress.sin_addr.s_addr);
+			if (result == 0) {
+				std::cout << "Invalid IP Address!";
+				return;
+			}
+			else if (result == -1) {
+				int errorCode = WSAGetLastError();
+				std::cout << std::string("WSA Error code: ") + std::to_string(errorCode) + "\nFor more information, please visit https://learn.microsoft.com/en-us/windows/win32/api/ws2tcpip/nf-ws2tcpip-inet_pton#return-value.\n";
+				std::cout << "Failed to set IP Address!";
+				return;
+			}
+			m_destinationAddress.sin_port = htons(udp_port_out);
+
+			// Open the network socket
+			m_nativeSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+			if (m_nativeSocket == INVALID_SOCKET) {
+				std::cout << "Failed to create network socket!";
+				return;
+			}
+			result = bind(m_nativeSocket, (sockaddr*)&m_localAddress, sizeof(m_localAddress));
+			if (result == SOCKET_ERROR) {
+				std::cout << "Failed to bind to network socket!";
+				return;
+			}
+}
+#endif
+
 
 void osc_controller::midi_receive_thread()
 {
@@ -60,6 +123,7 @@ void osc_controller::midi_receive_thread()
 
 	while (1) {
 	mackie_sender_receiver.receive_midi_data(buffer);	
+	
 
     OscMessage msg("/nothing");
 	bool button_pressed = false;
@@ -367,9 +431,11 @@ void osc_controller::osc_receive_thread()
 			int plugin_parameter_id = message.get_int(0);
 			float plugin_parameter_value = message.get_type_list().at(1) == 'f' ? message.get_float(1) : message.get_double(1);
 			local_strip_data.selected_strip.update_selected_strip(controller::PLUGIN_PARAMETER_VALUE, plugin_parameter_id, plugin_parameter_value);
-			int fader_id = plugin_multiplexer.plugin_multiplexer_from_plugin[plugin_parameter_id];
-			if(local_strip_data.selected_strip.controller_channel_nr_is_within_plugin_bank(fader_id) && (this->mode == PluginMode)){
-				mackie_sender_receiver.update(controller::PLUGIN_PARAMETER_VALUE, fader_id, plugin_parameter_value);
+			if (plugin_parameter_id < plugin_multiplexer.plugin_multiplexer_from_plugin.size()) {
+				int fader_id = plugin_multiplexer.plugin_multiplexer_from_plugin[plugin_parameter_id];
+				if (local_strip_data.selected_strip.controller_channel_nr_is_within_plugin_bank(fader_id) && (this->mode == PluginMode)) {
+					mackie_sender_receiver.update(controller::PLUGIN_PARAMETER_VALUE, fader_id, plugin_parameter_value);
+				}
 			}
 			continue;
 		}
@@ -414,6 +480,7 @@ void osc_controller::osc_receive_thread()
 	}
 }
 
+#ifdef __linux__
 int osc_controller::udp_sender_receiver::receive_udp_data(char *buffer)	
 {
 	struct sockaddr_in sender_address;
@@ -422,12 +489,41 @@ int osc_controller::udp_sender_receiver::receive_udp_data(char *buffer)
 	recvfrom(m_nativeSocket, buffer, buffer_length, 0, (struct sockaddr*)&sender_address, (socklen_t*)&sender_address_size);
 	return buffer_length;
 }
+#endif
 
+#ifdef _WIN64
+int osc_controller::udp_sender_receiver::receive_udp_data(char *buffer)	
+{
+	struct sockaddr_in sender_address;
+	int sender_address_size = sizeof(sender_address);
+	int buffer_length = 1024;
+	int res = recvfrom(m_nativeSocket, buffer, buffer_length, 0, (SOCKADDR*)&sender_address, &sender_address_size);
+	return buffer_length;
+}
+#endif
+
+	
+#ifdef __linux__
 void osc_controller::midi_sender_receiver::receive_midi_data(char *buffer)
 {
 	snd_rawmidi_read(MidiDeviceIn, buffer, 3); 
 	return;	
 }
+#endif
+
+#ifdef _WIN64
+	void osc_controller::midi_sender_receiver::receive_midi_data(char *buffer)
+	{
+		uint32_t message = 0;
+		while (midi_data.size() == 0)
+			Sleep(1);
+		buffer[0] = midi_data.back().data[0];
+		buffer[1] = midi_data.back().data[1];
+		buffer[2] = midi_data.back().data[2];
+		midi_data.pop_back();
+		return;
+	}
+#endif
 
 void osc_controller::strip_feedback::update(enum controller::controller_message type, float value)
 {
@@ -556,25 +652,65 @@ void osc_controller::midi_sender_receiver::update(enum controller::controller_me
 		break;
 	}
 }
-
+#ifdef __linux__
 void osc_controller::midi_sender_receiver::send_midi_data(unsigned char * message, int size)
 {
 	snd_rawmidi_write(MidiDeviceOut, message, size);	
 }
+#endif
 
-//this is now in update_selected_strip...
-/*
-void update_global_state(enum controller::controller_message type, int strip_nr, float value)
+#ifdef _WIN64
+void osc_controller::midi_sender_receiver::send_midi_data(unsigned char *message, int size)
 {
-	switch(type)
-	{
-	case controller::SELECT:
-		if(bool(value))
-    		selected_strip.number = strip_nr;
-		break;
+	if (size == 3) {
+		DWORD msg = 0;
+		msg |= message[0];
+		msg |= message[1] << 8;
+		msg |= message[2] << 16;
+		midiOutShortMsg(MidiDeviceOut, msg);
+	}
+	if (size == 120) {
+		MIDIHDR     midiHdr;
+		HANDLE      hBuffer;
+		UINT        err;
+		hBuffer = GlobalAlloc(GHND, 120);
+		if (hBuffer){
+			midiHdr.lpData = (LPSTR)GlobalLock(hBuffer);
+			if (midiHdr.lpData)
+			{
+				midiHdr.dwBufferLength = 120;
+
+				midiHdr.dwFlags = 0;
+
+				err = midiOutPrepareHeader(MidiDeviceOut, &midiHdr, sizeof(MIDIHDR));
+				if (!err)
+				{
+					memcpy(midiHdr.lpData, message, 120);
+
+					err = midiOutLongMsg(MidiDeviceOut, &midiHdr, sizeof(MIDIHDR));
+					if (err)
+					{
+						char errMsg[120];
+
+						midiOutGetErrorText(err, (LPWSTR)&errMsg[0], 120);
+						printf("Error: %s\r\n", &errMsg[0]);
+					}
+
+				while (MIDIERR_STILLPLAYING == midiOutUnprepareHeader(MidiDeviceOut, &midiHdr, sizeof(MIDIHDR)))
+				{
+					//Sleep(1000);
+				}
+			}
+			GlobalUnlock(hBuffer);
+		}
+		GlobalFree(hBuffer);
+	}
 	}
 }
-*/
+#endif
+
+
+
 
 void osc_controller::selected_strip_struct::update_selected_strip(enum controller::controller_message type, int nr, float value)
 {
@@ -806,7 +942,7 @@ void osc_controller::plugin_multiplexer_struct::setup(std::string plugin_name)
 		if(temp[1] > from_plugin_size)
 			from_plugin_size = temp[1];
 
-	plugin_multiplexer_from_plugin.resize(from_plugin_size + 1, 0);
+	plugin_multiplexer_from_plugin.resize(from_plugin_size + ONE_BASED, 0);
 
 	int from_controller_size = 0;
 	for(std::array<int, 2> temp : plugin_multiplexer.at(plugin_index).from_controller)
@@ -860,7 +996,12 @@ void osc_controller::udp_sender_receiver::send_udp_data(OscMessage message)
 	if (size < 1)
 		return;
 		// Send data over the socket
+	#ifdef __linux__
 	sendto(m_nativeSocket, data, size, 0, (struct sockaddr*)&m_destinationAddress, sizeof(m_destinationAddress)); //thats exactly the same, we should get rid of that one
+	#endif
+	#ifdef _WIN64
+	sendto(m_nativeSocket, data, size, 0, (sockaddr*)&m_destinationAddress, sizeof(m_destinationAddress));
+	#endif
 }
 
 int osc_controller::selected_strip_struct::get_selected_plugin_index()
@@ -985,6 +1126,7 @@ void osc_controller::udp_sender_receiver::init_osc_controller()
 	this->send_udp_data(setup_msg);
 }
 
+#ifdef __linux__
 int osc_controller::midi_sender_receiver::initialize_midi(int port_in, int port_out)
 {
 	int status;
@@ -1004,13 +1146,59 @@ int osc_controller::midi_sender_receiver::initialize_midi(int port_in, int port_
    	}
 	return 0;
 }
+#endif
+
+#ifdef _WIN64
+int osc_controller::midi_sender_receiver::initialize_midi(int port_in, int port_out)
+{
+	MMRESULT result;
+	//MidiSenderReceiver::PrintMidiDevices();//if there are none, later they have to be selected previously in the gui...
+	result = midiInOpen(&MidiDeviceIn, port_in, (DWORD_PTR)(void*)MidiInProc, 0, CALLBACK_FUNCTION);  
+	
+
+if (result != MMSYSERR_NOERROR) {
+		printf("midiInOpen() failed...rv=%d");
+	}
+	else {
+		midiInStart(MidiDeviceIn);
+	}
+
+
+	result = midiOutOpen(&MidiDeviceOut, port_out, 0, 0, CALLBACK_WINDOW);
+	if (result)
+		printf("There was an error opening MIDI Mapper!\r\n");
+/*
+	if (global_reference_midi_connections.mackie_hMidiIn[0] == 0) {
+		global_reference_midi_connections.mackie_hMidiIn[0] = MidiDeviceIn;
+		global_reference_midi_connections.mackie_MidiDeviceOut[0] = MidiDeviceOut;
+		global_reference_midi_connections.ardour_sender_receiver_nr_assignment[0] = 0;
+		device_nr = 0;
+
+	}
+
+	else if (global_reference_midi_connections.mackie_hMidiIn[1] == 0) {
+		global_reference_midi_connections.mackie_hMidiIn[1] = MidiDeviceIn;
+		global_reference_midi_connections.mackie_MidiDeviceOut[1] = MidiDeviceOut;
+		global_reference_midi_connections.ardour_sender_receiver_nr_assignment[1] = 1;
+		device_nr = 1;
+	}
+*/	
+	//reference_to_this[device_nr] = this;
+	return 0;
+}
+#endif
 
 void osc_controller::plugin_multiplexer_struct::initialize_plugin_multiplexer()
 {
+	#ifdef __linux__
 	std::string path = "/home/samuel/Software/hekky-osc-extension/examples/plugin_data";
+	#endif
+	#ifdef _WIN64
+	std::string path = "C:\\Users\\Samuel\\Documents\\plugin_data";
+	#endif
 	std::vector<std::string> file_locations;
-	for (const auto & entry : std::filesystem::directory_iterator(path))
-		file_locations.push_back(entry.path());
+	for (const auto& entry : std::filesystem::directory_iterator(path)) 
+		file_locations.push_back(entry.path().string());
 
 	struct plugin_routing temp;
 	plugin_multiplexer.resize(file_locations.size(), temp);
@@ -1019,7 +1207,12 @@ void osc_controller::plugin_multiplexer_struct::initialize_plugin_multiplexer()
 	int temp_plugin_index = 0;
 	for(std::string file_location : file_locations){
 		std::string plugin_name = file_location;
+		#ifdef __linux__
 		int pos = plugin_name.find_last_of('/') + 1;
+		#endif
+		#ifdef _WIN64
+		int pos = plugin_name.find_last_of('\\') + 1;
+		#endif
 		plugin_name.erase(0, pos);
 		pos = plugin_name.find(".txt");
 		plugin_name.erase(pos, plugin_name.size());
@@ -1077,3 +1270,15 @@ void osc_controller::midi_sender_receiver::initialize_mackie_display_formated()
 
 	return;
 }
+
+#ifdef _WIN64
+void CALLBACK MidiInProc(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2)
+{
+	struct midi_message_struct message;
+	message.data[0] = (dwParam1 & 0xff);
+	message.data[1] = (dwParam1 & 0xff00) >> 8;
+	message.data[2] = (dwParam1 & 0xff0000) >> 16;
+	midi_data.push_back(message);
+	return;	
+}
+#endif

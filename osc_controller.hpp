@@ -8,7 +8,7 @@
 #include <vector>
 #include <array>
 
-#if defined(__linux__)
+#ifdef __linux__
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -21,6 +21,24 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <alsa/asoundlib.h>     /* Interface to the ALSA system */
+#endif
+
+
+
+#ifdef _WIN64
+// Winsock API
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+#include <ws2def.h>
+#pragma comment(lib, "Ws2_32.lib")
+
+#include <SDKDDKVer.h>
+#define _WINSOCKAPI_
+#include <Windows.h>
+#include <conio.h>
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
 #endif
 
 #define PORT 9
@@ -87,6 +105,7 @@ enum channel_mode{
 //argument's... but that probaply would defy the whole point of something, but I don't know yet...
 //or maybe it would be a very good option...
 //let's try...
+
 
 class osc_controller{
 public:
@@ -172,19 +191,30 @@ private:
 	void osc_receive_thread();
 	struct udp_sender_receiver{
 		void initialize_udp(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out);
+		#ifdef __linux__
 		int m_nativeSocket;
+		#endif
+		#ifdef _WIN64
+		SOCKET m_nativeSocket;
+		#endif
 		sockaddr_in m_destinationAddress;
 		void send_udp_data(OscMessage message);
+		int receive_udp_data(char *buffer);
 		void request_plugin_descriptor(int selected_strip_number, int selected_plugin_index);
 		void get_plugin_list(int strip_number);
 		void init_osc_controller();	
-		int receive_udp_data(char *buffer);
 	};
 
 	void midi_receive_thread();
 	struct midi_sender_receiver{
+		#ifdef __linux__
 		snd_rawmidi_t* MidiDeviceIn;
 		snd_rawmidi_t* MidiDeviceOut;
+		#endif
+		#ifdef _WIN64
+		HMIDIIN MidiDeviceIn;
+		HMIDIOUT MidiDeviceOut;
+		#endif
 		struct mackie_display_struct mackie_display;
 		int initialize_midi(int port_in, int port_out);
 		void initialize_mackie_display_formated();
@@ -212,7 +242,7 @@ private:
 	struct midi_sender_receiver mackie_sender_receiver;
 	struct udp_sender_receiver ardour_sender_receiver;
 	struct plugin_multiplexer_struct plugin_multiplexer;	
-	volatile enum channel_mode mode;
+	volatile enum channel_mode mode = PanMode;
 	void switch_channel_mode();
 	void switch_channel_mode_without_updating_mackie(channel_mode input);
 	
