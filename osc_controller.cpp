@@ -25,7 +25,7 @@ osc_controller::osc_controller(std::string destination_ip_address, unsigned int 
 	//if you have only one midi device connected it's probaply 2,2
 	//if multiple, than, 3,3 4,4 5,5 and so forth...
 	#ifdef __linux__
-	this->mackie_sender_receiver.initialize_midi(3, 3);
+	this->mackie_sender_receiver.initialize_midi(1, 1);
 	#endif
 	//windows midi in out is not the same number for one device...
 	//if you have only one device connected it's probaply 0,1.
@@ -312,7 +312,7 @@ void osc_controller::midi_receive_thread()
 			if(!plugin_parameter_number)
                 break;
 			msg.PushInt32(plugin_parameter_number);
-			msg.PushFloat(value_float);
+			msg.PushFloat(value_float);  
 		}
 		if(this->mode == SendMode){
 			msg = OscMessage("/select/send_fader");

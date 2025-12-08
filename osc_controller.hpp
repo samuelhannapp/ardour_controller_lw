@@ -246,6 +246,6 @@ private:
 	void switch_channel_mode();
 	void switch_channel_mode_without_updating_mackie(channel_mode input);
 	
-	ardour_feedback_struct local_strip_data;
+	struct ardour_feedback_struct local_strip_data;
 };
 #endif

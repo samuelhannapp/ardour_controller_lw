@@ -303,13 +303,13 @@ std::vector<char> OscMessage::get_data(char* buffer, int buffer_length){
 }
 
 int OscMessage::get_data_start_point(){
-		std::string debug_string;
-		bool debug_active = false;
-		int c = 0;
-		for(c = 0; c < this->m_data.size(); c++)
-			debug_string.push_back(this->m_data.at(c));
-		if(c != 0)
-			debug_active = true;
+		//std::string debug_string;
+		//bool debug_active = false;
+		//int c = 0;
+		//for(c = 0; c < this->m_data.size(); c++)
+			//debug_string.push_back(this->m_data.at(c));
+		//if(c != 0)
+			//debug_active = true;
 
 		int i = 0;
 		while (this->m_data[i] != ',')
