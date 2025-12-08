@@ -20,11 +20,20 @@ osc_controller::osc_controller(std::string destination_ip_address, unsigned int 
 	this->plugin_multiplexer.initialize_plugin_multiplexer_from_controller_and_from_plugin();
 	this->mackie_sender_receiver.initialize_mackie_display_formated();
 
-    this->ardour_sender_receiver.initialize_udp(destination_ip_address, udp_port_in, udp_port_out);
+    	this->ardour_sender_receiver.initialize_udp(destination_ip_address, udp_port_in, udp_port_out);
 	//linux midi in out is allways the same number for one device
-	//this->mackie_sender_receiver.initialize_midi(2, 2);
+	//if you have only one midi device connected it's probaply 2,2
+	//if multiple, than, 3,3 4,4 5,5 and so forth...
+	#ifdef __linux__
+	this->mackie_sender_receiver.initialize_midi(3, 3);
+	#endif
 	//windows midi in out is not the same number for one device...
+	//if you have only one device connected it's probaply 0,1.
+	//if you have multiple midi devices connected than it's 1,2 or
+	//2,3 or 3,4...
+	#ifdef _WIN64
 	this->mackie_sender_receiver.initialize_midi(0, 1);
+	#endif
 
     std::thread mackie_control_thread(&osc_controller::midi_receive_thread, this);
 	mackie_control_thread.detach();
@@ -1191,7 +1200,8 @@ if (result != MMSYSERR_NOERROR) {
 void osc_controller::plugin_multiplexer_struct::initialize_plugin_multiplexer()
 {
 	#ifdef __linux__
-	std::string path = "/home/samuel/Software/hekky-osc-extension/examples/plugin_data";
+	
+	std::string path = "/home/samuel/Documents/plugin_data";
 	#endif
 	#ifdef _WIN64
 	std::string path = "C:\\Users\\Samuel\\Documents\\plugin_data";
