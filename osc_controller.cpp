@@ -936,6 +936,8 @@ void osc_controller::plugin_multiplexer_struct::setup(std::string plugin_name)
 	bool plugin_routing_does_not_exist = plugin_index == plugin_multiplexer.size();
 	if(plugin_routing_does_not_exist){
 		//rout the plugin_just as it is...
+		plugin_multiplexer_from_plugin.resize(32 + ONE_BASED);
+		plugin_multiplexer_from_controller.resize(32 + ONE_BASED);
 		for(int i = 1; i <= 32; i++){
 			plugin_multiplexer_from_controller[i] = i;
 		}
@@ -943,6 +945,8 @@ void osc_controller::plugin_multiplexer_struct::setup(std::string plugin_name)
 		for(int i = 1; i <= 32; i++){
 			plugin_multiplexer_from_plugin[i] = i;
 		}
+
+		return;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////
