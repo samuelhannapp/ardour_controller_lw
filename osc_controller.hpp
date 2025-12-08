@@ -23,8 +23,6 @@
 #include <alsa/asoundlib.h>     /* Interface to the ALSA system */
 #endif
 
-
-
 #ifdef _WIN64
 // Winsock API
 #include <winsock2.h>
