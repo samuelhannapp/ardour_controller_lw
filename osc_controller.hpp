@@ -39,9 +39,6 @@
 #pragma comment(lib, "winmm.lib")
 #endif
 
-#define PORT 9
-#define MIDI_NR 2
-
 #include "oscmessage.hpp"
 
 namespace mackie{

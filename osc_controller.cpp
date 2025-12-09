@@ -20,20 +20,8 @@ osc_controller::osc_controller(std::string destination_ip_address, unsigned int 
 	this->plugin_multiplexer.initialize_plugin_multiplexer_from_controller_and_from_plugin();
 	this->mackie_sender_receiver.initialize_mackie_display_formated();
 
-    	this->ardour_sender_receiver.initialize_udp(destination_ip_address, udp_port_in, udp_port_out);
-	//linux midi in out is allways the same number for one device
-	//if you have only one midi device connected it's probaply 2,2
-	//if multiple, than, 3,3 4,4 5,5 and so forth...
-	#ifdef __linux__
-	this->mackie_sender_receiver.initialize_midi(1, 1);
-	#endif
-	//windows midi in out is not the same number for one device...
-	//if you have only one device connected it's probaply 0,1.
-	//if you have multiple midi devices connected than it's 1,2 or
-	//2,3 or 3,4...
-	#ifdef _WIN64
-	this->mackie_sender_receiver.initialize_midi(0, 1);
-	#endif
+    this->ardour_sender_receiver.initialize_udp(destination_ip_address, udp_port_in, udp_port_out);
+	this->mackie_sender_receiver.initialize_midi(midi_port_in, midi_port_out);
 
     std::thread mackie_control_thread(&osc_controller::midi_receive_thread, this);
 	mackie_control_thread.detach();
