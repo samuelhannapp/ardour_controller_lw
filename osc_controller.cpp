@@ -10,7 +10,7 @@ std::vector<midi_message_struct> midi_data;
 void CALLBACK MidiInProc(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
 #endif
 
-osc_controller::osc_controller(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out)
+osc_controller::osc_controller(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out, unsigned int midi_port_in, unsigned int midi_port_out)
 {
 	this->plugin_multiplexer.initialize_plugin_multiplexer();
 	this->local_strip_data.selected_strip.initialize_selected_plugin_descriptor();
@@ -158,24 +158,24 @@ void osc_controller::midi_receive_thread()
 		switch(type){
 			case mackie::RECORD:
 				msg = OscMessage("/strip/recenable");
-				msg.PushInt32(channel_nr);
-				msg.PushInt32(!local_strip_data.strips[channel_nr].rec);
+				msg.PushInt(channel_nr);
+				msg.PushInt(!local_strip_data.strips[channel_nr].rec);
 				break;
 			case mackie::SOLO:
 				msg = OscMessage("/strip/solo");
-				msg.PushInt32(channel_nr);
-				msg.PushInt32(!local_strip_data.strips[channel_nr].solo);
+				msg.PushInt(channel_nr);
+				msg.PushInt(!local_strip_data.strips[channel_nr].solo);
 				break;
 			case mackie::MUTE:
 				msg = OscMessage("/strip/mute");
-				msg.PushInt32(channel_nr);
-				msg.PushInt32(!local_strip_data.strips[channel_nr].mute);
+				msg.PushInt(channel_nr);
+				msg.PushInt(!local_strip_data.strips[channel_nr].mute);
 				break;
 			case mackie::SELECT:
 				local_strip_data.selected_strip.update_selected_strip(controller::SELECT, channel_nr, 1);
 				msg = OscMessage("/strip/select");
-				msg.PushInt32(channel_nr);
-				msg.PushInt32(0);
+				msg.PushInt(channel_nr);
+				msg.PushInt(0);
 				ardour_sender_receiver.send_udp_data(msg);
                 break;
 			case mackie::KNOB_PUSH:
@@ -183,12 +183,12 @@ void osc_controller::midi_receive_thread()
 					case 1:
 						this->switch_channel_mode_without_updating_mackie(PanMode);
 						msg = OscMessage("/set_surface/strip_types");
-						msg.PushInt32(1 << AudioBusses);
+						msg.PushInt(1 << AudioBusses);
 						break;
 					case 2:
 						this->switch_channel_mode_without_updating_mackie(PanMode);
 						msg = OscMessage("/set_surface/strip_types");
-						msg.PushInt32(1 << VCAs);
+						msg.PushInt(1 << VCAs);
 						break;
 					case 3:
 						if(this->mode == PanMode)
@@ -233,7 +233,7 @@ void osc_controller::midi_receive_thread()
 					case 8:
 						//msg = OscMessage("/select/spill");
 						msg = OscMessage("/strip/spill");
-						msg.PushInt32(this->local_strip_data.selected_strip.number);
+						msg.PushInt(this->local_strip_data.selected_strip.number);
 						break;
 					default:
 						break;
@@ -244,7 +244,7 @@ void osc_controller::midi_receive_thread()
 				if(this->mode != PanMode)
 					break;
 				msg = OscMessage("/strip/fader/touch");
-				msg.PushInt32(channel_nr);
+				msg.PushInt(channel_nr);
 				msg.PushInt(button_pressed);
 				break;
 			default:
@@ -257,7 +257,7 @@ void osc_controller::midi_receive_thread()
 		channel_nr = buffer[1] % STRIPS_PER_CONTROLLER + 1;
 		if(this->mode == PanMode){
 			msg = OscMessage("/strip/pan_stereo_position");
-			msg.PushInt32(channel_nr);
+			msg.PushInt(channel_nr);
 			increment = buffer[2] == 0x1 ? -1 : 1;
 			value_float = this->local_strip_data.strips[channel_nr].stereo_position + increment * 0.03;
 			if(value_float < 0) value_float = 0;
@@ -271,7 +271,7 @@ void osc_controller::midi_receive_thread()
 			int plugin_parameter_number = plugin_multiplexer.plugin_multiplexer_from_controller[channel_nr + STRIPS_PER_CONTROLLER * this->local_strip_data.selected_strip.plugin_bank];
 			if(!plugin_parameter_number)
                 break;
-			msg.PushInt32(plugin_parameter_number);
+			msg.PushInt(plugin_parameter_number);
 
 			increment = buffer[2] == 0x1 ? 1 : -1;
 
@@ -286,7 +286,7 @@ void osc_controller::midi_receive_thread()
 		}
 		if(this->mode == SendMode){
 			msg = OscMessage("/select/send_fader");
-			msg.PushInt32(channel_nr);
+			msg.PushInt(channel_nr);
 			increment = buffer[2] == 0x1 ? 1 : -1;
 			value_float = this->local_strip_data.selected_strip.sends[channel_nr].volume + increment * 0.03;
 			if(value_float < 0) value_float = 0;
@@ -311,12 +311,12 @@ void osc_controller::midi_receive_thread()
 			int plugin_parameter_number = plugin_multiplexer.plugin_multiplexer_from_controller[fader_nr + 1 + STRIPS_PER_CONTROLLER * this->local_strip_data.selected_strip.plugin_bank];
 			if(!plugin_parameter_number)
                 break;
-			msg.PushInt32(plugin_parameter_number);
+			msg.PushInt(plugin_parameter_number);
 			msg.PushFloat(value_float);  
 		}
 		if(this->mode == SendMode){
 			msg = OscMessage("/select/send_fader");
-			msg.PushInt32(fader_nr + 1);
+			msg.PushInt(fader_nr + 1);
 			msg.PushFloat(value_float);
 		}
 		ardour_sender_receiver.send_udp_data(msg);
@@ -438,7 +438,7 @@ void osc_controller::osc_receive_thread()
 		}
 		else if(!message.GetAddress().compare("/select/plugin/parameter")){
 			int plugin_parameter_id = message.get_int(0);
-			float plugin_parameter_value = message.get_type_list().at(1) == 'f' ? message.get_float(1) : message.get_double(1);
+			float plugin_parameter_value = message.initialize_type_list().at(1) == 'f' ? message.get_float(1) : message.get_double(1);
 			local_strip_data.selected_strip.update_selected_strip(controller::PLUGIN_PARAMETER_VALUE, plugin_parameter_id, plugin_parameter_value);
 			if (plugin_parameter_id < plugin_multiplexer.plugin_multiplexer_from_plugin.size()) {
 				int fader_id = plugin_multiplexer.plugin_multiplexer_from_plugin[plugin_parameter_id];
@@ -1132,10 +1132,10 @@ void osc_controller::switch_channel_mode()
 void osc_controller::udp_sender_receiver::init_osc_controller()
 {
 	OscMessage setup_msg("/set_surface");
-	setup_msg.PushInt32(8);
-	setup_msg.PushInt32((1 << AudioTracks) | (1 << MidiTracks));
-	setup_msg.PushInt32((1 << StripButtons) | (1 << StripControls) | (1 << ExtraSelectOnlyFeedback)/* | (1 << MeteringasFloat)*/);
-	setup_msg.PushInt32(0b1000);
+	setup_msg.PushInt(8);
+	setup_msg.PushInt((1 << AudioTracks) | (1 << MidiTracks));
+	setup_msg.PushInt((1 << StripButtons) | (1 << StripControls) | (1 << ExtraSelectOnlyFeedback)/* | (1 << MeteringasFloat)*/);
+	setup_msg.PushInt(0b1000);
 	this->send_udp_data(setup_msg);
 }
 

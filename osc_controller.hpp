@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <errno.h>
-#include <alsa/asoundlib.h>     /* Interface to the ALSA system */
+#include <alsa/asoundlib.h>
 #endif
 
 #ifdef _WIN64
@@ -96,18 +96,9 @@ enum channel_mode{
 #define MAX_PLUGIN_PARAMETERS 200
 #define PLUGIN_ARRAY_SIZE (MAX_PLUGIN_PARAMETERS + ONE_BASED)
 
-//this concept doesn't work, because all member's have to have access to the super_class, and that's not possible, 
-//one solution would be to make all of the classes/struct's seperately, even in seperate files, and have the one super_class
-//and than pass to each object a reference of the super_class...
-//or another way would be, onlye the two thread's have access to the super_object, and they pass all required information as 
-//argument's... but that probaply would defy the whole point of something, but I don't know yet...
-//or maybe it would be a very good option...
-//let's try...
-
-
 class osc_controller{
 public:
-	osc_controller(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out);
+	osc_controller(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out, unsigned int midi_port_in, unsigned int midi_port_out);
 private:
 	struct strip_feedback{
 		std::string name;
@@ -222,14 +213,11 @@ private:
 		void update_display(const strip_feedback *strips);
 		void update_display(const struct send *sends);
 		void update_display(const plugin_parameter *selected_plugin, const plugin_multiplexer_struct *plugin_multiplexer, int plugin_bank);
-		void encode_midi(uint8_t *data, uint8_t midi_cmd, uint8_t midi_param0, uint8_t midi_param1);
-		//void update_faders(enum channel_mode mode);
 		void update_faders(const plugin_parameter *selected_plugin, const plugin_multiplexer_struct *plugin_multiplexer, int plugin_bank);
 		void update_faders(const send *sends);
 		void update_faders(const strip_feedback *strips);
 		//void update_fader(int strip_nr, float value, enum channel_mode mode);
 	};
-
 	
 	struct ardour_feedback_struct{
 		struct strip_feedback strips[STRIP_ARRAY_SIZE]; //this is 1 based, 0 is not used... controller has 8 strip's

@@ -2,9 +2,6 @@
 #include <math.h>
 #include <string.h>
 
-#define OSC_MINIMUM_PACKET_BYTES  8
-
-
 
 OscMessage::OscMessage(const std::string& address)
 	: m_address(address), m_type(","), m_readonly(false)
@@ -20,7 +17,7 @@ OscMessage::OscMessage(char* buffer, int buffer_length)
 	//HEKKYOSC_ASSERT(m_address.length() > 1, "The address is invalid!");
 	//HEKKYOSC_ASSERT(m_address.at(0) == '/', "The address is invalid! It should start with a '/'!");
 	m_type = get_type_list(buffer, buffer_length);
-	m_data = get_data(buffer, buffer_length);
+	m_data = initialize_data(buffer, buffer_length);
 	m_readonly = false;
 
 }
@@ -29,17 +26,17 @@ OscMessage::~OscMessage() {
 	m_data.clear();
 }
 
-OscMessage OscMessage::PushBlob(char* data, size_t size) {
+OscMessage OscMessage::PushString(std::string data) {
 	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
 
-	m_data.insert(m_data.begin(), data, data + size);
-	m_type += "b";
+	std::copy(data.begin(), data.end(), std::back_inserter(m_data));
+	m_data.insert(m_data.end(), GetAlignedStringLength(data) - data.length(), 0);
+	m_type += "s";
 	return *this;
 }
 
-OscMessage OscMessage::PushFloat32(float data) {
-	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
-
+// Aliases
+OscMessage OscMessage::PushFloat(float data) {
 	if (isinf(data)) {
 		m_type += "I";
 	}
@@ -58,10 +55,7 @@ OscMessage OscMessage::PushFloat32(float data) {
 	}
 	return *this;
 }
-
-OscMessage OscMessage::PushFloat64(double data) {
-	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
-
+OscMessage OscMessage::PushDouble(double data) {
 	if (isinf(data)) {
 		m_type += "I";
 	}
@@ -80,10 +74,7 @@ OscMessage OscMessage::PushFloat64(double data) {
 	}
 	return *this;
 }
-
-OscMessage OscMessage::PushInt32(int data) {
-	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
-
+OscMessage OscMessage::PushInt(int data) {
 	union {
 		int i;
 		char c[4];
@@ -97,10 +88,7 @@ OscMessage OscMessage::PushInt32(int data) {
 	m_type += "i";
 	return *this;
 }
-
-OscMessage OscMessage::PushInt64(long long data) {
-	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
-
+OscMessage OscMessage::PushLongLong(long long data) {
 	union {
 		long long i;
 		char c[8];
@@ -113,149 +101,6 @@ OscMessage OscMessage::PushInt64(long long data) {
 	m_data.insert(m_data.end(), primitiveLiteral.c, primitiveLiteral.c + 8);
 	m_type += "h";
 	return *this;
-}
-
-OscMessage OscMessage::PushBoolean(bool data) {
-	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
-
-	m_type += (data == true) ? "T" : "F";
-	return *this;
-}
-
-OscMessage OscMessage::PushString(std::string data) {
-	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
-
-	std::copy(data.begin(), data.end(), std::back_inserter(m_data));
-	m_data.insert(m_data.end(), GetAlignedStringLength(data) - data.length(), 0);
-	m_type += "s";
-	return *this;
-}
-
-OscMessage OscMessage::PushStringRef(const std::string& data) {
-	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
-
-	std::copy(data.begin(), data.end(), std::back_inserter(m_data));
-	m_data.insert(m_data.end(), GetAlignedStringLength(data) - data.length(), 0);
-	m_type += "s";
-	return *this;
-}
-
-OscMessage OscMessage::PushCStyleStringRef(const char* data) {
-	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
-
-	m_data.insert(m_data.end(), data, data + strlen(data));
-	m_data.insert(m_data.end(), GetAlignedStringLength(data) - strlen(data), 0);
-	m_type += "s";
-	return *this;
-}
-
-OscMessage OscMessage::PushCStyleString(char* data) {
-	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
-
-	m_data.insert(m_data.end(), data, data + strlen(data));
-	m_data.insert(m_data.end(), GetAlignedStringLength(data) - strlen(data), 0);
-	m_type += "s";
-	return *this;
-}
-
-OscMessage OscMessage::PushWString(std::wstring data) {
-	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
-
-	std::copy(data.begin(), data.end(), std::back_inserter(m_data));
-	m_data.insert(m_data.end(), GetAlignedStringLength(data) - data.length(), 0);
-	m_type += "s";
-	return *this;
-}
-
-OscMessage OscMessage::PushWStringRef(const std::wstring& data) {
-	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
-
-	std::copy(data.begin(), data.end(), std::back_inserter(m_data));
-	m_data.insert(m_data.end(), GetAlignedStringLength(data) - data.length(), 0);
-	m_type += "s";
-	return *this;
-}
-
-OscMessage OscMessage::PushCStyleWStringRef(const wchar_t* data) {
-	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
-
-	m_data.insert(m_data.end(), data, data + wcslen(data));
-	m_data.insert(m_data.end(), GetAlignedStringLength(data) - wcslen(data), 0);
-	m_type += "s";
-	return *this;
-}
-
-OscMessage OscMessage::PushCStyleWString(wchar_t* data) {
-	//HEKKYOSC_ASSERT(m_readonly == false, "Cannot write to a message packet once sent to the network! Construct a new message instead.");
-
-	m_data.insert(m_data.end(), data, data + wcslen(data));
-	m_data.insert(m_data.end(), GetAlignedStringLength(data) - wcslen(data), 0);
-	m_type += "s";
-	return *this;
-}
-
-// Aliases
-OscMessage OscMessage::PushFloat(float data) {
-	return PushFloat32(data);
-}
-OscMessage OscMessage::PushDouble(double data) {
-	return PushFloat64(data);
-}
-OscMessage OscMessage::PushInt(int data) {
-	return PushInt32(data);
-}
-OscMessage OscMessage::PushLongLong(long long data) {
-	return PushInt64(data);
-}
-
-// Generic aliases
-OscMessage OscMessage::Push(float data) {
-	return PushFloat32(data);
-}
-OscMessage OscMessage::Push(double data) {
-	return PushFloat64(data);
-}
-OscMessage OscMessage::Push(int data) {
-	return PushInt32(data);
-}
-OscMessage OscMessage::Push(long long data) {
-	return PushInt64(data);
-}
-OscMessage OscMessage::PushBool(bool data) {
-	return PushBoolean(data);
-}
-
-OscMessage OscMessage::Push(std::string data) {
-	return PushString(data);
-}
-OscMessage OscMessage::Push(const std::string& data) {
-	return PushStringRef(data);
-}
-OscMessage OscMessage::Push(char* data) {
-	return PushCStyleString(data);
-}
-
-OscMessage OscMessage::Push(const char* data) {
-	return PushCStyleStringRef(data);
-}
-
-// Wide strings
-OscMessage OscMessage::Push(std::wstring data) {
-	return PushWString(data);
-}
-OscMessage OscMessage::Push(const std::wstring& data) {
-	return PushWStringRef(data);
-}
-OscMessage OscMessage::Push(wchar_t* data) {
-	return PushCStyleWString(data);
-}
-OscMessage OscMessage::Push(const wchar_t* data) {
-	return PushCStyleWStringRef(data);
-}
-
-// Blob
-OscMessage OscMessage::Push(char* data, size_t size) {
-	return PushBlob(data, size);
 }
 
 // Internal function
@@ -295,7 +140,7 @@ std::string OscMessage::get_type_list(char* buffer, int buffer_length){
 	return ret;
 }
 
-std::vector<char> OscMessage::get_data(char* buffer, int buffer_length){
+std::vector<char> OscMessage::initialize_data(char* buffer, int buffer_length){
 	std::vector<char> out;
 	for(int i = 0; i < buffer_length; i++)
 		out.push_back(*(buffer + i));
@@ -370,10 +215,10 @@ float OscMessage::get_float(int argument_nr){
 	return ret;
 }
 
-uint8_t OscMessage::get_int(int argument_nr)
+int OscMessage::get_int(int argument_nr)
 {
 	int argument_start_point = this->get_argument_start_point(argument_nr);
-	uint8_t ret = 0;
+	int ret = 0;
 
 	for (int i = 0; i < 4; i++) {
 		ret |= ((this->m_data[argument_start_point++]) << (24 - (i * 8)));
