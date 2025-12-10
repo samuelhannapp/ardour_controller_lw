@@ -6,7 +6,13 @@
 struct midi_message_struct{
 	unsigned char data[3];
 };
-std::vector<midi_message_struct> midi_data;
+
+struct midi_input {
+	HMIDIIN device;
+	std::vector<midi_message_struct> midi_data;
+};
+
+std::vector<midi_input> midi_input_buffer;
 void CALLBACK MidiInProc(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
 #endif
 
@@ -366,6 +372,8 @@ void osc_controller::osc_receive_thread()
 			continue;
 		}
 		else if(!message.GetAddress().compare("/strip/pan_stereo_position")){
+			if (message.GetTypeList().size() == 1)
+				break;
 			int strip_nr = message.get_int(0);
 			float value = message.get_float(1);
 			local_strip_data.strips[strip_nr].update(controller::STEREO_POSITION, value);
@@ -419,6 +427,8 @@ void osc_controller::osc_receive_thread()
 			}
 			int plugin_parameter_id = message.get_int(0);
 			std::string plugin_parameter_name = message.get_string(1);
+			if (plugin_parameter_id < 0)
+				continue;
 			this->local_strip_data.selected_strip.update_selected_strip(controller::PLUGIN_PARAMETER_NAME, plugin_parameter_id, plugin_parameter_name);
 			if(this->mode == PluginMode)
 				this->mackie_sender_receiver.update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
@@ -467,7 +477,7 @@ void osc_controller::osc_receive_thread()
 			parameter_data.zero_or_more_scale_points = message.get_int(9);
 			std::string type_list = message.GetTypeList();
 			parameter_data.value = type_list.at(10) == 'f' ? message.get_float(10) : message.get_double(10);
-			if(parameter_data.parameter_id < MAX_PLUGIN_PARAMETERS)
+			if((parameter_data.parameter_id < MAX_PLUGIN_PARAMETERS) && parameter_data.parameter_id > 0)
 				local_strip_data.selected_strip.selected_plugin[parameter_data.parameter_id] = parameter_data;
 			continue;
 		}
@@ -512,12 +522,18 @@ void osc_controller::midi_sender_receiver::receive_midi_data(char *buffer)
 	void osc_controller::midi_sender_receiver::receive_midi_data(char *buffer)
 	{
 		uint32_t message = 0;
-		while (midi_data.size() == 0)
+		HMIDIIN midi_connection;
+		int midi_connection_number = -1;
+		for (int i = 0; i < midi_input_buffer.size(); i++)
+			if (midi_input_buffer.at(i).device == this->MidiDeviceIn)
+				midi_connection_number = i;
+
+		while (midi_input_buffer.at(midi_connection_number).midi_data.size() == 0)
 			Sleep(1);
-		buffer[0] = midi_data.back().data[0];
-		buffer[1] = midi_data.back().data[1];
-		buffer[2] = midi_data.back().data[2];
-		midi_data.pop_back();
+		buffer[0] = midi_input_buffer.at(midi_connection_number).midi_data.back().data[0];
+		buffer[1] = midi_input_buffer.at(midi_connection_number).midi_data.back().data[1];
+		buffer[2] = midi_input_buffer.at(midi_connection_number).midi_data.back().data[2];
+		midi_input_buffer.at(midi_connection_number).midi_data.pop_back();
 		return;
 	}
 #endif
@@ -1155,6 +1171,9 @@ int osc_controller::midi_sender_receiver::initialize_midi(int port_in, int port_
 	MMRESULT result;
 	//MidiSenderReceiver::PrintMidiDevices();//if there are none, later they have to be selected previously in the gui...
 	result = midiInOpen(&MidiDeviceIn, port_in, (DWORD_PTR)(void*)MidiInProc, 0, CALLBACK_FUNCTION);  
+	struct midi_input temp;
+	temp.device = MidiDeviceIn;
+	midi_input_buffer.push_back(temp);
 	
 
 if (result != MMSYSERR_NOERROR) {
@@ -1168,23 +1187,7 @@ if (result != MMSYSERR_NOERROR) {
 	result = midiOutOpen(&MidiDeviceOut, port_out, 0, 0, CALLBACK_WINDOW);
 	if (result)
 		printf("There was an error opening MIDI Mapper!\r\n");
-/*
-	if (global_reference_midi_connections.mackie_hMidiIn[0] == 0) {
-		global_reference_midi_connections.mackie_hMidiIn[0] = MidiDeviceIn;
-		global_reference_midi_connections.mackie_MidiDeviceOut[0] = MidiDeviceOut;
-		global_reference_midi_connections.ardour_sender_receiver_nr_assignment[0] = 0;
-		device_nr = 0;
 
-	}
-
-	else if (global_reference_midi_connections.mackie_hMidiIn[1] == 0) {
-		global_reference_midi_connections.mackie_hMidiIn[1] = MidiDeviceIn;
-		global_reference_midi_connections.mackie_MidiDeviceOut[1] = MidiDeviceOut;
-		global_reference_midi_connections.ardour_sender_receiver_nr_assignment[1] = 1;
-		device_nr = 1;
-	}
-*/	
-	//reference_to_this[device_nr] = this;
 	return 0;
 }
 #endif
@@ -1280,7 +1283,9 @@ void CALLBACK MidiInProc(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwP
 	message.data[0] = (dwParam1 & 0xff);
 	message.data[1] = (dwParam1 & 0xff00) >> 8;
 	message.data[2] = (dwParam1 & 0xff0000) >> 16;
-	midi_data.push_back(message);
+	for(struct midi_input &midi_in : midi_input_buffer)
+		if (midi_in.device == hMidiIn)
+			midi_in.midi_data.push_back(message);
 	return;	
 }
 #endif
