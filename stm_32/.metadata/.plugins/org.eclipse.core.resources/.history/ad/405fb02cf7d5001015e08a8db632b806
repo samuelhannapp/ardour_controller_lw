@@ -1,0 +1,44 @@
+/*
+  ***************************************************************************************************************
+  ***************************************************************************************************************
+  ***************************************************************************************************************
+
+  File:		  udpClientRAW.h
+  Author:     ControllersTech.com
+  Updated:    Jul 23, 2021
+
+  ***************************************************************************************************************
+  Copyright (C) 2017 ControllersTech.com
+
+  This is a free software under the GNU license, you can redistribute it and/or modify it under the terms
+  of the GNU General Public License version 3 as published by the Free Software Foundation.
+  This software library is shared with public for educational purposes, without WARRANTY and Author is not liable for any damages caused directly
+  or indirectly by this software, read more about this on the GNU General Public License.
+
+  ***************************************************************************************************************
+*/
+
+
+#ifndef INC_STM32_SOCK_H_
+#define INC_STM32_SOCK_H_
+
+
+//#include <stm32_sock.h>
+#include "lwip/pbuf.h"
+#include "lwip/udp.h"
+#include "lwip/tcp.h"
+
+//#include "stdio.h"
+#include "string.h"
+
+//#include "udpsender.hpp"
+
+//#include "enums.hpp"
+//void udpClient_connect(void);
+//void udpClient_send(char *data, int len);
+//void udp_receive_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
+void sendto(struct udp_pcb *m_nativeSocket, char *data, int size, int not_applicapple, ip_addr_t *sender_address, int sender_address_size);
+int recvfrom(struct udp_pcb *m_nativeSocket, char *data, int size, int not_applicapple, ip_addr_t *sender_address, int *sender_address_size);
+
+
+#endif /* INC_STM32_SOCK_H_ */

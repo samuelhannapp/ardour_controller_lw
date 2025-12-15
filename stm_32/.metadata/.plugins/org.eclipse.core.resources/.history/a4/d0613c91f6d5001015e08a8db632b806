@@ -1,0 +1,80 @@
+/*
+  ***************************************************************************************************************
+  ***************************************************************************************************************
+  ***************************************************************************************************************
+
+  File:		  udpClientRAW.c
+  Author:     ControllersTech.com
+  Updated:    Jul 23, 2021
+
+  ***************************************************************************************************************
+  Copyright (C) 2017 ControllersTech.com
+
+  This is a free software under the GNU license, you can redistribute it and/or modify it under the terms
+  of the GNU General Public License version 3 as published by the Free Software Foundation.
+  This software library is shared with public for educational purposes, without WARRANTY and Author is not liable for any damages caused directly
+  or indirectly by this software, read more about this on the GNU General Public License.
+
+  ***************************************************************************************************************
+*/
+
+
+#include "stm32_sock.h"
+#include "oscmessage.hpp"
+//#include "midi_application.h"
+
+struct udp_pcb *upcb;
+int counter = 0;
+
+std::vector<std::vector<char>> ll_buffer;
+
+void sendto(struct udp_pcb *m_nativeSocket, char *data, int size, int not_applicatpple, ip_addr_t *sender_address, int sender_address_size)
+{
+	struct pbuf *txBuf;
+
+  /* allocate pbuf from pool*/
+  txBuf = pbuf_alloc(PBUF_TRANSPORT, size, PBUF_RAM);
+
+  if (txBuf != NULL)
+  {
+    /* copy data to pbuf */
+    pbuf_take(txBuf, data, size);
+
+    /* send udp data */
+    udp_send(m_nativeSocket, txBuf);
+
+    /* free pbuf */
+    pbuf_free(txBuf);
+  }
+}
+
+int recvfrom(struct udp_pcb *m_nativeSocket, char *data, int size, int not_applicapple, ip_addr_t *sender_address, int *sender_address_size)
+{
+	//in case there would be multiple socket's, m_nativeSocket would be used to get to the right buffer
+	//I think the erase is what makes this so slow...
+	//I want to use a fifo... ringbuffer
+	int size = ll_buffer.front().size();
+	if(!size)
+		return 0;
+	for(int i = 0; i < size; i++)
+		data[i] = ll_buffer.front().at(i);
+
+	ll_buffer.erase(ll_buffer.begin());
+	return size;
+}
+
+void udp_receive_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *addr, u16_t port)
+{
+	std::vector<char> temp;
+	char * raw_data= (char *)p->payload;
+	for(int i = 0; i < p->len; i++){
+		temp.push_back(raw_data[i]);
+	}
+	ll_buffer.push_back(temp);
+
+	//counter++;
+
+	pbuf_free(p);
+}
+
+

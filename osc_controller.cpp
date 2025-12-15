@@ -1,4 +1,5 @@
 #include "osc_controller.hpp"
+#include "udp_sender_receiver.hpp"
 
 
 //this is global data from the callback for windows..., what a pain...
@@ -16,6 +17,10 @@ std::vector<midi_input> midi_input_buffer;
 void CALLBACK MidiInProc(HMIDIIN hMidiIn, UINT wMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
 #endif
 
+#ifdef __STM32F7xx_HAL_H
+extern uint8_t IP_ADDRESS[4];
+#endif
+
 osc_controller::osc_controller(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out, unsigned int midi_port_in, unsigned int midi_port_out)
 {
 	this->plugin_multiplexer.initialize_plugin_multiplexer();
@@ -26,7 +31,7 @@ osc_controller::osc_controller(std::string destination_ip_address, unsigned int 
 	this->plugin_multiplexer.initialize_plugin_multiplexer_from_controller_and_from_plugin();
 	this->mackie_sender_receiver.initialize_mackie_display_formated();
 
-    this->ardour_sender_receiver.initialize_udp(destination_ip_address, udp_port_in, udp_port_out);
+    this->ardour_sender_receiver = ardour(destination_ip_address, udp_port_in, udp_port_out);
 	this->mackie_sender_receiver.initialize_midi(midi_port_in, midi_port_out);
 
     std::thread mackie_control_thread(&osc_controller::midi_receive_thread, this);
@@ -37,88 +42,6 @@ osc_controller::osc_controller(std::string destination_ip_address, unsigned int 
 
 	this->ardour_sender_receiver.init_osc_controller();
 }
-#ifdef __linux__
-void osc_controller::udp_sender_receiver::initialize_udp(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out)
-{
-	struct hostent* h;
-	//check ip adress
-	h = gethostbyname(destination_ip_address.c_str());
-	if (h == NULL) {
-		std::cout << ("Invalid IP Address!");
-		return;
-		//exit (EXIT_FAILURE);
-	}
-	m_destinationAddress.sin_family = h->h_addrtype;
-	memcpy((char*)&m_destinationAddress.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
-	m_destinationAddress.sin_port = htons(udp_port_out);
-	// Open the network socket
-	m_nativeSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (m_nativeSocket < 0) {
-		std::cout << ("Cannot open Socket!");
-		return;
-		//exit (EXIT_FAILURE);
-	}
-	//Bind network socket
-	sockaddr_in m_localAddress;
-	m_localAddress.sin_family = AF_INET;
-	m_localAddress.sin_addr.s_addr = htonl(INADDR_ANY);
-	m_localAddress.sin_port = htons(udp_port_in);
-	int result = bind(m_nativeSocket, (struct sockaddr*)&m_localAddress, sizeof(m_localAddress));
-	if (result < 0) {
-		std::cout << ("Failed to bind to network socket!");
-		return;
-		//exit (EXIT_FAILURE);
-	}
-}
-#endif
-
-#ifdef _WIN64
-void osc_controller::udp_sender_receiver::initialize_udp(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out)
-{
-			int result = 0;
-				WSADATA wsaData;
-				// @TODO: Skip if other connections are open
-				result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-				if (result != 0) {
-					std::cout << "WSAStartup failed";
-					return;
-				}
-
-			// Get localhost as a native network address
-			sockaddr_in m_localAddress;
-			m_localAddress.sin_family = AF_INET;
-			m_localAddress.sin_addr.s_addr = INADDR_ANY;
-			m_localAddress.sin_port = htons(udp_port_in);
-
-			// Get the destination as a native network address
-			m_destinationAddress.sin_family = AF_INET;
-			result = inet_pton(AF_INET, destination_ip_address.c_str(), &m_destinationAddress.sin_addr.s_addr);
-			if (result == 0) {
-				std::cout << "Invalid IP Address!";
-				return;
-			}
-			else if (result == -1) {
-				int errorCode = WSAGetLastError();
-				std::cout << std::string("WSA Error code: ") + std::to_string(errorCode) + "\nFor more information, please visit https://learn.microsoft.com/en-us/windows/win32/api/ws2tcpip/nf-ws2tcpip-inet_pton#return-value.\n";
-				std::cout << "Failed to set IP Address!";
-				return;
-			}
-			m_destinationAddress.sin_port = htons(udp_port_out);
-
-			// Open the network socket
-			m_nativeSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-			if (m_nativeSocket == INVALID_SOCKET) {
-				std::cout << "Failed to create network socket!";
-				return;
-			}
-			result = bind(m_nativeSocket, (sockaddr*)&m_localAddress, sizeof(m_localAddress));
-			if (result == SOCKET_ERROR) {
-				std::cout << "Failed to bind to network socket!";
-				return;
-			}
-}
-#endif
-
 
 void osc_controller::midi_receive_thread()
 {
@@ -325,14 +248,26 @@ void osc_controller::midi_receive_thread()
    }
 }
 
+#ifdef __STM32F7xx_HAL_H
+static void write_to_itm(std::string string)
+{
+	for(char c : string)
+		ITM_SendChar(c);
+	ITM_SendChar('\n');
+	return;
+}
+#endif
+
+
 void osc_controller::osc_receive_thread()
 {
-	while(1){
+
+	do{
 		char buffer[1024];
 		int buffer_length = 0;
-		buffer_length = ardour_sender_receiver.receive_udp_data(buffer);			
-		OscMessage message = OscMessage(buffer, buffer_length);
-		//std::cout << message.GetAddress() << "\n";
+		OscMessage message = ardour_sender_receiver.receive_udp_data();
+
+		//write_to_itm(message.GetAddress());
 
 		if(!message.GetAddress().compare(0, 13, "/strip/fader\0")){
 			int strip_nr = message.get_int(0);
@@ -484,42 +419,10 @@ void osc_controller::osc_receive_thread()
 		else if(!message.GetAddress().compare("/strip/plugin/descriptor_end")){
 			continue;
 		}
-	}
+	}while(1);
 }
-
-#ifdef __linux__
-int osc_controller::udp_sender_receiver::receive_udp_data(char *buffer)	
-{
-	struct sockaddr_in sender_address;
-	int sender_address_size = sizeof(sender_address);
-	int buffer_length = 1024;
-	recvfrom(m_nativeSocket, buffer, buffer_length, 0, (struct sockaddr*)&sender_address, (socklen_t*)&sender_address_size);
-	return buffer_length;
-}
-#endif
-
 #ifdef _WIN64
-int osc_controller::udp_sender_receiver::receive_udp_data(char *buffer)	
-{
-	struct sockaddr_in sender_address;
-	int sender_address_size = sizeof(sender_address);
-	int buffer_length = 1024;
-	int res = recvfrom(m_nativeSocket, buffer, buffer_length, 0, (SOCKADDR*)&sender_address, &sender_address_size);
-	return buffer_length;
-}
-#endif
-
-	
-#ifdef __linux__
-void osc_controller::midi_sender_receiver::receive_midi_data(char *buffer)
-{
-	snd_rawmidi_read(MidiDeviceIn, buffer, 3); 
-	return;	
-}
-#endif
-
-#ifdef _WIN64
-	void osc_controller::midi_sender_receiver::receive_midi_data(char *buffer)
+	void midi_sender_receiver::receive_midi_data(char *buffer)
 	{
 		uint32_t message = 0;
 		HMIDIIN midi_connection;
@@ -538,7 +441,14 @@ void osc_controller::midi_sender_receiver::receive_midi_data(char *buffer)
 	}
 #endif
 
-void osc_controller::strip_feedback::update(enum controller::controller_message type, float value)
+#ifdef __STM32F7xx_HAL_H
+void osc_controller::midi_sender_receiver::receive_midi_data(char *buffer)
+{
+
+}
+#endif
+
+void strip_feedback::update(enum controller::controller_message type, float value)
 {
 	switch(type){
 	case controller::STRIP_VOLUME:
@@ -561,7 +471,7 @@ void osc_controller::strip_feedback::update(enum controller::controller_message 
 	}
 }
 
-void osc_controller::strip_feedback::update(enum controller::controller_message type, std::string string)
+void strip_feedback::update(enum controller::controller_message type, std::string string)
 {
 	switch(type)
 	{
@@ -573,7 +483,7 @@ void osc_controller::strip_feedback::update(enum controller::controller_message 
 	}
 }
 
-void osc_controller::midi_sender_receiver::update(enum controller::controller_message type, int strip_nr, float value)
+void midi_sender_receiver::update(enum controller::controller_message type, int strip_nr, float value)
 {
 	switch(type){
 	case controller::STRIP_VOLUME:
@@ -673,7 +583,7 @@ void osc_controller::midi_sender_receiver::send_midi_data(unsigned char * messag
 #endif
 
 #ifdef _WIN64
-void osc_controller::midi_sender_receiver::send_midi_data(unsigned char *message, int size)
+void midi_sender_receiver::send_midi_data(unsigned char *message, int size)
 {
 	if (size == 3) {
 		DWORD msg = 0;
@@ -722,10 +632,16 @@ void osc_controller::midi_sender_receiver::send_midi_data(unsigned char *message
 }
 #endif
 
+#ifdef __STM32F7xx_HAL_H
+void osc_controller::midi_sender_receiver::send_midi_data(unsigned char * message, int size)
+{
+	;
+}
+#endif
 
 
 
-void osc_controller::selected_strip_struct::update_selected_strip(enum controller::controller_message type, int nr, float value)
+void selected_strip_struct::update_selected_strip(enum controller::controller_message type, int nr, float value)
 {
 	switch(type){
 	case controller::SEND_ENABLE:
@@ -746,7 +662,7 @@ void osc_controller::selected_strip_struct::update_selected_strip(enum controlle
 	}
 }
 
-void osc_controller::selected_strip_struct::update_selected_strip(enum controller::controller_message type, int nr, std::string string)
+void selected_strip_struct::update_selected_strip(enum controller::controller_message type, int nr, std::string string)
 {
 	switch(type){
 	case controller::SEND_NAME:
@@ -759,7 +675,7 @@ void osc_controller::selected_strip_struct::update_selected_strip(enum controlle
 	}
 }
 
-void osc_controller::midi_sender_receiver::update_display(const strip_feedback *strips)
+void midi_sender_receiver::update_display(const strip_feedback *strips)
 {
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
 		this->mackie_display.mackie_display_formated.at(i) = strips[i + 1].name;
@@ -775,7 +691,7 @@ void osc_controller::midi_sender_receiver::update_display(const strip_feedback *
 	send_midi_data(mackie_display.MIDI_TX_SYSX_Buffer, 120);
 }
 
-void osc_controller::midi_sender_receiver::update_display(const send *sends)
+void midi_sender_receiver::update_display(const struct send *sends)
 {
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
 		this->mackie_display.mackie_display_formated.at(i) = sends[i + 1].name;
@@ -791,7 +707,7 @@ void osc_controller::midi_sender_receiver::update_display(const send *sends)
 	send_midi_data(mackie_display.MIDI_TX_SYSX_Buffer, 120);
 }
 
-void osc_controller::midi_sender_receiver::update_display(const plugin_parameter *selected_plugin, const plugin_multiplexer_struct *plugin_multiplexer, int plugin_bank)
+void midi_sender_receiver::update_display(const plugin_parameter *selected_plugin, const plugin_multiplexer_struct *plugin_multiplexer, int plugin_bank)
 {
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
 		int plugin_parameter_id = plugin_multiplexer->plugin_multiplexer_from_controller[i + plugin_bank * STRIPS_PER_CONTROLLER + 1];
@@ -807,7 +723,7 @@ void osc_controller::midi_sender_receiver::update_display(const plugin_parameter
 	send_midi_data(mackie_display.MIDI_TX_SYSX_Buffer, 120);
 }
 
-void osc_controller::mackie_display_struct::fill_sysx_buffer()
+void mackie_display_struct::fill_sysx_buffer()
 {
 	int buffer_counter = 0;
 	int line_nr = 0;
@@ -854,7 +770,7 @@ void osc_controller::mackie_display_struct::fill_sysx_buffer()
 	}
 }
 
-void osc_controller::mackie_display_struct::prepare_strip_names(const strip_feedback *strips)
+void mackie_display_struct::prepare_strip_names(const strip_feedback *strips)
 {
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
 		this->mackie_display_formated.at(i) = strips[i + 1].name;
@@ -867,7 +783,7 @@ void osc_controller::mackie_display_struct::prepare_strip_names(const strip_feed
 	}	
 }
 
-void osc_controller::mackie_display_struct::prepare_selected_plugin_parameter_names(const selected_strip_struct *selected_strip, const plugin_multiplexer_struct *plugin_multiplexer)
+void mackie_display_struct::prepare_selected_plugin_parameter_names(const selected_strip_struct *selected_strip, const plugin_multiplexer_struct *plugin_multiplexer)
 {
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
 		int plugin_parameter_id = plugin_multiplexer->plugin_multiplexer_from_controller[i + selected_strip->plugin_bank * STRIPS_PER_CONTROLLER + 1];
@@ -880,37 +796,8 @@ void osc_controller::mackie_display_struct::prepare_selected_plugin_parameter_na
 			this->mackie_display_formated.at(i).insert(position, 7 - position - 1, ' ');
 	}
 }
-/*
-void osc_controller::mackie_display_struct::prepare_strip_names()
-{
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		this->mackie_display_formated.at(i) = strips[i + 1].name;
-	}
-	size_t position = 0;
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		position = this->mackie_display_formated.at(i).find(' ');
-		if(position < 6)
-			this->mackie_display_formated.at(i).insert(position, 7 - position - 1, ' ');
-	}
-}
-*/
-/*
-void osc_controller::mackie_display_struct::prepare_selected_plugin_parameter_names()
-{
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		int plugin_parameter_id = plugin_multiplexer_from_controller[i + selected_strip.plugin_bank * STRIPS_PER_CONTROLLER + 1];
-		this->mackie_display_formated.at(i) = selected_strip.selected_plugin[plugin_parameter_id].name;
-	}
-	size_t position = 0;
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		position = this->mackie_display_formated.at(i).find(' ');
-		if(position < 6)
-			this->mackie_display_formated.at(i).insert(position, 7 - position - 1, ' ');
-	}
-}
-*/
 
-void osc_controller::mackie_display_struct::prepare_selected_strip_send_names(const send *sends)
+void mackie_display_struct::prepare_selected_strip_send_names(const struct send *sends)
 {
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
 		this->mackie_display_formated.at(i) = sends[i + 1].name;
@@ -923,7 +810,7 @@ void osc_controller::mackie_display_struct::prepare_selected_strip_send_names(co
 	}
 }
 
-void osc_controller::plugin_multiplexer_struct::setup(std::string plugin_name)
+void plugin_multiplexer_struct::setup(std::string plugin_name)
 {
 	unsigned int plugin_index = 0;
 	for(struct plugin_routing index : plugin_multiplexer){
@@ -980,7 +867,7 @@ void osc_controller::plugin_multiplexer_struct::setup(std::string plugin_name)
 }
 
 //this shoudl also exist for the selected strip in osc...
-void osc_controller::udp_sender_receiver::get_plugin_list(int strip_number)
+void ardour::get_plugin_list(int strip_number)
 {
 	OscMessage message("/strip/plugin/list");
 	message.PushInt(strip_number);
@@ -988,7 +875,7 @@ void osc_controller::udp_sender_receiver::get_plugin_list(int strip_number)
 	return;
 }
 
-bool osc_controller::selected_strip_struct::controller_channel_nr_is_within_plugin_bank(int fader_id)
+bool selected_strip_struct::controller_channel_nr_is_within_plugin_bank(int fader_id)
 {
 	if((fader_id / STRIPS_PER_CONTROLLER) == this->plugin_bank)
 		return true;
@@ -996,7 +883,7 @@ bool osc_controller::selected_strip_struct::controller_channel_nr_is_within_plug
 	return false;
 }
 
-void osc_controller::udp_sender_receiver::request_plugin_descriptor(int selected_strip_number, int selected_plugin_index)
+void ardour::request_plugin_descriptor(int selected_strip_number, int selected_plugin_index)
 {
 	OscMessage message("/strip/plugin/descriptor");
 	message.PushInt(selected_strip_number);
@@ -1005,23 +892,22 @@ void osc_controller::udp_sender_receiver::request_plugin_descriptor(int selected
 	return;
 }
 
-void osc_controller::udp_sender_receiver::send_udp_data(OscMessage message)
+void ardour::send_udp_data(OscMessage message)
 {
 	int size = 0;
 	char* data = message.GetBytes(size);
-	// Send data over the socket
-	if (size < 1)
-		return;
-		// Send data over the socket
-	#ifdef __linux__
-	sendto(m_nativeSocket, data, size, 0, (struct sockaddr*)&m_destinationAddress, sizeof(m_destinationAddress)); //thats exactly the same, we should get rid of that one
-	#endif
-	#ifdef _WIN64
-	sendto(m_nativeSocket, data, size, 0, (sockaddr*)&m_destinationAddress, sizeof(m_destinationAddress));
-	#endif
+	send_udp_data_raw(data, size);
 }
 
-int osc_controller::selected_strip_struct::get_selected_plugin_index()
+OscMessage ardour::receive_udp_data()
+{
+	char buffer[1024];
+	int length = receive_udp_data_raw(buffer);
+	OscMessage message(buffer, length);
+	return message;
+}
+
+int selected_strip_struct::get_selected_plugin_index()
 {
 	std::vector<std::string> plugin_list = this->plugin_list;
 	unsigned int index = 0;
@@ -1035,38 +921,8 @@ int osc_controller::selected_strip_struct::get_selected_plugin_index()
 
 	return index + 1;
 }
-/*
-void osc_controller::midi_sender_receiver::update_faders(enum channel_mode mode)
-{
-	switch(mode){
-		case PluginMode:
-			for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-				int plugin_parameter_number = plugin_multiplexer_from_controller[i + 1 + STRIPS_PER_CONTROLLER * selected_strip.plugin_bank];
-				float value = selected_strip.selected_plugin[plugin_parameter_number].value;
-				this->update(controller::PLUGIN_PARAMETER_VALUE, i + 1, value);
-			}
-			break;
-		case PanMode:
-			for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-				float value = strips[i + 1].volume;
-				this->update(controller::STRIP_VOLUME, i + 1, value);
-			}
-			break;
-		case SendMode:
-			for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-				float value = selected_strip.sends[i + 1].volume;
-				this->update(controller::STRIP_VOLUME, i + 1, value);
-			}
-			break;
-	}
-}
-*/
 
-//in case there would be a update of an array in the mackie control, we could do like for the display, 
-//updating all at the same time...
-//like putting all into a message than send 3 * 8 bytes in size...
-
-void osc_controller::midi_sender_receiver::update_faders(const plugin_parameter *selected_plugin, const plugin_multiplexer_struct *plugin_multiplexer, int plugin_bank)
+void midi_sender_receiver::update_faders(const plugin_parameter *selected_plugin, const plugin_multiplexer_struct *plugin_multiplexer, int plugin_bank)
 {
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
 		int plugin_parameter_number = plugin_multiplexer->plugin_multiplexer_from_controller[i + ONE_BASED + STRIPS_PER_CONTROLLER * plugin_bank];
@@ -1075,7 +931,7 @@ void osc_controller::midi_sender_receiver::update_faders(const plugin_parameter 
 	}
 }
 
-void osc_controller::midi_sender_receiver::update_faders(const send *sends)
+void midi_sender_receiver::update_faders(const struct send *sends)
 {
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
 		float value = sends[i + ONE_BASED].volume;
@@ -1083,7 +939,7 @@ void osc_controller::midi_sender_receiver::update_faders(const send *sends)
 	}	
 }
 
-void osc_controller::midi_sender_receiver::update_faders(const strip_feedback *strips)
+void midi_sender_receiver::update_faders(const struct strip_feedback *strips)
 {
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
 		float value = strips[i + 1].volume;
@@ -1133,7 +989,7 @@ void osc_controller::switch_channel_mode()
 	}
 }
 
-void osc_controller::udp_sender_receiver::init_osc_controller()
+void ardour::init_osc_controller()
 {
 	OscMessage setup_msg("/set_surface");
 	setup_msg.PushInt(8);
@@ -1144,7 +1000,7 @@ void osc_controller::udp_sender_receiver::init_osc_controller()
 }
 
 #ifdef __linux__
-int osc_controller::midi_sender_receiver::initialize_midi(int port_in, int port_out)
+int midi_sender_receiver::initialize_midi(int port_in, int port_out)
 {
 	int status;
 	std::string port_number = std::to_string(port_out);//this shoule be single digit for now...
@@ -1166,7 +1022,7 @@ int osc_controller::midi_sender_receiver::initialize_midi(int port_in, int port_
 #endif
 
 #ifdef _WIN64
-int osc_controller::midi_sender_receiver::initialize_midi(int port_in, int port_out)
+int midi_sender_receiver::initialize_midi(int port_in, int port_out)
 {
 	MMRESULT result;
 	//MidiSenderReceiver::PrintMidiDevices();//if there are none, later they have to be selected previously in the gui...
@@ -1192,17 +1048,18 @@ if (result != MMSYSERR_NOERROR) {
 }
 #endif
 
-void osc_controller::plugin_multiplexer_struct::initialize_plugin_multiplexer()
+void plugin_multiplexer_struct::initialize_plugin_multiplexer()
 {
-	#ifdef __linux__
-	
+#ifdef __linux__
 	std::string path = "/home/samuel/Documents/plugin_data";
-	#endif
-	#ifdef _WIN64
+#endif
+
+#ifdef _WIN64
 	std::string path = "C:\\Users\\Samuel\\Documents\\plugin_data";
-	#endif
+#endif
+
 	std::vector<std::string> file_locations;
-	for (const auto& entry : std::filesystem::directory_iterator(path)) 
+	for (const auto& entry : std::filesystem::directory_iterator(path))
 		file_locations.push_back(entry.path().string());
 
 	struct plugin_routing temp;
@@ -1210,14 +1067,17 @@ void osc_controller::plugin_multiplexer_struct::initialize_plugin_multiplexer()
 
 	std::string line;
 	int temp_plugin_index = 0;
-	for(std::string file_location : file_locations){
+	for (std::string file_location : file_locations) {
 		std::string plugin_name = file_location;
-		#ifdef __linux__
+
+#ifdef __linux__
 		int pos = plugin_name.find_last_of('/') + 1;
-		#endif
-		#ifdef _WIN64
+#endif
+
+#ifdef _WIN64
 		int pos = plugin_name.find_last_of('\\') + 1;
-		#endif
+#endif
+
 		plugin_name.erase(0, pos);
 		pos = plugin_name.find(".txt");
 		plugin_name.erase(pos, plugin_name.size());
@@ -1225,16 +1085,17 @@ void osc_controller::plugin_multiplexer_struct::initialize_plugin_multiplexer()
 
 		std::ifstream file(file_location);
 		int parameter_index = 0;
-		while(std::getline(file, line)){
+		while (std::getline(file, line)) {
 			parameter_index++;
 			plugin_multiplexer.at(temp_plugin_index).from_controller.push_back(std::array<int, 2>{parameter_index, std::stoi(line)});
 		}
 
 		temp_plugin_index++;
+
 	}
 }
 
-void osc_controller::plugin_multiplexer_struct::initialize_plugin_multiplexer_from_controller_and_from_plugin()
+void plugin_multiplexer_struct::initialize_plugin_multiplexer_from_controller_and_from_plugin()
 {
 	for(int i = 0; i < MAX_PLUGIN_PARAMETERS; i++){
 		plugin_multiplexer_from_plugin.push_back(i);
@@ -1242,7 +1103,7 @@ void osc_controller::plugin_multiplexer_struct::initialize_plugin_multiplexer_fr
 	}
 }
 
-void osc_controller::selected_strip_struct::initialize_selected_plugin_descriptor()
+void selected_strip_struct::initialize_selected_plugin_descriptor()
 {
 	for(int i = 0; i < MAX_PLUGIN_PARAMETERS; i++){
 		this->selected_plugin[i].name = std::string("default");
@@ -1250,24 +1111,24 @@ void osc_controller::selected_strip_struct::initialize_selected_plugin_descripto
 	}
 }
 
-void osc_controller::selected_strip_struct::initialize_selected_strip_sends()
+void selected_strip_struct::initialize_selected_strip_sends()
 {
 	for (int i = 0; i < SEND_ARRAY_SIZE; i++)
 		this->sends[i].name = std::string("default");
 }
 
-void osc_controller::selected_strip_struct::initialize_selected_strip_plugin_list(){
+void selected_strip_struct::initialize_selected_strip_plugin_list(){
 	for(int i = 0; i < 16; i++)
 		this->plugin_list.push_back("default");
 	return;
 }
 
-void osc_controller::selected_strip_struct::initialize_selected_strip()
+void selected_strip_struct::initialize_selected_strip()
 {
 	this->plugin_bank = 0;
 }
 
-void osc_controller::midi_sender_receiver::initialize_mackie_display_formated()
+void midi_sender_receiver::initialize_mackie_display_formated()
 {
 	std::string default_string("defa defa");
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++)

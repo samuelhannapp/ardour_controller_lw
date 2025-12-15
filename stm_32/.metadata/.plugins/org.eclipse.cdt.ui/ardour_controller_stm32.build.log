@@ -1,0 +1,10 @@
+22:01:50 **** Incremental Build of configuration Debug for project ardour_controller_stm32 ****
+make -j28 all 
+arm-none-eabi-size  ardour_controller_stm32.elf 
+   text	   data	    bss	    dec	    hex	filename
+ 116600	    456	  33496	 150552	  24c18	ardour_controller_stm32.elf
+Finished building: default.size.stdout
+ 
+
+22:01:51 Build Finished. 0 errors, 0 warnings. (took 921ms)
+

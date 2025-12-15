@@ -39,7 +39,12 @@
 #pragma comment(lib, "winmm.lib")
 #endif
 
+#ifdef __STM32F7xx_HAL_H
+#include "stm32_sock.h"
+#endif
+
 #include "oscmessage.hpp"
+#include "udp_sender_receiver.hpp"
 
 namespace mackie{
     enum button_type {
@@ -93,137 +98,133 @@ enum channel_mode{
 #define MAX_PLUGIN_PARAMETERS 200
 #define PLUGIN_ARRAY_SIZE (MAX_PLUGIN_PARAMETERS + ONE_BASED)
 
-class osc_controller{
-public:
-	osc_controller(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out, unsigned int midi_port_in, unsigned int midi_port_out);
-private:
-	struct strip_feedback{
-		std::string name;
-		float volume;
-		float stereo_position;
-		bool rec;
-		bool solo;
-		bool mute;
-		volatile bool fader_touch; //this is actually not feedback...
-		void update(enum controller::controller_message type, float value);
-		void update(enum controller::controller_message type, std::string string);
-	};
+//I would like to have the udp sender receiver and midi sender receiver extern...
 
-	struct send{
+struct send{
 		std::string name;
 		volatile float volume;
 		bool enable;
 	};
 
-	struct plugin_parameter{
-		//int ssid;
-		//int plugin_id;
-		int parameter_id;
-		std::string name;
-		int flags;
-		std::string data_type;
-		float min_value;
-		float max_value;
-		std::string scale_points;
-		int zero_or_more_scale_points;
-		volatile float value;
-	};
+struct plugin_parameter{
+	//int ssid;
+	//int plugin_id;
+	int parameter_id;
+	std::string name;
+	int flags;
+	std::string data_type;
+	float min_value;
+	float max_value;
+	std::string scale_points;
+	int zero_or_more_scale_points;
+	volatile float value;
+};
 
-	struct plugin_routing{
-		std::string plugin_name;
-		std::vector<std::array<int, 2>> from_controller;
-	};
+struct plugin_routing{
+	std::string plugin_name;
+	std::vector<std::array<int, 2>> from_controller;
+};
 
-	struct plugin_multiplexer_struct{
-		std::vector<uint8_t> plugin_multiplexer_from_plugin;
-		std::vector<uint8_t> plugin_multiplexer_from_controller;
-		std::vector<plugin_routing> plugin_multiplexer;
-		void initialize_plugin_multiplexer();
-		void initialize_plugin_multiplexer_from_controller_and_from_plugin();
-		void setup(std::string plugin_name);
-	};
+struct plugin_multiplexer_struct{
+	std::vector<uint8_t> plugin_multiplexer_from_plugin;
+	std::vector<uint8_t> plugin_multiplexer_from_controller;
+	std::vector<plugin_routing> plugin_multiplexer;
+	void initialize_plugin_multiplexer();
+	void initialize_plugin_multiplexer_from_controller_and_from_plugin();
+	void setup(std::string plugin_name);
+};
 
-	struct selected_strip_struct{
-		int number;
-		struct send sends[SEND_ARRAY_SIZE]; //we actually use here the ardour internal banking, so 
-											//it should be 8 + ONE_BASED
-		std::vector<std::string> plugin_list; //this is not feedback, so I cannot put it into the feedback struct...
-		std::string selected_plugin_name;
-		struct plugin_parameter selected_plugin[MAX_PLUGIN_PARAMETERS];
-		int plugin_bank;
-		//void update_global_state(enum controller::controller_message type, int strip_nr, float value);
-		void update_selected_strip(enum controller::controller_message type, int nr, float value);
-		void update_selected_strip(enum controller::controller_message type, int nr, std::string string);
-		bool controller_channel_nr_is_within_plugin_bank(int fader_id);
-		void initialize_selected_strip_sends();
-		void initialize_selected_plugin_descriptor();
-		void initialize_selected_strip_plugin_list();
-		void initialize_selected_strip();
-		int get_selected_plugin_index();
-	};
+struct selected_strip_struct{
+	int number;
+	struct send sends[SEND_ARRAY_SIZE]; //we actually use here the ardour internal banking, so 
+										//it should be 8 + ONE_BASED
+	std::vector<std::string> plugin_list; //this is not feedback, so I cannot put it into the feedback struct...
+	std::string selected_plugin_name;
+	struct plugin_parameter selected_plugin[MAX_PLUGIN_PARAMETERS];
+	int plugin_bank;
+	//void update_global_state(enum controller::controller_message type, int strip_nr, float value);
+	void update_selected_strip(enum controller::controller_message type, int nr, float value);
+	void update_selected_strip(enum controller::controller_message type, int nr, std::string string);
+	bool controller_channel_nr_is_within_plugin_bank(int fader_id);
+	void initialize_selected_strip_sends();
+	void initialize_selected_plugin_descriptor();
+	void initialize_selected_strip_plugin_list();
+	void initialize_selected_strip();
+	int get_selected_plugin_index();
+};
 
-	struct mackie_display_struct{
-		uint8_t MIDI_TX_SYSX_Buffer[SYSX_BUFFER_SIZE];
-		std::vector<std::string> mackie_display_formated;
-		void prepare_strip_names(const strip_feedback *strips);
-		void prepare_selected_plugin_parameter_names(const selected_strip_struct *selected_strip, const plugin_multiplexer_struct *plugin_multiplexer);
-		void prepare_selected_strip_send_names(const struct send *sends);
-		void fill_sysx_buffer();
-	};
+struct mackie_display_struct{
+	uint8_t MIDI_TX_SYSX_Buffer[SYSX_BUFFER_SIZE];
+	std::vector<std::string> mackie_display_formated;
+	void prepare_strip_names(const struct strip_feedback *strips);
+	void prepare_selected_plugin_parameter_names(const struct selected_strip_struct *selected_strip, const plugin_multiplexer_struct *plugin_multiplexer);
+	void prepare_selected_strip_send_names(const struct send *sends);
+	void fill_sysx_buffer();
+};
 
-	//osc_receive_thread and midi_receive_thread are the only one's not in a struct, 
-	//an they are the only one's who have access to all data...
 
-	void osc_receive_thread();
-	struct udp_sender_receiver{
-		void initialize_udp(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out);
-		#ifdef __linux__
-		int m_nativeSocket;
-		#endif
-		#ifdef _WIN64
-		SOCKET m_nativeSocket;
-		#endif
-		sockaddr_in m_destinationAddress;
-		void send_udp_data(OscMessage message);
-		int receive_udp_data(char *buffer);
-		void request_plugin_descriptor(int selected_strip_number, int selected_plugin_index);
-		void get_plugin_list(int strip_number);
-		void init_osc_controller();	
-	};
+struct midi_sender_receiver{
+	#ifdef __linux__
+	snd_rawmidi_t* MidiDeviceIn;
+	snd_rawmidi_t* MidiDeviceOut;
+	#endif
+	#ifdef _WIN64
+	HMIDIIN MidiDeviceIn;
+	HMIDIOUT MidiDeviceOut;
+	#endif
+	struct mackie_display_struct mackie_display;
+	int initialize_midi(int port_in, int port_out);
+	void initialize_mackie_display_formated();
+	void receive_midi_data(char *buffer);
+	void send_midi_data(unsigned char * message, int size);
+	void update(enum controller::controller_message type, int strip_nr, float value);
+	void update_display(const struct strip_feedback *strips);
+	void update_display(const struct send *sends);
+	void update_display(const struct plugin_parameter *selected_plugin, const plugin_multiplexer_struct *plugin_multiplexer, int plugin_bank);
+	void update_faders(const struct plugin_parameter *selected_plugin, const plugin_multiplexer_struct *plugin_multiplexer, int plugin_bank);
+	void update_faders(const struct send *sends);
+	void update_faders(const struct strip_feedback *strips);
+	//void update_fader(int strip_nr, float value, enum channel_mode mode);
+};
+
+struct strip_feedback{
+	std::string name;
+	float volume;
+	float stereo_position;
+	bool rec;
+	bool solo;
+	bool mute;
+	volatile bool fader_touch; //this is actually not feedback...
+	void update(enum controller::controller_message type, float value);
+	void update(enum controller::controller_message type, std::string string);
+};
+
+struct ardour_feedback_struct{
+	struct strip_feedback strips[STRIP_ARRAY_SIZE]; //this is 1 based, 0 is not used... controller has 8 strip's
+	struct selected_strip_struct selected_strip;
+};
+
+class ardour : public udp_sender_receiver{
+public:
+	using udp_sender_receiver::udp_sender_receiver;
+	void send_udp_data(OscMessage message);
+	OscMessage receive_udp_data();
+	void request_plugin_descriptor(int selected_strip_number, int selected_plugin_index);
+	void get_plugin_list(int strip_number);
+	void init_osc_controller();	
+};
+
+
+
+class osc_controller{
+public:
+	osc_controller(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out, unsigned int midi_port_in, unsigned int midi_port_out);
 
 	void midi_receive_thread();
-	struct midi_sender_receiver{
-		#ifdef __linux__
-		snd_rawmidi_t* MidiDeviceIn;
-		snd_rawmidi_t* MidiDeviceOut;
-		#endif
-		#ifdef _WIN64
-		HMIDIIN MidiDeviceIn;
-		HMIDIOUT MidiDeviceOut;
-		#endif
-		struct mackie_display_struct mackie_display;
-		int initialize_midi(int port_in, int port_out);
-		void initialize_mackie_display_formated();
-		void receive_midi_data(char *buffer);
-		void send_midi_data(unsigned char * message, int size);
-		void update(enum controller::controller_message type, int strip_nr, float value);
-		void update_display(const strip_feedback *strips);
-		void update_display(const struct send *sends);
-		void update_display(const plugin_parameter *selected_plugin, const plugin_multiplexer_struct *plugin_multiplexer, int plugin_bank);
-		void update_faders(const plugin_parameter *selected_plugin, const plugin_multiplexer_struct *plugin_multiplexer, int plugin_bank);
-		void update_faders(const send *sends);
-		void update_faders(const strip_feedback *strips);
-		//void update_fader(int strip_nr, float value, enum channel_mode mode);
-	};
-	
-	struct ardour_feedback_struct{
-		struct strip_feedback strips[STRIP_ARRAY_SIZE]; //this is 1 based, 0 is not used... controller has 8 strip's
-		struct selected_strip_struct selected_strip;
-	};
+	void osc_receive_thread();
 
-	public:
 	struct midi_sender_receiver mackie_sender_receiver;
-	struct udp_sender_receiver ardour_sender_receiver;
+	ardour ardour_sender_receiver;
 	struct plugin_multiplexer_struct plugin_multiplexer;	
 	volatile enum channel_mode mode = PanMode;
 	void switch_channel_mode();
