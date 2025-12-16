@@ -1,0 +1,46 @@
+#pragma once
+#include <wx/wx.h>
+#include <wx/grid.h>
+#include "udp_sender_receiver.hpp"
+#include <thread>
+#include <vector>
+
+struct plugin_routing {
+	std::string plugin_name;
+	int routing_list[32];
+};
+
+class App : public wxApp {
+public:
+	bool OnInit();
+	wxFrame* window;
+	wxBoxSizer* button_layout;
+	wxBoxSizer* main_layout;
+	wxStaticText* plugin_name;
+	wxButton* plugin_down;
+	wxButton* plugin_up;
+	wxButton* reset_table;
+	wxButton* reset_cell;
+	wxButton* save_plugin;
+	wxListBox* plugin_parameter_list;
+	wxGrid* table;
+	void plugin_parameter_selected(wxCommandEvent& event);
+	void cell_selected(wxGridEvent& event);
+	wxGridCellCoords selected_cell;
+
+	udp_sender_receiver *ardour;
+	std::thread *ardour_receiver_thread;
+	void receive_ardour_data();
+
+	void plugin_up_function(wxCommandEvent& event);
+	void plugin_down_function(wxCommandEvent& event);
+	void reset_cell_function(wxCommandEvent& event);
+	void reset_table_function(wxCommandEvent& event);
+	void save_plugin_function(wxCommandEvent& event);
+
+	std::vector<plugin_routing> plugin_routing_list;
+	void init_plugin_routing();
+
+};
+
+wxIMPLEMENT_APP(App);
