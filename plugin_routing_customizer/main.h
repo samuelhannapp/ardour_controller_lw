@@ -7,7 +7,7 @@
 
 struct plugin_routing {
 	std::string plugin_name;
-	int routing_list[32];
+	std::string routing_list[32];
 };
 
 class App : public wxApp {
@@ -40,6 +40,7 @@ public:
 
 	std::vector<plugin_routing> plugin_routing_list;
 	void init_plugin_routing();
+	void reset_plugin_parameter_list();
 
 };
 

@@ -16,7 +16,9 @@ bool App::OnInit() {
 	button_layout = new wxBoxSizer(wxHORIZONTAL);
 	main_layout = new wxBoxSizer(wxVERTICAL);
 
-	plugin_name = new wxStaticText(window, wxID_ANY, "plugin_name");
+	plugin_name = new wxStaticText(window, wxID_ANY, "plugin_name\t\t");
+	
+	plugin_name->SetMinSize(wxSize(140, plugin_name->GetSize().GetHeight()));
 	plugin_down = new wxButton(window, wxID_ANY, "plugin down");
 	plugin_up = new wxButton(window, wxID_ANY, "plugin up");
 	reset_table = new wxButton(window, wxID_ANY, "reset table");
@@ -24,8 +26,8 @@ bool App::OnInit() {
 	save_plugin = new wxButton(window, wxID_ANY, "save_plugin");
 
 	plugin_parameter_list = new wxListBox(window, wxID_ANY);
-	for (int i = 0; i < PLUGIN_PARAMETER_MAX_CNT; i++)
-		plugin_parameter_list->Append("default");
+	plugin_parameter_list->SetMinSize(wxSize(200, plugin_parameter_list->GetSize().GetHeight()));
+	//this->reset_plugin_parameter_list();
 
 	Connect(wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler(App::plugin_parameter_selected));
 	Connect(wxEVT_GRID_CELL_LEFT_CLICK, wxGridEventHandler(App::cell_selected));
@@ -44,7 +46,6 @@ bool App::OnInit() {
 
 	table = new wxGrid(window, wxID_ANY);
 	table->CreateGrid(TABLE_ROWS, TABLE_COLS);
-
 	main_layout->Add(button_layout);
 	main_layout->Add(plugin_parameter_list, 1);
 	main_layout->Add(table);
@@ -59,16 +60,27 @@ bool App::OnInit() {
 	int size;
 	buffer = setup_message.GetBytes(size);
 	ardour->send_udp_data_raw(buffer, size);
-
+	
 	window->Show();
 	return true;
+}
+
+void App::reset_plugin_parameter_list()
+{
+	plugin_parameter_list->Clear();
+	//for (int i = 0; i < PLUGIN_PARAMETER_MAX_CNT; i++)
+			//plugin_parameter_list->Append("default\t\t");
 }
 
 void App::plugin_parameter_selected(wxCommandEvent& event)
 {
 	table->SetCellValue(selected_cell, event.GetString());
+	int nr = (selected_cell.GetRow() + 1) * selected_cell.GetCol();
+	nr++;
+	selected_cell.SetRow(nr / TABLE_COLS);
+	selected_cell.SetCol(nr % TABLE_COLS);
+	table->SetGridCursor(selected_cell);
 }
-
 
 
 void App::cell_selected(wxGridEvent& event)
@@ -122,7 +134,7 @@ void App::save_plugin_function(wxCommandEvent& event)
 		for (int c = 0; c < TABLE_COLS; c++) {
 			std::string content(table->GetCellValue(wxGridCellCoords(r, c)).c_str());
 			if (content.size())
-				plugin_data.append(content.substr(0, content.find_first_of(' ')));
+				plugin_data.append(content);
 			else
 				plugin_data.push_back('0');
 			plugin_data.push_back('\n');
@@ -139,22 +151,50 @@ void App::receive_ardour_data()
 		OscMessage message(buffer, size);
 		if (!message.GetAddress().compare("/select/plugin/parameter/name")) {
 			int position = message.get_int(0) - 1;
-			if ((plugin_parameter_list->GetCount() > position) && (position > -1)) {
-				std::string string(std::to_string(position + 1));
-				string.push_back(' ');
-				string.append(message.get_string(1));
+			std::string string(std::to_string(position + 1));
+			string.push_back(' ');
+			string.append(message.get_string(1));
+
+			//if the string exist's already at the same place
+			if (plugin_parameter_list->GetCount() > position)
+				if (plugin_parameter_list->GetString(position).compare(string))
+					continue;
+
+			//if the string is the next position
+			if (plugin_parameter_list->GetCount() == position)
+				plugin_parameter_list->Append(string);
+
+			//if the position is within the list
+			if (plugin_parameter_list->GetCount() > position) {
 				plugin_parameter_list->Insert(string, position);
+				plugin_parameter_list->Delete(position + 1);
 			}
 		}
+
+		int ctr = 0;
+
 		if (!message.GetAddress().compare("/select/plugin/name")) {
+			reset_plugin_parameter_list();
 			std::string string(message.get_string(0));
 			plugin_name->SetLabel(string);
+			for (plugin_routing plugin : plugin_routing_list)
+				if (!string.compare(plugin.plugin_name)) {
+					break;
+				}
+				else
+					ctr++;
+
+			if (ctr != plugin_routing_list.size())
+				for (int r = 0; r < TABLE_ROWS; r++)
+					for (int c = 0; c < TABLE_COLS; c++)
+						table->SetCellValue(wxGridCellCoords(r, c), plugin_routing_list.at(ctr).routing_list[(r * TABLE_COLS) + c]);
 		}
-			
 	}
-				
 }
 
+
+//we need a version of this function wich initializes a specific plugin, after it was saved...
+//another version would be, every time a new plugin is called we look it up on the disc...
 void App::init_plugin_routing()
 {
 	std::string path = "C:\\Users\\Samuel\\Documents\\plugin_data";
@@ -162,11 +202,24 @@ void App::init_plugin_routing()
 	for (std::filesystem::directory_entry entry : std::filesystem::directory_iterator(path))
 		file_names.push_back(entry.path().string());
 
+	std::string filename_extension(".txt");
 
-	for (std::string file_name : file_names) {
+	for (std::string directory : file_names) {
 		struct plugin_routing temp;
-		temp.plugin_name = file_name.substr(file_name.find_last_of('\');
+		temp.plugin_name = directory.substr(directory.find_last_of('\\') + 1);
+		temp.plugin_name.erase(temp.plugin_name.size() - filename_extension.size(), filename_extension.size());
 		plugin_routing_list.push_back(temp);
 	}
-	return;
+	
+	int ctr = 0;
+	for (std::string directory : file_names) {
+		std::ifstream file(directory);
+		std::string line;
+		
+		for (int i = 0; i < 32; i++) {
+			std::getline(file, line);
+			plugin_routing_list.at(ctr).routing_list[i] = line;
+		}
+		ctr++;
+	}
 }
