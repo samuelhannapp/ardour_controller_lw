@@ -126,11 +126,13 @@
   <ItemGroup>
     <ClInclude Include="..\..\oscmessage.hpp" />
     <ClInclude Include="..\..\osc_controller.hpp" />
+    <ClInclude Include="..\..\udp_sender_receiver.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\main.cpp" />
     <ClCompile Include="..\..\oscmessage.cpp" />
     <ClCompile Include="..\..\osc_controller.cpp" />
+    <ClCompile Include="..\..\udp_sender_receiver.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -16,6 +16,8 @@ bool App::OnInit() {
 	button_layout = new wxBoxSizer(wxHORIZONTAL);
 	main_layout = new wxBoxSizer(wxVERTICAL);
 
+	selected_cell = wxGridCellCoords(0, 0);
+
 	plugin_name = new wxStaticText(window, wxID_ANY, "plugin_name\t\t");
 	
 	plugin_name->SetMinSize(wxSize(140, plugin_name->GetSize().GetHeight()));
@@ -27,7 +29,6 @@ bool App::OnInit() {
 
 	plugin_parameter_list = new wxListBox(window, wxID_ANY);
 	plugin_parameter_list->SetMinSize(wxSize(200, plugin_parameter_list->GetSize().GetHeight()));
-	//this->reset_plugin_parameter_list();
 
 	Connect(wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler(App::plugin_parameter_selected));
 	Connect(wxEVT_GRID_CELL_LEFT_CLICK, wxGridEventHandler(App::cell_selected));
@@ -75,7 +76,7 @@ void App::reset_plugin_parameter_list()
 void App::plugin_parameter_selected(wxCommandEvent& event)
 {
 	table->SetCellValue(selected_cell, event.GetString());
-	int nr = (selected_cell.GetRow() + 1) * selected_cell.GetCol();
+	int nr = (selected_cell.GetRow() * TABLE_COLS) + selected_cell.GetCol();
 	nr++;
 	selected_cell.SetRow(nr / TABLE_COLS);
 	selected_cell.SetCol(nr % TABLE_COLS);
