@@ -1,6 +1,8 @@
 #include <wx/wx.h>
 #include <wx/splitter.h>
 
+#define SPACE_SIZE_SIDE 40
+
 class MyApp : public wxApp
 {
 public:
@@ -24,11 +26,19 @@ private:
 	wxPanel* channel_name_panel[CHANNEL_COUNT];
 	wxPanel* panel[CHANNEL_COUNT];
 
+	int space_size_side = SPACE_SIZE_SIDE;
 
     void OnHello(wxCommandEvent& event);
     void OnExit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
 	void OnSize(wxSizeEvent& event);
+public:
+	void OnSlider(wxCommandEvent& event);
+};
+
+class WindowScalerFrame : public wxFrame {
+public:
+	WindowScalerFrame(MyFrame *parent, wxWindowID wxID_ANY, const wxString& title = "scale window", const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 };
 
 enum

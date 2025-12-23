@@ -1,7 +1,6 @@
 #include "main.hpp"
 
 #define SPACE_SIZE 20
-#define SPACE_SIZE_SIDE 40
 
 bool MyApp::OnInit()
 {
@@ -66,12 +65,20 @@ MyFrame::MyFrame()
 void MyFrame::OnSize(wxSizeEvent& event)
 {
 	wxSize size = event.GetSize();
-	wxSize panel_size(size.GetWidth() / 8 - SPACE_SIZE - (SPACE_SIZE / 8 * 2), size.GetHeight() - 100); 
+	wxSize panel_size(size.GetWidth() / 8 - SPACE_SIZE - (SPACE_SIZE_SIDE / 8 * 2), size.GetHeight() - space_size_side); 
 	for (int i = 0; i < CHANNEL_COUNT; i++)
 		panel[i]->SetMinSize(panel_size);
+	this->Update();
 	event.Skip();
 	return;
 
+}
+
+void MyFrame::OnSlider(wxCommandEvent& event)
+{
+	space_size_side = event.GetInt();
+	wxSizeEvent size_event(wxSize(this->GetSize()));
+	this->OnSize(size_event);
 }
 
 void MyFrame::OnExit(wxCommandEvent& event)
@@ -87,5 +94,18 @@ void MyFrame::OnAbout(wxCommandEvent& event)
 
 void MyFrame::OnHello(wxCommandEvent& event)
 {
-    wxLogMessage("Hello world from wxWidgets!");
+	WindowScalerFrame *scaler_window = new WindowScalerFrame(this, wxID_ANY, "scaler", wxPoint(100, 100), wxSize(300, 300));
+	scaler_window->Show();
+	event.Skip();
+	return;
+}
+
+WindowScalerFrame::WindowScalerFrame(MyFrame *parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size)
+	: wxFrame(parent, id, title, pos, size)
+{
+	wxSlider* slider = new wxSlider(this, wxID_ANY, 40, 0, 500);
+	wxBoxSizer* main_layout = new wxBoxSizer(wxHORIZONTAL);
+	main_layout->Add(slider);
+	this->SetSizer(main_layout);
+	slider->Bind(wxEVT_SLIDER, &MyFrame::OnSlider, parent);
 }
