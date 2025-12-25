@@ -1,7 +1,5 @@
 #include "main.hpp"
 
-#define SPACE_SIZE 20
-
 bool MyApp::OnInit()
 {
     MyFrame* frame = new MyFrame();
@@ -37,48 +35,73 @@ MyFrame::MyFrame()
 	channel_layout = new wxBoxSizer(wxHORIZONTAL);
 	main_layout = new  wxBoxSizer(wxVERTICAL);
 
-	channel_layout->AddSpacer(SPACE_SIZE_SIDE);
+	spacers.push_back(channel_layout->AddSpacer(SPACE_SIZE_SIDE));
 	for (int i = 0; i < CHANNEL_COUNT; i++) {
 		panel[i] = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_SUNKEN);
 		panel[i]->SetMinSize(wxSize(100, 100));
 		panel[i]->SetBackgroundColour(wxColor(210, 210, 210));
 		channel_name_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10) , wxSize(80, 50), wxBORDER_SUNKEN);
 		channel_name_panel[i]->SetMinSize(wxSize(80, 50));
-		channel_name[i] = new wxStaticText(channel_name_panel[i], wxID_ANY, "test1");
+		channel_name[i] = new wxStaticText(channel_name_panel[i], wxID_ANY, "drums\nmic sm58", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
+		wxFont font = channel_name[i]->GetFont();
+		font.SetWeight(wxFONTWEIGHT_BOLD);
+		font.SetPointSize(10);
+		channel_name[i]->SetFont(font);
 		channel_name[i]->SetBackgroundColour(wxColor(230, 230, 230));
-		channel_layout->Add(panel[i], 0, wxSTRETCH_NOT);
+		channel_layout->Add(panel[i], 0, wxEXPAND);
 		if(i != (CHANNEL_COUNT - 1))
-			channel_layout->AddSpacer(SPACE_SIZE);
+			spacers.push_back(channel_layout->AddSpacer(SPACE_SIZE));
 	}
-	channel_layout->AddSpacer(SPACE_SIZE_SIDE);
+	//spacers.push_back(channel_layout->AddSpacer(SPACE_SIZE_SIDE));
 
-	main_layout->AddSpacer(SPACE_SIZE);
+	top_spacer = main_layout->AddSpacer(SPACE_SIZE);
 	main_layout->Add(channel_layout);
 	main_layout->AddSpacer(SPACE_SIZE);
 
 	this->SetSizer(main_layout);
 
 	Bind(wxEVT_SIZE, &MyFrame::OnSize, this);
-
 }
 
 void MyFrame::OnSize(wxSizeEvent& event)
 {
 	wxSize size = event.GetSize();
-	wxSize panel_size(size.GetWidth() / 8 - SPACE_SIZE - (SPACE_SIZE_SIDE / 8 * 2), size.GetHeight() - space_size_side); 
-	for (int i = 0; i < CHANNEL_COUNT; i++)
+	int spacer_count = this->spacers.size();
+	wxSize panel_size;
+	panel_size = wxSize(size.GetWidth() / 8 - SPACE_SIZE - (space_size_side), size.GetHeight() - MENU_SIZE - SPACE_SIZE - PANEL_OFFSET);
+	spacers[0]->SetMinSize(wxSize(left_spacer_size, 0));
+	top_spacer->SetMinSize(wxSize(0, PANEL_OFFSET));
+	
+	wxSize channel_name_size(panel_size.GetWidth() - SPACE_SIZE * 2, CHANNEL_NAME_HEIGHT);
+	for (int i = 0; i < CHANNEL_COUNT; i++) {
 		panel[i]->SetMinSize(panel_size);
+		channel_name_panel[i]->SetSize(channel_name_size);
+		channel_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - PANEL_OFFSET));
+		channel_name[i]->SetSize(channel_name_size);
+	}
+
 	this->Update();
 	event.Skip();
 	return;
-
 }
+
 
 void MyFrame::OnSlider(wxCommandEvent& event)
 {
-	space_size_side = event.GetInt();
-	wxSizeEvent size_event(wxSize(this->GetSize()));
-	this->OnSize(size_event);
+	space_size_side = event.GetInt() / 14;
+	wxSize original_size = this->GetSize();
+	wxSize temp_size(600, 600);
+	this->SetSize(temp_size);
+	this->SetSize(original_size);
+}
+
+void MyFrame::OnSlider_2(wxCommandEvent& event)
+{
+	left_spacer_size = event.GetInt() / 3;
+	wxSize original_size = this->GetSize();
+	wxSize temp_size(600, 600);
+	this->SetSize(temp_size);
+	this->SetSize(original_size);
 }
 
 void MyFrame::OnExit(wxCommandEvent& event)
@@ -103,9 +126,22 @@ void MyFrame::OnHello(wxCommandEvent& event)
 WindowScalerFrame::WindowScalerFrame(MyFrame *parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size)
 	: wxFrame(parent, id, title, pos, size)
 {
-	wxSlider* slider = new wxSlider(this, wxID_ANY, 40, 0, 500);
+	wxSlider* slider = new wxSlider(this, wxID_ANY, SPACE_SIZE, SPACE_SIZE, 800);
+	wxSlider* slider_2 = new wxSlider(this, wxID_ANY, SPACE_SIZE, SPACE_SIZE, 800);
 	wxBoxSizer* main_layout = new wxBoxSizer(wxHORIZONTAL);
+	slider_value = new wxStaticText(this, wxID_ANY, "value");
+
 	main_layout->Add(slider);
+	main_layout->Add(slider_2);
+	main_layout->Add(slider_value);
 	this->SetSizer(main_layout);
 	slider->Bind(wxEVT_SLIDER, &MyFrame::OnSlider, parent);
+	slider->Bind(wxEVT_SLIDER, &WindowScalerFrame::OnSlider, this);
+	slider_2->Bind(wxEVT_SLIDER, &MyFrame::OnSlider_2, parent);
+}
+
+void WindowScalerFrame::OnSlider(wxCommandEvent& event)
+{
+	this->slider_value->SetLabel(std::to_string(event.GetInt()));
+	event.Skip();
 }
