@@ -1,6 +1,8 @@
 #include "oscmessage.hpp"
 #include <math.h>
 #include <string.h>
+#include "oscmessage.hpp"
+#include "udp_sender_receiver.hpp"
 
 
 OscMessage::OscMessage(const std::string& address)

@@ -214,7 +214,12 @@ public:
 	void init_osc_controller();	
 };
 
-
+class osc_sender_receiver : public udp_sender_receiver {
+public:
+	using udp_sender_receiver::udp_sender_receiver;
+	void send_udp_data(OscMessage message);
+	OscMessage receive_udp_data();
+};
 
 class osc_controller{
 public:
@@ -225,6 +230,7 @@ public:
 
 	struct midi_sender_receiver mackie_sender_receiver;
 	ardour ardour_sender_receiver;
+	osc_sender_receiver display;
 	struct plugin_multiplexer_struct plugin_multiplexer;	
 	volatile enum channel_mode mode = PanMode;
 	void switch_channel_mode();

@@ -1,8 +1,10 @@
 #include <wx/wx.h>
 #include <wx/splitter.h>
+#include <wx/thread.h>
+#include "udp_sender_receiver.hpp"
 
 #define SPACE_SIZE_SIDE 40
-#define SPACE_SIZE 20
+#define SPACE_SIZE 10
 #define CHANNEL_NAME_HEIGHT 50 
 #define MENU_SIZE 80
 #define PANEL_OFFSET 400
@@ -16,6 +18,18 @@ public:
 wxIMPLEMENT_APP(MyApp);
 
 #define CHANNEL_COUNT 8
+
+class OscThread : public wxThread {
+public:
+	OscThread(wxEvtHandler* handler);
+
+protected:
+	ExitCode Entry() override;
+	
+private:
+	wxEvtHandler* m_handler;
+	udp_sender_receiver* osc_controller;
+};
 
 class MyFrame : public wxFrame
 {
@@ -34,6 +48,7 @@ private:
 
 	int space_size_side = SPACE_SIZE_SIDE;
 	int left_spacer_size = SPACE_SIZE;
+	int panel_offset = PANEL_OFFSET;
     void OnHello(wxCommandEvent& event);
     void OnExit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
@@ -41,16 +56,28 @@ private:
 public:
 	void OnSlider(wxCommandEvent& event);
 	void OnSlider_2(wxCommandEvent& event);
+	void OnSlider_3(wxCommandEvent& event);
+
+	void OnThreadUpdate(wxThreadEvent& event);
+
+	OscThread* thread;
 };
 
 class WindowScalerFrame : public wxFrame {
 public:
 	WindowScalerFrame(MyFrame *parent, wxWindowID wxID_ANY, const wxString& title = "scale window", const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
-	void OnSlider(wxCommandEvent& event);
-	wxStaticText* slider_value;
+	void OnSlider_1(wxCommandEvent& event);
+	void OnSlider_2(wxCommandEvent& event);
+	void OnSlider_3(wxCommandEvent& event);
+
+	wxStaticText* slider_value_1;
+	wxStaticText* slider_value_2;
+	wxStaticText* slider_value_3;
 };
 
 enum
 {
     ID_Hello = 2, ID_OTHER, ID_THIRD, ID_PLUGIN
 };
+
+

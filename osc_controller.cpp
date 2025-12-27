@@ -40,6 +40,8 @@ osc_controller::osc_controller(std::string destination_ip_address, unsigned int 
 	std::thread ardour_thread(&osc_controller::osc_receive_thread, this);
 	ardour_thread.detach();
 
+	display = osc_sender_receiver("127.0.0.1", 11, 12);
+
 	this->ardour_sender_receiver.init_osc_controller();
 }
 
@@ -269,6 +271,7 @@ void osc_controller::osc_receive_thread()
 
 		//write_to_itm(message.GetAddress());
 
+
 		if(!message.GetAddress().compare(0, 13, "/strip/fader\0")){
 			int strip_nr = message.get_int(0);
 			float value = message.get_float(1);
@@ -385,8 +388,10 @@ void osc_controller::osc_receive_thread()
 			int strip_nr = message.get_int(0);
 			std::string strip_name = message.get_string(1);
 			local_strip_data.strips[strip_nr].update(controller::STRIP_NAME, strip_name);
-			if(this->mode == PanMode)
+			if (this->mode == PanMode) {
 				mackie_sender_receiver.update_display(this->local_strip_data.strips);
+				display.send_udp_data(message);
+			}
 			continue;
 		}
 		else if(!message.GetAddress().compare("/strip/plugin/list")){
@@ -900,6 +905,23 @@ void ardour::send_udp_data(OscMessage message)
 }
 
 OscMessage ardour::receive_udp_data()
+{
+	char buffer[1024];
+	int length = receive_udp_data_raw(buffer);
+	OscMessage message(buffer, length);
+	return message;
+}
+
+//code duplication!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+void osc_sender_receiver::send_udp_data(OscMessage message)
+{
+	int size = 0;
+	char* data = message.GetBytes(size);
+	send_udp_data_raw(data, size);
+}
+
+OscMessage osc_sender_receiver::receive_udp_data()
 {
 	char buffer[1024];
 	int length = receive_udp_data_raw(buffer);

@@ -1,4 +1,6 @@
 #include "main.hpp"
+#include "oscmessage.hpp"
+#include <vector>
 
 bool MyApp::OnInit()
 {
@@ -61,6 +63,9 @@ MyFrame::MyFrame()
 	this->SetSizer(main_layout);
 
 	Bind(wxEVT_SIZE, &MyFrame::OnSize, this);
+	thread = new OscThread(this);
+	thread->Run();
+	Bind(wxEVT_THREAD, &MyFrame::OnThreadUpdate, this);
 }
 
 void MyFrame::OnSize(wxSizeEvent& event)
@@ -68,15 +73,15 @@ void MyFrame::OnSize(wxSizeEvent& event)
 	wxSize size = event.GetSize();
 	int spacer_count = this->spacers.size();
 	wxSize panel_size;
-	panel_size = wxSize(size.GetWidth() / 8 - SPACE_SIZE - (space_size_side), size.GetHeight() - MENU_SIZE - SPACE_SIZE - PANEL_OFFSET);
+	panel_size = wxSize(size.GetWidth() / 8 - SPACE_SIZE - (space_size_side), size.GetHeight() - MENU_SIZE - SPACE_SIZE - panel_offset);
 	spacers[0]->SetMinSize(wxSize(left_spacer_size, 0));
-	top_spacer->SetMinSize(wxSize(0, PANEL_OFFSET));
+	top_spacer->SetMinSize(wxSize(0, panel_offset));
 	
 	wxSize channel_name_size(panel_size.GetWidth() - SPACE_SIZE * 2, CHANNEL_NAME_HEIGHT);
 	for (int i = 0; i < CHANNEL_COUNT; i++) {
 		panel[i]->SetMinSize(panel_size);
 		channel_name_panel[i]->SetSize(channel_name_size);
-		channel_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - PANEL_OFFSET));
+		channel_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset));
 		channel_name[i]->SetSize(channel_name_size);
 	}
 
@@ -85,6 +90,37 @@ void MyFrame::OnSize(wxSizeEvent& event)
 	return;
 }
 
+OscThread::OscThread(wxEvtHandler* handler)
+	: wxThread(wxTHREAD_DETACHED), m_handler(handler) 
+{
+	osc_controller = new udp_sender_receiver("127.0.0.1", 12, 11);
+}
+
+wxThread::ExitCode OscThread::Entry()
+{
+	int test = 0;
+	while (1) {
+
+		char buffer[1024];
+		int size = osc_controller->receive_udp_data_raw(buffer);
+		std::vector<char> data;
+		for (int i = 0; i < size; i++)
+			data.push_back(buffer[i]);
+
+		wxThreadEvent event = wxThreadEvent();
+		event.SetPayload(data);
+		/*
+		wxSleep(2); // simulate work
+		test++;
+		// Create and send event
+		wxString string("hello");
+		string.append(std::to_string(test));
+		event.SetString(string);
+		*/
+		wxQueueEvent(m_handler, event.Clone());
+	}
+	return nullptr;
+}
 
 void MyFrame::OnSlider(wxCommandEvent& event)
 {
@@ -102,6 +138,29 @@ void MyFrame::OnSlider_2(wxCommandEvent& event)
 	wxSize temp_size(600, 600);
 	this->SetSize(temp_size);
 	this->SetSize(original_size);
+}
+
+void MyFrame::OnSlider_3(wxCommandEvent& event)
+{
+	panel_offset = event.GetInt();
+	wxSize original_size = this->GetSize();
+	wxSize temp_size(600, 600);
+	this->SetSize(temp_size);
+	this->SetSize(original_size);
+}
+
+void MyFrame::OnThreadUpdate(wxThreadEvent& event)
+{
+	// SAFE: runs on GUI thread
+	std::vector<char> data;
+	data = event.GetPayload<std::vector<char>>();
+	char array[1024];
+	for (int i = 0; i < data.size(); i++)
+		array[i] = data.at(i);
+	OscMessage message(array, data.size());
+	int index = message.get_int(0) - 1;
+	this->channel_name[index]->SetLabel(message.get_string(1));
+	this->channel_name[index]->SetSize(channel_name_panel[index]->GetSize());
 }
 
 void MyFrame::OnExit(wxCommandEvent& event)
@@ -126,22 +185,52 @@ void MyFrame::OnHello(wxCommandEvent& event)
 WindowScalerFrame::WindowScalerFrame(MyFrame *parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size)
 	: wxFrame(parent, id, title, pos, size)
 {
-	wxSlider* slider = new wxSlider(this, wxID_ANY, SPACE_SIZE, SPACE_SIZE, 800);
+	wxSlider* slider_1 = new wxSlider(this, wxID_ANY, SPACE_SIZE, SPACE_SIZE, 800);
 	wxSlider* slider_2 = new wxSlider(this, wxID_ANY, SPACE_SIZE, SPACE_SIZE, 800);
-	wxBoxSizer* main_layout = new wxBoxSizer(wxHORIZONTAL);
-	slider_value = new wxStaticText(this, wxID_ANY, "value");
+	wxSlider* slider_3 = new wxSlider(this, wxID_ANY, SPACE_SIZE, SPACE_SIZE, 800);
+	wxBoxSizer* slider_layout = new wxBoxSizer(wxHORIZONTAL);
+	wxBoxSizer* label_layout = new wxBoxSizer(wxHORIZONTAL);
+	wxBoxSizer* main_layout = new wxBoxSizer(wxVERTICAL);
+	slider_value_1 = new wxStaticText(this, wxID_ANY, "value");
+	slider_value_2 = new wxStaticText(this, wxID_ANY, "value");
+	slider_value_3 = new wxStaticText(this, wxID_ANY, "value");
+	
+	slider_layout->Add(slider_1);
+	slider_layout->Add(slider_2);
+	slider_layout->Add(slider_3);
 
-	main_layout->Add(slider);
-	main_layout->Add(slider_2);
-	main_layout->Add(slider_value);
+	label_layout->Add(slider_value_1);
+	label_layout->Add(slider_value_2);
+	label_layout->Add(slider_value_3);
+
+	main_layout->Add(slider_layout);
+	main_layout->Add(label_layout);
+
 	this->SetSizer(main_layout);
-	slider->Bind(wxEVT_SLIDER, &MyFrame::OnSlider, parent);
-	slider->Bind(wxEVT_SLIDER, &WindowScalerFrame::OnSlider, this);
+
+	slider_1->Bind(wxEVT_SLIDER, &MyFrame::OnSlider, parent);
 	slider_2->Bind(wxEVT_SLIDER, &MyFrame::OnSlider_2, parent);
+	slider_3->Bind(wxEVT_SLIDER, &MyFrame::OnSlider_3, parent);
+
+	slider_1->Bind(wxEVT_SLIDER, &WindowScalerFrame::OnSlider_1, this);
+	slider_2->Bind(wxEVT_SLIDER, &WindowScalerFrame::OnSlider_2, this);
+	slider_3->Bind(wxEVT_SLIDER, &WindowScalerFrame::OnSlider_3, this);
 }
 
-void WindowScalerFrame::OnSlider(wxCommandEvent& event)
+void WindowScalerFrame::OnSlider_1(wxCommandEvent& event)
 {
-	this->slider_value->SetLabel(std::to_string(event.GetInt()));
+	this->slider_value_1->SetLabel(std::to_string(event.GetInt()));
+	event.Skip();
+}
+
+void WindowScalerFrame::OnSlider_2(wxCommandEvent& event)
+{
+	this->slider_value_2->SetLabel(std::to_string(event.GetInt()));
+	event.Skip();
+}
+
+void WindowScalerFrame::OnSlider_3(wxCommandEvent& event)
+{
+	this->slider_value_3->SetLabel(std::to_string(event.GetInt()));
 	event.Skip();
 }
