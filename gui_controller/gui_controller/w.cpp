@@ -13,17 +13,15 @@ bool MyApp::OnInit()
 MyFrame::MyFrame()
 	: wxFrame(nullptr, wxID_ANY, "Hello World")
 {
-
+	channel_1 = new Channel(this);
 	main_layout = new wxBoxSizer(wxHORIZONTAL);
-	for (int i = 0; i < CHANNEL_COUNT; i++) {
-		channel[i] = new Channel(this, i);
-		main_layout->Add(channel[i]);
-	}
+	main_layout->Add(channel_1);
 	this->SetSizer(main_layout);
-	Bind(wxEVT_THREAD, &MyFrame::state_changed, this);
+	//Bind(wxEVT_ANY, &MyFrame::state_changed, channel_1);
 }
 
-Channel::Channel(wxWindow *parent, int index_input)
+
+Channel::Channel(wxWindow *parent)
 	: wxBoxSizer(wxVERTICAL)
 {
 	this->fader = new wxSlider(parent, wxID_ANY, 300, 0, MAX_14_BIT, 
@@ -33,24 +31,22 @@ Channel::Channel(wxWindow *parent, int index_input)
 	this->mute = new wxButton(parent, wxID_ANY, "Mute");
 	this->select = new wxButton(parent, wxID_ANY, "Sel");
 
-	this->index = index_input;
-
 	this->Add(record);
 	this->Add(solo);
 	this->Add(mute);
 	this->Add(select);
 	this->Add(fader);
+
+	this->index = 0;
 	
 	fader->Bind(wxEVT_SLIDER, &Channel::OnSlider, this);
-	handler = (wxEvtHandler*)parent;
+	handler = parent;
 
 }
 
-void MyFrame::state_changed(wxThreadEvent& event)
+void MyFrame::state_changed(wxCommandEvent& event)
 {
-	channel_message message;
-	message = event.GetPayload<channel_message>();
-	return;
+		
 }
 
 void Channel::OnSlider(wxCommandEvent& event)
@@ -60,8 +56,7 @@ void Channel::OnSlider(wxCommandEvent& event)
 	message.value = event.GetInt();
 	message.index = this->index;
 	//state_changed(message);
-	wxThreadEvent event_1 = wxThreadEvent(wxEVT_THREAD); // No specific id
-	event_1.SetPayload(message);
+	wxCommandEvent event_1 = wxCommandEvent(); // No specific id
 	
 	// Add any data; sometimes the only information needed at the destination is the arrival of the event itself
 
