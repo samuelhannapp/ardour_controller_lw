@@ -15,7 +15,7 @@ wxIMPLEMENT_APP(MyApp);
 
 namespace gui_controller {
 	enum channel_component {
-		fader, record, solo, mute, select
+		fader, record, solo, mute, select, show_busses, show_vcas, page_down, page_up, mode, plugin_down, plugin_up, spill
 	};
 }
 
@@ -28,15 +28,17 @@ struct channel_message {
 class Channel : public wxBoxSizer
 {
 public:
-	Channel(wxWindow* parent, int index_input);
+	Channel(wxWindow* parent, int index_input, std::string button_function);
 private:
 	int index;
 	wxSlider* fader;
+	wxButton* function_button;
 	wxButton* record;
 	wxButton* solo;
 	wxButton* mute;
 	wxButton* select;
 	void OnSlider(wxCommandEvent& event);
+	void OnButton(wxCommandEvent& event);
 	wxEvtHandler* handler;
 };
 
