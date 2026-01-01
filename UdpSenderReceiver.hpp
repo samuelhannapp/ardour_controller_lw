@@ -36,10 +36,10 @@
 #ifdef __STM32F7xx_HAL_H
 #include "stm32_sock.h"
 #endif
-class udp_sender_receiver{
+class UdpSenderReceiver{
 public:
-	udp_sender_receiver() {};
-	udp_sender_receiver(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out);
+	UdpSenderReceiver() {};
+	UdpSenderReceiver(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out);
 	#ifdef __linux__
 	int m_nativeSocket;
 	sockaddr_in m_destinationAddress;
@@ -53,7 +53,7 @@ public:
 	ip_addr_t m_destinationAddress;
 	#endif
 
-	void send_udp_data_raw(char *data, int size);
-	int receive_udp_data_raw(char *buffer);
+	void send_data(char *data, int size);
+	int receive_data(char *buffer);
 };
 #endif

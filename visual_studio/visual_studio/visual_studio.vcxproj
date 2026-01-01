@@ -124,15 +124,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\oscmessage.hpp" />
-    <ClInclude Include="..\..\osc_controller.hpp" />
-    <ClInclude Include="..\..\udp_sender_receiver.hpp" />
+    <ClInclude Include="..\..\ArdourSenderReceiver.hpp" />
+    <ClInclude Include="..\..\Defines.hpp" />
+    <ClInclude Include="..\..\MackieControl.hpp" />
+    <ClInclude Include="..\..\MackieSenderReceiver.hpp" />
+    <ClInclude Include="..\..\MidiSenderReceiver.hpp" />
+    <ClInclude Include="..\..\OscMessage.hpp" />
+    <ClInclude Include="..\..\OscSenderReceiver.hpp" />
+    <ClInclude Include="..\..\OscController.hpp" />
+    <ClInclude Include="..\..\PluginMultiplexer.hpp" />
+    <ClInclude Include="..\..\UdpSenderReceiver.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\ArdourSenderReceiver.cpp" />
+    <ClCompile Include="..\..\MackieControl.cpp" />
+    <ClCompile Include="..\..\MackieSenderReceiver.cpp" />
     <ClCompile Include="..\..\main.cpp" />
-    <ClCompile Include="..\..\oscmessage.cpp" />
-    <ClCompile Include="..\..\osc_controller.cpp" />
-    <ClCompile Include="..\..\udp_sender_receiver.cpp" />
+    <ClCompile Include="..\..\MidiSenderReceiver.cpp" />
+    <ClCompile Include="..\..\OscMessage.cpp" />
+    <ClCompile Include="..\..\OscSenderReceiver.cpp" />
+    <ClCompile Include="..\..\OscController.cpp" />
+    <ClCompile Include="..\..\PluginMultiplexer.cpp" />
+    <ClCompile Include="..\..\UdpSenderReceiver.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

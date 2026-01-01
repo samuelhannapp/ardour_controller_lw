@@ -1,7 +1,7 @@
-#include "udp_sender_receiver.hpp"
+#include "UdpSenderReceiver.hpp"
 #include <iostream>
 
-void udp_sender_receiver::send_udp_data_raw(char *data, int size)
+void UdpSenderReceiver::send_data(char *data, int size)
 {
 	if (size < 1)
 		return;
@@ -55,7 +55,7 @@ udp_sender_receiver::udp_sender_receiver(std::string destination_ip_address, uns
 #endif
 
 #ifdef _WIN64
-udp_sender_receiver::udp_sender_receiver(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out)
+UdpSenderReceiver::UdpSenderReceiver(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out)
 {
 			int result = 0;
 				WSADATA wsaData;
@@ -166,7 +166,7 @@ int osc_controller::udp_sender_receiver::receive_udp_data_raw(char *buffer)
 #endif
 
 #ifdef _WIN64
-int udp_sender_receiver::receive_udp_data_raw(char *buffer)	
+int UdpSenderReceiver::receive_data(char *buffer)	
 {
 	struct sockaddr_in sender_address;
 	int sender_address_size = sizeof(sender_address);

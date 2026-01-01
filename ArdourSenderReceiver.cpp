@@ -1,0 +1,83 @@
+#include "ArdourSenderReceiver.hpp"
+
+void selected_strip_struct::update_selected_strip(enum controller::controller_message type, int nr, float value)
+{
+	switch(type){
+	case controller::SEND_ENABLE:
+		this->sends[nr].enable = bool(value);
+		break;
+	case controller::SEND_FADER:
+		this->sends[nr].volume = value;
+		break;
+	case controller::PLUGIN_PARAMETER_VALUE:
+		this->selected_plugin[nr].value = value;
+		break;
+	case controller::SELECT:
+		if(bool(value))
+    		this->number = nr;
+		break;
+	default:
+		break;
+	}
+}
+
+void selected_strip_struct::update_selected_strip(enum controller::controller_message type, int nr, std::string string)
+{
+	switch(type){
+	case controller::SEND_NAME:
+		this->sends[nr].name = string;
+		break;
+	case controller::PLUGIN_PARAMETER_NAME:
+		this->selected_plugin[nr].name = string;
+	default:
+		break;
+	}
+}
+
+bool selected_strip_struct::controller_channel_nr_is_within_plugin_bank(int fader_id)
+{
+	if((fader_id / STRIPS_PER_CONTROLLER) == this->plugin_bank)
+		return true;
+
+	return false;
+}
+
+int selected_strip_struct::get_selected_plugin_index()
+{
+	std::vector<std::string> plugin_list = this->plugin_list;
+	unsigned int index = 0;
+	for(std::string name : this->plugin_list){
+		if(name.compare(this->selected_plugin_name))
+			index++;
+		break;
+	}
+	if(index == this->plugin_list.size())
+		return 0;
+
+	return index + 1;
+}
+
+void selected_strip_struct::initialize_selected_plugin_descriptor()
+{
+	for(int i = 0; i < MAX_PLUGIN_PARAMETERS; i++){
+		this->selected_plugin[i].name = std::string("default");
+		this->selected_plugin[i].value = 0;
+	}
+}
+
+void selected_strip_struct::initialize_selected_strip_sends()
+{
+	for (int i = 0; i < SEND_ARRAY_SIZE; i++)
+		this->sends[i].name = std::string("default");
+}
+
+void selected_strip_struct::initialize_selected_strip_plugin_list(){
+	for(int i = 0; i < 16; i++)
+		this->plugin_list.push_back("default");
+	return;
+}
+
+void selected_strip_struct::initialize_selected_strip()
+{
+	this->plugin_bank = 0;
+}
