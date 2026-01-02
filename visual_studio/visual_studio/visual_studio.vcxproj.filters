@@ -24,7 +24,7 @@
     <ClInclude Include="..\..\UdpSenderReceiver.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\MackieControl.hpp">
+    <ClInclude Include="..\..\MackieSenderReceiver.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\MidiSenderReceiver.hpp">
@@ -42,9 +42,6 @@
     <ClInclude Include="..\..\Defines.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\MackieSenderReceiver.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\main.cpp">
@@ -57,9 +54,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\UdpSenderReceiver.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\MackieControl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\MidiSenderReceiver.cpp">

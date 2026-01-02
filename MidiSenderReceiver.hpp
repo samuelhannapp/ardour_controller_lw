@@ -22,4 +22,5 @@ public:
 	int initialize_midi(int port_in, int port_out);
 	void receive_data(char *buffer);
 	void send_data(unsigned char * message, int size);
+
 };

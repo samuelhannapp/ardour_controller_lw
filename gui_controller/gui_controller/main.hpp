@@ -1,7 +1,7 @@
 #pragma once
 #include <wx/wx.h>
 
-//wxDEFINE_EVENT(CHANNEL_EVENT, wxCommandEvent);
+#include "MackieSenderReceiver.hpp"
 
 #define CHANNEL_COUNT 8
 
@@ -49,6 +49,7 @@ public:
 	wxBoxSizer* main_layout;
 	Channel* channel[CHANNEL_COUNT];
 	void state_changed(wxThreadEvent& event);
+	MackieSenderReceiver *mackie_sender_receiver;
 };
 
 

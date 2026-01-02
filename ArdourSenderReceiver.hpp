@@ -55,8 +55,8 @@ struct strip_feedback{
 	bool solo;
 	bool mute;
 	volatile bool fader_touch; //this is actually not feedback...
-	void update(enum controller::controller_message type, float value);
-	void update(enum controller::controller_message type, std::string string);
+	void send_data(enum controller::controller_message type, float value);
+	void send_data(enum controller::controller_message type, std::string string);
 };
 
 struct ardour_feedback_struct{

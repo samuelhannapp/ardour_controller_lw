@@ -31,6 +31,9 @@ MyFrame::MyFrame()
 	}
 	this->SetSizerAndFit(main_layout);
 	Bind(wxEVT_THREAD, &MyFrame::state_changed, this);
+
+	this->mackie_sender_receiver = new MackieSenderReceiver();
+	this->mackie_sender_receiver->initialize_midi(1, 1);
 }
 
 Channel::Channel(wxWindow *parent, int index_input, std::string button_function)
@@ -66,7 +69,6 @@ Channel::Channel(wxWindow *parent, int index_input, std::string button_function)
 	this->mute->Bind(wxEVT_BUTTON, &Channel::OnButton, this);
 	this->select->Bind(wxEVT_BUTTON, &Channel::OnButton, this);
 	handler = (wxEvtHandler*)parent;
-
 }
 
 void MyFrame::state_changed(wxThreadEvent& event)
@@ -75,11 +77,7 @@ void MyFrame::state_changed(wxThreadEvent& event)
 	message = event.GetPayload<channel_message>();
 	OscMessage osc_message("/Midi");
 	char midi_message[3];
-	unsigned char button_nr = mackie::RECORD * STRIPS_PER_CONTROLLER + strip_nr - 1;
-	unsigned char button_value = int(value) * 0x7f;
-	unsigned char midi_message[3] = { 0x90, button_nr, button_value };
-	int int_message(midi_message[0] | midi_message[1] << 8 | midi_message[2] << 16);
-	osc_message.PushInt(int_message);
+	this->mackie_sender_receiver->send_data(controller::STRIP_VOLUME,message.index, message.value);
 	return;
 }
 

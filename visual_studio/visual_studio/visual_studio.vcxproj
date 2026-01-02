@@ -126,7 +126,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\ArdourSenderReceiver.hpp" />
     <ClInclude Include="..\..\Defines.hpp" />
-    <ClInclude Include="..\..\MackieControl.hpp" />
     <ClInclude Include="..\..\MackieSenderReceiver.hpp" />
     <ClInclude Include="..\..\MidiSenderReceiver.hpp" />
     <ClInclude Include="..\..\OscMessage.hpp" />
@@ -137,7 +136,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\ArdourSenderReceiver.cpp" />
-    <ClCompile Include="..\..\MackieControl.cpp" />
     <ClCompile Include="..\..\MackieSenderReceiver.cpp" />
     <ClCompile Include="..\..\main.cpp" />
     <ClCompile Include="..\..\MidiSenderReceiver.cpp" />
