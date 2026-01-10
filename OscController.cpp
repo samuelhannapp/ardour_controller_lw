@@ -1,8 +1,14 @@
 #include "OscController.hpp"
 #include "UdpSenderReceiver.hpp"
-#include "MackieSenderReceiver.hpp"
+#ifdef MACKIE_CONTROL_MIDI_VERSION
+#include "MackieSenderReceiverMidi.hpp"
+#endif
+#ifdef MACKIE_CONTROL_UDP_VERSION
+#include "MackieSenderReceiverUdp.hpp"
+#endif
 #include <array>
 #include <functional>
+#include "Defines.hpp"
 
 
 OscController::OscController(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out, unsigned int midi_port_in, unsigned int midi_port_out)
@@ -13,12 +19,15 @@ OscController::OscController(std::string destination_ip_address, unsigned int ud
 	this->local_strip_data.selected_strip.initialize_selected_strip_plugin_list();
 	this->local_strip_data.selected_strip.initialize_selected_strip();
 	this->plugin_multiplexer.initialize_plugin_multiplexer_from_controller_and_from_plugin();
-	this->mackie_sender_receiver.initialize_mackie_display_formated();
 	
     this->ardour_sender_receiver = ArdourSenderReceiver(destination_ip_address, udp_port_in, udp_port_out);
-	this->mackie_sender_receiver.initialize_midi(midi_port_in, midi_port_out);
-
-	this->mackie_sender_receiver.signal_data_to_outside = std::bind(&OscController::process_midi, this, std::placeholders::_1);
+#ifdef MACKIE_CONTROL_MIDI_VERSION
+	this->mackie_sender_receiver = new MackieControl(midi_port_in, midi_port_out);
+#endif
+#ifdef MACKIE_CONTROL_UDP_VERSION
+	this->mackie_sender_receiver = new MackieControl("127.0.0.1", 13, 14);
+#endif
+	this->mackie_sender_receiver->initialize_mackie_display_formated();//this should be inside the constructor...
 
     std::thread mackie_control_thread(&OscController::mackie_receive_thread, this);
 	mackie_control_thread.detach();
@@ -31,9 +40,9 @@ OscController::OscController(std::string destination_ip_address, unsigned int ud
 	this->ardour_sender_receiver.init_osc_controller();
 }
 
-void OscController::process_midi(char buffer[3])
+void OscController::process_midi(MidiMessage message)
 {
-OscMessage msg("/nothing");
+	OscMessage msg("/nothing");
 	bool button_pressed = false;
 	int channel_nr = 0;
 	int fader_nr = 0;
@@ -41,14 +50,14 @@ OscMessage msg("/nothing");
 	float value_float = 0;
 	float increment = 0;
 
-	enum mackie::button_type type = (enum mackie::button_type)(buffer[1] / STRIPS_PER_CONTROLLER);
+	enum mackie::button_type type = (enum mackie::button_type)(message.data[1] / STRIPS_PER_CONTROLLER);
 
-	int command = buffer[0] & 0xf0;
+	int command = message.data[0] & 0xf0;
 	switch(command) {
 	//case 0x80: // Note off
 	case 0x90: // Note on
-  		button_pressed = buffer[2];
-		channel_nr = buffer[1] % STRIPS_PER_CONTROLLER + ONE_BASED;
+  		button_pressed = message.data[2];
+		channel_nr = message.data[1] % STRIPS_PER_CONTROLLER + ONE_BASED;
 
 		if(!button_pressed)
 			if(!(type == mackie::FADER_TOUCH))
@@ -95,8 +104,8 @@ OscMessage msg("/nothing");
 						if(this->mode == PluginMode){
 							if(local_strip_data.selected_strip.plugin_bank > 0)
 								local_strip_data.selected_strip.plugin_bank--;
-							this->mackie_sender_receiver.update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
-                            this->mackie_sender_receiver.update_faders(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
+							this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
+                            this->mackie_sender_receiver->update_faders(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
 						}
 						if(this->mode == SendMode){
 							msg = OscMessage("/select/send_page");
@@ -110,8 +119,8 @@ OscMessage msg("/nothing");
 							if(local_strip_data.selected_strip.plugin_bank < PLUGIN_PAGES_SIZE)
 								local_strip_data.selected_strip.plugin_bank++;
 
-							mackie_sender_receiver.update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
-                            mackie_sender_receiver.update_faders(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
+							this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
+                            this->mackie_sender_receiver->update_faders(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
 						}
 						if(this->mode == SendMode){
 							msg = OscMessage("/select/send_page");
@@ -153,11 +162,11 @@ OscMessage msg("/nothing");
 		break;
 	case 0xa0: // Aftertouch
 	case 0xB0: // Continuous controller
-		channel_nr = buffer[1] % STRIPS_PER_CONTROLLER + 1;
+		channel_nr = message.data[1] % STRIPS_PER_CONTROLLER + 1;
 		if(this->mode == PanMode){
 			msg = OscMessage("/strip/pan_stereo_position");
 			msg.PushInt(channel_nr);
-			increment = buffer[2] == 0x1 ? -1 : 1;
+			increment = message.data[2] == 0x1 ? -1 : 1;
 			value_float = this->local_strip_data.strips[channel_nr].stereo_position + increment * 0.03;
 			if(value_float < 0) value_float = 0;
 			if(value_float > 1) value_float = 1;
@@ -172,7 +181,7 @@ OscMessage msg("/nothing");
                 break;
 			msg.PushInt(plugin_parameter_number);
 
-			increment = buffer[2] == 0x1 ? 1 : -1;
+			increment = message.data[2] == 0x1 ? 1 : -1;
 
 			float value_float = this->local_strip_data.selected_strip.selected_plugin[plugin_parameter_number].value + increment * 0.03;
 			if(value_float < 0) value_float = 0;
@@ -186,7 +195,7 @@ OscMessage msg("/nothing");
 		if(this->mode == SendMode){
 			msg = OscMessage("/select/send_fader");
 			msg.PushInt(channel_nr);
-			increment = buffer[2] == 0x1 ? 1 : -1;
+			increment = message.data[2] == 0x1 ? 1 : -1;
 			value_float = this->local_strip_data.selected_strip.sends[channel_nr].volume + increment * 0.03;
 			if(value_float < 0) value_float = 0;
 			if(value_float > 1) value_float = 1;
@@ -197,8 +206,8 @@ OscMessage msg("/nothing");
 	case 0xC0: // Patch change
 	case 0xD0: // Channel Pressure
 	case 0xE0: // Pitch bend
-		fader_nr = buffer[0] & 0xf;
-		value_14_bit = buffer[1] | (buffer[2] << 7);
+		fader_nr = message.data[0] & 0xf;
+		value_14_bit = message.data[1] | (message.data[2] << 7);
 		value_float = float(value_14_bit / float(MAX_14_BIT));
 		if(this->mode == PanMode){
 			msg = OscMessage("/strip/fader");
@@ -241,9 +250,12 @@ static void write_to_itm(std::string string)
 
 void OscController::mackie_receive_thread()
 {
-	char data[3];
-	this->mackie_sender_receiver.receive_data(data);
-	this->process_midi(data);
+	while (1) {
+		unsigned char* ptr = 0;
+		MidiMessage message(ptr, 0);
+		this->mackie_sender_receiver->receive_data(message);
+		this->process_midi(message);
+	}
 }
 
 void OscController::ardour_receive_thread()
@@ -262,7 +274,7 @@ void OscController::ardour_receive_thread()
 			float value = message.get_float(1);
             local_strip_data.strips[strip_nr].send_data(controller::STRIP_VOLUME, value);
 			if(this->mode == PanMode)
-				mackie_sender_receiver.send_data(controller::STRIP_VOLUME, strip_nr, value);
+				mackie_sender_receiver->send_data(controller::STRIP_VOLUME, strip_nr, value);
 			//update_fader(strip_nr, value, local_strip_data.mode);
 			continue;
 		}
@@ -270,28 +282,28 @@ void OscController::ardour_receive_thread()
 			int strip_nr = message.get_int(0);
 			float value = message.get_float(1);
 			local_strip_data.strips[strip_nr].send_data(controller::REC_ENABLE, value);
-			mackie_sender_receiver.send_data(controller::REC_ENABLE, strip_nr, value);
+			mackie_sender_receiver->send_data(controller::REC_ENABLE, strip_nr, value);
 			continue;
 		}
 		else if(!message.GetAddress().compare("/strip/solo")){
 			int strip_nr = message.get_int(0);
 			float value = message.get_float(1);
 			local_strip_data.strips[strip_nr].send_data(controller::SOLO, value);
-			mackie_sender_receiver.send_data(controller::SOLO, strip_nr, value);
+			mackie_sender_receiver->send_data(controller::SOLO, strip_nr, value);
 			continue;
 		}
 		else if(!message.GetAddress().compare("/strip/mute")){
 			int strip_nr = message.get_int(0);
 			float value = message.get_float(1);
 			local_strip_data.strips[strip_nr].send_data(controller::MUTE, value);
-			mackie_sender_receiver.send_data(controller::MUTE, strip_nr, value);
+			mackie_sender_receiver->send_data(controller::MUTE, strip_nr, value);
 			continue;
 		}
 		else if(!message.GetAddress().compare("/strip/select")){
 			int strip_nr = message.get_int(0);
 			float value = message.get_float(1);
 			local_strip_data.selected_strip.update_selected_strip(controller::SELECT, strip_nr, value);
-			mackie_sender_receiver.send_data(controller::SELECT, strip_nr, value);
+			mackie_sender_receiver->send_data(controller::SELECT, strip_nr, value);
 			continue;
 		}
 		else if(!message.GetAddress().compare("/strip/pan_stereo_position")){
@@ -300,14 +312,14 @@ void OscController::ardour_receive_thread()
 			int strip_nr = message.get_int(0);
 			float value = message.get_float(1);
 			local_strip_data.strips[strip_nr].send_data(controller::STEREO_POSITION, value);
-			mackie_sender_receiver.send_data(controller::STEREO_POSITION, strip_nr, value);
+			mackie_sender_receiver->send_data(controller::STEREO_POSITION, strip_nr, value);
 			continue;
 		}
 		else if(!message.GetAddress().compare("/strip/meter")){
 			int strip_nr = message.get_int(0);
 			float value = message.get_float(1);
 
-			mackie_sender_receiver.send_data(controller::METER, strip_nr, value);
+			mackie_sender_receiver->send_data(controller::METER, strip_nr, value);
 			continue;
 		}
 		else if(!message.GetAddress().compare("/select/send_enable")){
@@ -322,7 +334,7 @@ void OscController::ardour_receive_thread()
 			std::string string = message.get_string(1);
 			local_strip_data.selected_strip.update_selected_strip(controller::SEND_NAME, send_nr, string);
 			if(this->mode == SendMode)
-				mackie_sender_receiver.update_display(this->local_strip_data.selected_strip.sends);
+				mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.sends);
 			continue;
 		}
 		else if(!message.GetAddress().compare("/select/send_fader")){
@@ -330,7 +342,7 @@ void OscController::ardour_receive_thread()
 			float value = message.get_float(1);
 			local_strip_data.selected_strip.update_selected_strip(controller::SEND_FADER, send_id, value);
 			if(this->mode == SendMode)
-				mackie_sender_receiver.send_data(controller::SEND_FADER, send_id, value);
+				mackie_sender_receiver->send_data(controller::SEND_FADER, send_id, value);
 			continue;
 		}
 		else if(!message.GetAddress().compare("/select/plugin/name")){
@@ -354,7 +366,7 @@ void OscController::ardour_receive_thread()
 				continue;
 			this->local_strip_data.selected_strip.update_selected_strip(controller::PLUGIN_PARAMETER_NAME, plugin_parameter_id, plugin_parameter_name);
 			if(this->mode == PluginMode)
-				this->mackie_sender_receiver.update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
+				this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
 			continue;
 		}
 		else if(!message.GetAddress().compare("/select/plugin/parameter")){
@@ -364,7 +376,7 @@ void OscController::ardour_receive_thread()
 			if (plugin_parameter_id < plugin_multiplexer.plugin_multiplexer_from_plugin.size()) {
 				int fader_id = plugin_multiplexer.plugin_multiplexer_from_plugin[plugin_parameter_id];
 				if (local_strip_data.selected_strip.controller_channel_nr_is_within_plugin_bank(fader_id) && (this->mode == PluginMode)) {
-					mackie_sender_receiver.send_data(controller::PLUGIN_PARAMETER_VALUE, fader_id, plugin_parameter_value);
+					mackie_sender_receiver->send_data(controller::PLUGIN_PARAMETER_VALUE, fader_id, plugin_parameter_value);
 				}
 			}
 			continue;
@@ -374,7 +386,7 @@ void OscController::ardour_receive_thread()
 			std::string strip_name = message.get_string(1);
 			local_strip_data.strips[strip_nr].send_data(controller::STRIP_NAME, strip_name);
 			if (this->mode == PanMode) {
-				mackie_sender_receiver.update_display(this->local_strip_data.strips);
+				mackie_sender_receiver->update_display(this->local_strip_data.strips);
 				display.send_data(message);
 			}
 			continue;
@@ -509,18 +521,18 @@ void OscController::switch_channel_mode()
 	switch(this->mode){
 	case PanMode:
 		this->mode = SendMode;
-		this->mackie_sender_receiver.update_display(this->local_strip_data.selected_strip.sends);
-		this->mackie_sender_receiver.update_faders(this->local_strip_data.selected_strip.sends);
+		this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.sends);
+		this->mackie_sender_receiver->update_faders(this->local_strip_data.selected_strip.sends);
 		break;
 	case SendMode:
 		this->mode = PluginMode;
-		this->mackie_sender_receiver.update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
-		this->mackie_sender_receiver.update_faders(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
+		this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
+		this->mackie_sender_receiver->update_faders(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
 		break;
 	case PluginMode:
 		this->mode = PanMode;
-		this->mackie_sender_receiver.update_display(this->local_strip_data.strips);
-		this->mackie_sender_receiver.update_faders(this->local_strip_data.strips);
+		this->mackie_sender_receiver->update_display(this->local_strip_data.strips);
+		this->mackie_sender_receiver->update_faders(this->local_strip_data.strips);
 		break;
 	default:
 		break;

@@ -36,6 +36,8 @@
 #ifdef __STM32F7xx_HAL_H
 #include "stm32_sock.h"
 #endif
+
+#include "Defines.hpp"
 class UdpSenderReceiver{
 public:
 	UdpSenderReceiver() {};

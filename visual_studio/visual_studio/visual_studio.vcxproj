@@ -103,6 +103,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\Samuel\Software\arduor_controller_lw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -126,7 +127,10 @@
   <ItemGroup>
     <ClInclude Include="..\..\ArdourSenderReceiver.hpp" />
     <ClInclude Include="..\..\Defines.hpp" />
-    <ClInclude Include="..\..\MackieSenderReceiver.hpp" />
+    <ClInclude Include="..\..\MackieControl.hpp" />
+    <ClInclude Include="..\..\MackieDisplay.hpp" />
+    <ClInclude Include="..\..\MackieSenderReceiverMidi.hpp" />
+    <ClInclude Include="..\..\MackieSenderReceiverUdp.hpp" />
     <ClInclude Include="..\..\MidiSenderReceiver.hpp" />
     <ClInclude Include="..\..\OscMessage.hpp" />
     <ClInclude Include="..\..\OscSenderReceiver.hpp" />
@@ -136,6 +140,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\ArdourSenderReceiver.cpp" />
+    <ClCompile Include="..\..\MackieControl.cpp" />
     <ClCompile Include="..\..\MackieSenderReceiver.cpp" />
     <ClCompile Include="..\..\main.cpp" />
     <ClCompile Include="..\..\MidiSenderReceiver.cpp" />

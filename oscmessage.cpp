@@ -2,7 +2,7 @@
 #include <math.h>
 #include <string.h>
 #include "oscmessage.hpp"
-#include "udp_sender_receiver.hpp"
+#include "UdpSenderReceiver.hpp"
 
 
 OscMessage::OscMessage(const std::string& address)
@@ -223,7 +223,7 @@ int OscMessage::get_int(int argument_nr)
 	int ret = 0;
 
 	for (int i = 0; i < 4; i++) {
-		ret |= ((this->m_data[argument_start_point++]) << (24 - (i * 8)));
+		ret |= (((unsigned char)this->m_data[argument_start_point++]) << (24 - (i * 8)));
 	}
 
 	return ret;

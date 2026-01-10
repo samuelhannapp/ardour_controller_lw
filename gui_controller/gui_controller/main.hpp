@@ -1,7 +1,7 @@
 #pragma once
 #include <wx/wx.h>
 
-#include "MackieSenderReceiver.hpp"
+#include "MackieSenderReceiverUdp.hpp"
 
 #define CHANNEL_COUNT 8
 
@@ -13,15 +13,17 @@ public:
 
 wxIMPLEMENT_APP(MyApp);
 
+/*
 namespace gui_controller {
 	enum channel_component {
 		fader, record, solo, mute, select, show_busses, show_vcas, page_down, page_up, mode, plugin_down, plugin_up, spill
 	};
 }
-
+*/
 struct channel_message {
-	enum gui_controller::channel_component type;
-	int value;
+	//enum gui_controller::channel_component type;
+	enum controller::controller_message type;
+	float value;
 	int index;
 };
 

@@ -1,5 +1,8 @@
-#include "MackieSenderReceiver.hpp"
+//#include "MackieSenderReceiverMidi.hpp"
+#include "MackieSenderReceiverUdp.hpp"
 #include "ArdourSenderReceiver.hpp"
+#include "OscMessage.hpp"
+#include "Defines.hpp"
 
 #ifdef __STM32F7xx_HAL_H
 extern uint8_t IP_ADDRESS[4];
@@ -24,7 +27,7 @@ void MackieSenderReceiver::send_data(enum controller::controller_message type, i
     	uint8_t value_low = value_14_bit & 0x7f;
     	uint8_t value_high = ((value_14_bit & 0x3f80) >> 7);
         unsigned char midi_message[3]  = {(unsigned char)(0xe0 | (strip_nr - 1)), value_low, value_high};
-	    MidiSenderReceiver::send_data(midi_message, 3);
+	    send_data(MidiMessage(midi_message, 3));
 		}
 		break;
 	case controller::REC_ENABLE:
@@ -32,7 +35,7 @@ void MackieSenderReceiver::send_data(enum controller::controller_message type, i
 		unsigned char button_nr = mackie::RECORD * STRIPS_PER_CONTROLLER + strip_nr -1;
 		unsigned char button_value = int(value) * 0x7f;
 		unsigned char midi_message[3]  = {0x90, button_nr, button_value};
-	    MidiSenderReceiver::send_data(midi_message, 3);
+	    send_data(MidiMessage(midi_message, 3));
 		}
 		break;
 	case controller::SOLO:
@@ -40,7 +43,7 @@ void MackieSenderReceiver::send_data(enum controller::controller_message type, i
 		unsigned char button_nr = mackie::SOLO * STRIPS_PER_CONTROLLER + strip_nr -1;
     	unsigned char button_value = int(value) * 0x7f;
 		unsigned char midi_message[3]  = {0x90, button_nr, button_value};
-	    MidiSenderReceiver::send_data(midi_message, 3);
+	    send_data(MidiMessage(midi_message, 3));
 		}
 		break;
 	case controller::MUTE:
@@ -48,7 +51,7 @@ void MackieSenderReceiver::send_data(enum controller::controller_message type, i
 		unsigned char button_nr = mackie::MUTE * STRIPS_PER_CONTROLLER + strip_nr -1;
     	unsigned char button_value = int(value) * 0x7f;
 		unsigned char midi_message[3]  = {0x90, button_nr, button_value};
-	    MidiSenderReceiver::send_data(midi_message, 3);
+	    send_data(MidiMessage(midi_message, 3));
 		}
 		break;
 	case controller::SELECT:
@@ -57,7 +60,7 @@ void MackieSenderReceiver::send_data(enum controller::controller_message type, i
     	unsigned char button_value = int(value);
     	button_value = button_value * 0x7f;
 		unsigned char midi_message[3]  = {0x90, button_nr, button_value};
-	    MidiSenderReceiver::send_data(midi_message, 3);
+	    send_data(MidiMessage(midi_message, 3));
 		}
 		break;
 	case controller::STEREO_POSITION:
@@ -72,7 +75,7 @@ void MackieSenderReceiver::send_data(enum controller::controller_message type, i
     		led_strip_value = 1;
     	}
 		unsigned char midi_message[3]  = {0xb0, knob_nr, led_strip_value};
-	    MidiSenderReceiver::send_data(midi_message, 3);
+	    send_data(MidiMessage(midi_message, 3));
 		}
 		break;
 	case controller::SEND_FADER:
@@ -87,7 +90,7 @@ void MackieSenderReceiver::send_data(enum controller::controller_message type, i
     		led_strip_value = 1;
     	}
 		unsigned char midi_message[3]  = {0xb0, knob_nr, led_strip_value};
-	    MidiSenderReceiver::send_data(midi_message, 3);
+	    send_data(MidiMessage(midi_message, 3));
 		}
 		break;
 	case controller::METER:
@@ -99,18 +102,26 @@ void MackieSenderReceiver::send_data(enum controller::controller_message type, i
 			led_strip_value = 0;
 		led_strip_value |= ((strip_nr - 1) << 4);
 		unsigned char midi_message[3]  = {0xd0, led_strip_value, 0};
-	    MidiSenderReceiver::send_data(midi_message, 3);
+	    send_data(MidiMessage(midi_message, 3));
 		}
 		break;
+	case controller::KNOB_PUSH:
+		{
+		unsigned char button_nr = mackie::KNOB_PUSH * STRIPS_PER_CONTROLLER + strip_nr - 1;
+		unsigned char button_value = int(value) * 0x7f;
+		unsigned char midi_message[3] = { 0x90, button_nr, button_value };
+		send_data(MidiMessage(midi_message, 3));
+		break;
+		}
 	default:
 		break;
 	}
 }
 
-void MackieSenderReceiver::update_display(const strip_feedback *strips)
+void MackieSenderReceiver::send_data(std::string strings[9])
 {
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		this->mackie_display.mackie_display_formated.at(i) = strips[i + 1].name;
+		this->mackie_display.mackie_display_formated.at(i) = strings[i + 1];
 	}
 	size_t position = 0;
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
@@ -120,64 +131,7 @@ void MackieSenderReceiver::update_display(const strip_feedback *strips)
 	}
 
 	mackie_display.fill_sysx_buffer();
-	MidiSenderReceiver::send_data(mackie_display.MIDI_TX_SYSX_Buffer, 120);
-}
-
-void MackieSenderReceiver::update_display(const struct send *sends)
-{
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		this->mackie_display.mackie_display_formated.at(i) = sends[i + 1].name;
-	}
-	size_t position = 0;
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		position = this->mackie_display.mackie_display_formated.at(i).find(' ');
-		if(position < 6)
-			this->mackie_display.mackie_display_formated.at(i).insert(position, 7 - position - 1, ' ');
-	}
-
-	mackie_display.fill_sysx_buffer();
-	MidiSenderReceiver::send_data(mackie_display.MIDI_TX_SYSX_Buffer, 120);
-}
-
-void MackieSenderReceiver::update_display(const plugin_parameter *selected_plugin, const plugin_multiplexer_struct *plugin_multiplexer, int plugin_bank)
-{
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		int plugin_parameter_id = plugin_multiplexer->plugin_multiplexer_from_controller[i + plugin_bank * STRIPS_PER_CONTROLLER + 1];
-		this->mackie_display.mackie_display_formated.at(i) = selected_plugin[plugin_parameter_id].name;
-	}
-	size_t position = 0;
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		position = this->mackie_display.mackie_display_formated.at(i).find(' ');
-		if(position < 6)
-			this->mackie_display.mackie_display_formated.at(i).insert(position, 7 - position - 1, ' ');
-	}
-	mackie_display.fill_sysx_buffer();
-	MidiSenderReceiver::send_data(mackie_display.MIDI_TX_SYSX_Buffer, 120);
-}
-
-void MackieSenderReceiver::update_faders(const plugin_parameter *selected_plugin, const plugin_multiplexer_struct *plugin_multiplexer, int plugin_bank)
-{
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		int plugin_parameter_number = plugin_multiplexer->plugin_multiplexer_from_controller[i + ONE_BASED + STRIPS_PER_CONTROLLER * plugin_bank];
-		float value = selected_plugin[plugin_parameter_number].value;
-		this->send_data(controller::PLUGIN_PARAMETER_VALUE, i + ONE_BASED, value);
-	}
-}
-
-void MackieSenderReceiver::update_faders(const struct send *sends)
-{
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		float value = sends[i + ONE_BASED].volume;
-		this->send_data(controller::STRIP_VOLUME, i + ONE_BASED, value);
-	}	
-}
-
-void MackieSenderReceiver::update_faders(const struct strip_feedback *strips)
-{
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		float value = strips[i + 1].volume;
-		this->send_data(controller::STRIP_VOLUME, i + ONE_BASED, value);
-	}
+	send_data(MidiMessage(mackie_display.MIDI_TX_SYSX_Buffer, 120));
 }
 
 void mackie_display_struct::fill_sysx_buffer()
@@ -227,45 +181,26 @@ void mackie_display_struct::fill_sysx_buffer()
 	}
 }
 
-void mackie_display_struct::prepare_strip_names(const strip_feedback *strips)
+
+//This is only for the Udp version of the MackieSenderReceiver
+;void MackieSenderReceiver::send_data(struct MidiMessage message)
 {
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		this->mackie_display_formated.at(i) = strips[i + 1].name;
-	}
-	size_t position = 0;
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		position = this->mackie_display_formated.at(i).find(' ');
-		if(position < 6)
-			this->mackie_display_formated.at(i).insert(position, 7 - position - 1, ' ');
-	}	
+	OscMessage osc_message("/Midi");
+	int data = message.data[0] | (message.data[1] << 8) | (message.data[2] << 16);
+	osc_message.PushInt(data);
+	int size = 0;
+	char* data_ptr = osc_message.GetBytes(size);
+	UdpSenderReceiver::send_data(data_ptr, size);
 }
 
-void mackie_display_struct::prepare_selected_plugin_parameter_names(const selected_strip_struct *selected_strip, const plugin_multiplexer_struct *plugin_multiplexer)
+void MackieSenderReceiver::receive_data(MidiMessage &midi_message)
 {
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		int plugin_parameter_id = plugin_multiplexer->plugin_multiplexer_from_controller[i + selected_strip->plugin_bank * STRIPS_PER_CONTROLLER + 1];
-		this->mackie_display_formated.at(i) = selected_strip->selected_plugin[plugin_parameter_id].name;
-	}
-	size_t position = 0;
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		position = this->mackie_display_formated.at(i).find(' ');
-		if(position < 6)
-			this->mackie_display_formated.at(i).insert(position, 7 - position - 1, ' ');
-	}
+	char udp_data[1024];
+	int length = UdpSenderReceiver::receive_data(udp_data);
+	OscMessage osc_message(udp_data, length);
+	int midi_data = osc_message.get_int(0);
+	midi_message.data[0] = midi_data & 0xff;
+	midi_message.data[1] = (midi_data & 0xff00) >> 8;
+	midi_message.data[2] = (midi_data & 0xff0000) >> 16;
+	midi_message.data[3] = 0;
 }
-
-void mackie_display_struct::prepare_selected_strip_send_names(const struct send *sends)
-{
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		this->mackie_display_formated.at(i) = sends[i + 1].name;
-	}
-	size_t position = 0;
-	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		position = this->mackie_display_formated.at(i).find(' ');
-		if(position < 6)
-			this->mackie_display_formated.at(i).insert(position, 7 - position - 1, ' ');
-	}
-}
-
-
-

@@ -75,6 +75,30 @@ if (result != MMSYSERR_NOERROR) {
 }
 #endif
 
+MidiSenderReceiver::MidiSenderReceiver(int port_in, int port_out)
+{
+	MMRESULT result;
+	//MidiSenderReceiver::PrintMidiDevices();//if there are none, later they have to be selected previously in the gui...
+	result = midiInOpen(&MidiDeviceIn, port_in, (DWORD_PTR)(void*)MidiInProc, 0, CALLBACK_FUNCTION);  
+	struct midi_input temp;
+	temp.device = MidiDeviceIn;
+	midi_input_buffer.push_back(temp);
+	
+
+if (result != MMSYSERR_NOERROR) {
+		printf("midiInOpen() failed...rv=%d");
+	}
+	else {
+		midiInStart(MidiDeviceIn);
+	}
+
+
+	result = midiOutOpen(&MidiDeviceOut, port_out, 0, 0, CALLBACK_WINDOW);
+	if (result)
+		printf("There was an error opening MIDI Mapper!\r\n");
+
+}
+
 #ifdef _WIN64
 	void MidiSenderReceiver::receive_data(char *buffer)
 	{
@@ -110,16 +134,16 @@ void MidiSenderReceiver::send_data(unsigned char * message, int size)
 #endif
 
 #ifdef _WIN64
-void MidiSenderReceiver::send_data(unsigned char *message, int size)
+void MidiSenderReceiver::send_data(struct MidiMessage message)
 {
-	if (size == 3) {
+	if (message.length == 3) {
 		DWORD msg = 0;
-		msg |= message[0];
-		msg |= message[1] << 8;
-		msg |= message[2] << 16;
+		msg |= message.data[0];
+		msg |= message.data[1] << 8;
+		msg |= message.data[2] << 16;
 		midiOutShortMsg(MidiDeviceOut, msg);
 	}
-	if (size == 120) {
+	if (message.length == 120) {
 		MIDIHDR     midiHdr;
 		HANDLE      hBuffer;
 		UINT        err;
@@ -135,7 +159,7 @@ void MidiSenderReceiver::send_data(unsigned char *message, int size)
 				err = midiOutPrepareHeader(MidiDeviceOut, &midiHdr, sizeof(MIDIHDR));
 				if (!err)
 				{
-					memcpy(midiHdr.lpData, message, 120);
+					memcpy(midiHdr.lpData, message.data, 120);
 
 					err = midiOutLongMsg(MidiDeviceOut, &midiHdr, sizeof(MIDIHDR));
 					if (err)
