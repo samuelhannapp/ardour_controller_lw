@@ -1,7 +1,8 @@
 #pragma once
 #include <wx/wx.h>
-
+#include <wx/thread.h>
 #include "MackieSenderReceiverUdp.hpp"
+#include "wxOscReceiveThread.h"
 
 #define CHANNEL_COUNT 8
 
@@ -13,19 +14,8 @@ public:
 
 wxIMPLEMENT_APP(MyApp);
 
-/*
-namespace gui_controller {
-	enum channel_component {
-		fader, record, solo, mute, select, show_busses, show_vcas, page_down, page_up, mode, plugin_down, plugin_up, spill
-	};
-}
-*/
-struct channel_message {
-	//enum gui_controller::channel_component type;
-	enum controller::controller_message type;
-	float value;
-	int index;
-};
+
+
 
 class Channel : public wxBoxSizer
 {
@@ -33,15 +23,17 @@ public:
 	Channel(wxWindow* parent, int index_input, std::string button_function);
 private:
 	int index;
+	void OnSlider(wxCommandEvent& event);
+	void OnButton(wxCommandEvent& event);
+	wxEvtHandler* handler;
+public:
+	wxStaticText* display;
 	wxSlider* fader;
 	wxButton* function_button;
 	wxButton* record;
 	wxButton* solo;
 	wxButton* mute;
 	wxButton* select;
-	void OnSlider(wxCommandEvent& event);
-	void OnButton(wxCommandEvent& event);
-	wxEvtHandler* handler;
 };
 
 class MyFrame : public wxFrame
@@ -52,11 +44,7 @@ public:
 	Channel* channel[CHANNEL_COUNT];
 	void state_changed(wxThreadEvent& event);
 	MackieSenderReceiver *mackie_sender_receiver;
+	wxOscReceiveThread* receive_thread;
+	void OnThreadUpdate(wxThreadEvent& event);
 };
 
-
-/*
-wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
-EVT_COMMAND(wxID_ANY, CHANNEL_EVENT, MyFrame::state_changed)
-wxEND_EVENT_TABLE()
-*/

@@ -11,6 +11,7 @@ namespace controller{
 }
 
 #define SYSX_BUFFER_SIZE 120
+#define STRIPS_PER_CONTROLLER 8
 
 #define MACKIE_CONTROL_UDP_VERSION 1 
 //#define MACKIE_CONTROL_MIDI_VERSION 1

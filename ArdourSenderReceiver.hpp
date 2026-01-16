@@ -5,7 +5,7 @@
 #include "Defines.hpp"
 
 
-#define STRIPS_PER_CONTROLLER 8
+
 #define STRIP_ARRAY_SIZE (STRIPS_PER_CONTROLLER + ONE_BASED)
 
 #define MAX_SEND_STRIPS 8

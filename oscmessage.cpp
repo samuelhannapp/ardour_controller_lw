@@ -199,6 +199,9 @@ int OscMessage::get_argument_start_point(int argument_nr){
 		case 'd':
 			start_point += 8;
 			break;
+		case 'h':
+			start_point += 8;
+			break;
 		}
 	return start_point;
 }
@@ -229,6 +232,18 @@ int OscMessage::get_int(int argument_nr)
 	return ret;
 }
 
+long long OscMessage::get_long_long(int argument_nr)
+{
+	int argument_start_point = this->get_argument_start_point(argument_nr);
+	long long ret = 0;
+
+	for (int i = 0; i < 8; i++) {
+		long long byte = (unsigned char)this->m_data[argument_start_point++];
+		ret |= byte << (56 - (i * 8));
+	}
+
+	return ret;
+}
 
 double OscMessage::get_double(int argument_nr){
 	int argument_start_point = this->get_argument_start_point(argument_nr);
@@ -243,65 +258,67 @@ double OscMessage::get_double(int argument_nr){
 	memcpy(&val, byte_array, sizeof(double));
 	return val;
 }
-	std::string OscMessage::get_string(int argument_nr){
-		int argument_start_point = this->get_argument_start_point(argument_nr);
 
-		std::string ret;
-		while (this->m_data[argument_start_point] != '\0')
-			ret.push_back(this->m_data[argument_start_point++]);
-		return ret;
-	}
+std::string OscMessage::get_string(int argument_nr){
+	int argument_start_point = this->get_argument_start_point(argument_nr);
+
+	std::string ret;
+	while (this->m_data[argument_start_point] != '\0')
+		ret.push_back(this->m_data[argument_start_point++]);
+	return ret;
+}
 
 uint64_t OscMessage::GetAlignedStringLength(const std::string& string) {
 		uint64_t len = string.length() + (4 - string.length() % 4);
 		if (len <= string.length()) len += 4;
 		return len;
-	}
-	uint64_t OscMessage::GetAlignedStringLength(const std::wstring& string) {
-		uint64_t len = string.length() + (4 - string.length() % 4);
-		if (len <= string.length()) len += 4;
-		return len;
-	}
+}
 
-	bool OscMessage::IsLittleEndian() {
-		union {
-			uint32_t i;
-			char c[4];
-		} endianCheck = { 0x01020304 };
+uint64_t OscMessage::GetAlignedStringLength(const std::wstring& string) {
+	uint64_t len = string.length() + (4 - string.length() % 4);
+	if (len <= string.length()) len += 4;
+	return len;
+}
 
-		return endianCheck.c[0] != 1;
-	}
+bool OscMessage::IsLittleEndian() {
+	union {
+		uint32_t i;
+		char c[4];
+	} endianCheck = { 0x01020304 };
 
-	uint32_t OscMessage::SwapInt32(uint32_t num) {
-		return static_cast<std::uint32_t>((num << 24) | ((num << 8) & 0x00FF0000) | ((num >> 8) & 0x0000FF00) | (num >> 24));
-	}
+	return endianCheck.c[0] != 1;
+}
 
-	float OscMessage::SwapFloat32(float num) {
+uint32_t OscMessage::SwapInt32(uint32_t num) {
+	return static_cast<std::uint32_t>((num << 24) | ((num << 8) & 0x00FF0000) | ((num >> 8) & 0x0000FF00) | (num >> 24));
+}
 
-		union {
-			float f;
-			uint32_t ui32;
-		} swapper = { num };
+float OscMessage::SwapFloat32(float num) {
 
-		swapper.ui32 = SwapInt32(swapper.ui32);
-		return swapper.f;
-	}
+	union {
+		float f;
+		uint32_t ui32;
+	} swapper = { num };
 
-	uint64_t OscMessage::SwapInt64(uint64_t num) {
-		num = (num & 0x00000000FFFFFFFF) << 32	| (num & 0xFFFFFFFF00000000) >> 32;
-		num = (num & 0x0000FFFF0000FFFF) << 16	| (num & 0xFFFF0000FFFF0000) >> 16;
-		num = (num & 0x00FF00FF00FF00FF) << 8	| (num & 0xFF00FF00FF00FF00) >> 8;
-		return num;
-	}
+	swapper.ui32 = SwapInt32(swapper.ui32);
+	return swapper.f;
+}
 
-	double OscMessage::SwapFloat64(double num) {
+uint64_t OscMessage::SwapInt64(uint64_t num) {
+	num = (num & 0x00000000FFFFFFFF) << 32	| (num & 0xFFFFFFFF00000000) >> 32;
+	num = (num & 0x0000FFFF0000FFFF) << 16	| (num & 0xFFFF0000FFFF0000) >> 16;
+	num = (num & 0x00FF00FF00FF00FF) << 8	| (num & 0xFF00FF00FF00FF00) >> 8;
+	return num;
+}
 
-		union {
-			double d;
-			uint64_t ui64;
-		} swapper = { num };
+double OscMessage::SwapFloat64(double num) {
 
-		swapper.ui64 = SwapInt64(swapper.ui64);
-		return swapper.d;
-	}
+	union {
+		double d;
+		uint64_t ui64;
+	} swapper = { num };
+
+	swapper.ui64 = SwapInt64(swapper.ui64);
+	return swapper.d;
+}
 

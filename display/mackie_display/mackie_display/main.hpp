@@ -1,7 +1,7 @@
 #include <wx/wx.h>
 #include <wx/splitter.h>
 #include <wx/thread.h>
-#include "udp_sender_receiver.hpp"
+#include "UdpSenderReceiver.hpp"
 
 #define SPACE_SIZE_SIDE 40
 #define SPACE_SIZE 10
@@ -22,13 +22,12 @@ wxIMPLEMENT_APP(MyApp);
 class OscThread : public wxThread {
 public:
 	OscThread(wxEvtHandler* handler);
-
+	UdpSenderReceiver* osc_controller;
 protected:
 	ExitCode Entry() override;
 	
 private:
 	wxEvtHandler* m_handler;
-	udp_sender_receiver* osc_controller;
 };
 
 class MyFrame : public wxFrame

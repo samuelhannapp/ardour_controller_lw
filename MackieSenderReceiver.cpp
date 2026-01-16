@@ -186,11 +186,28 @@ void mackie_display_struct::fill_sysx_buffer()
 ;void MackieSenderReceiver::send_data(struct MidiMessage message)
 {
 	OscMessage osc_message("/Midi");
-	int data = message.data[0] | (message.data[1] << 8) | (message.data[2] << 16);
-	osc_message.PushInt(data);
+	if (message.length == 3) {
+		int data = message.data[0] | (message.data[1] << 8) | (message.data[2] << 16);
+		osc_message.PushInt(data);
+		int size = 0;
+		char* data_ptr = osc_message.GetBytes(size);
+		UdpSenderReceiver::send_data(data_ptr, size);
+	}
+	long long temp[15] = { 0 };
+	if (message.length == 120) {
+		for (int i = 0; i < 120; i++)
+			temp[i / 8] |= ((long long)message.data[i]) << ((i % 8) * 8);
+
+		for (int i = 0; i < 15; i++) {
+			osc_message.PushLongLong(temp[i]);
+		}
+	
+
 	int size = 0;
 	char* data_ptr = osc_message.GetBytes(size);
 	UdpSenderReceiver::send_data(data_ptr, size);
+	}
+	return;
 }
 
 void MackieSenderReceiver::receive_data(MidiMessage &midi_message)

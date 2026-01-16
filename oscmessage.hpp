@@ -40,6 +40,7 @@ public:
 	int get_int(int where);
 	float get_float(int where);
 	double get_double(int where);
+	long long get_long_long(int where);
 	std::string get_string(int where);
 	std::string initialize_type_list(){return this->m_type;}
 	char* GetBytes(int& size);

@@ -93,7 +93,7 @@ void MyFrame::OnSize(wxSizeEvent& event)
 OscThread::OscThread(wxEvtHandler* handler)
 	: wxThread(wxTHREAD_DETACHED), m_handler(handler) 
 {
-	osc_controller = new udp_sender_receiver("127.0.0.1", 12, 11);
+	osc_controller = new UdpSenderReceiver("127.0.0.1", 12, 11);
 }
 
 wxThread::ExitCode OscThread::Entry()
@@ -102,7 +102,7 @@ wxThread::ExitCode OscThread::Entry()
 	while (1) {
 
 		char buffer[1024];
-		int size = osc_controller->receive_udp_data_raw(buffer);
+		int size = osc_controller->receive_data(buffer);
 		std::vector<char> data;
 		for (int i = 0; i < size; i++)
 			data.push_back(buffer[i]);

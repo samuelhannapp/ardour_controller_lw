@@ -102,7 +102,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Samuel\Software\ardour_controller_lw;$(WXWIN)\include\msvc;$(WXWIN)\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Samuel\Software\arduor_controller_lw;$(WXWIN)\include\msvc;$(WXWIN)\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -126,12 +126,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\oscmessage.cpp" />
-    <ClCompile Include="..\..\..\udp_sender_receiver.cpp" />
+    <ClCompile Include="..\..\..\UdpSenderReceiver.cpp" />
+    <ClCompile Include="..\..\..\wxOscReceiveThread.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\oscmessage.hpp" />
-    <ClInclude Include="..\..\..\udp_sender_receiver.hpp" />
+    <ClInclude Include="..\..\..\UdpSenderReceiver.hpp" />
+    <ClInclude Include="..\..\..\wxOscReceiveThread.h" />
     <ClInclude Include="main.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

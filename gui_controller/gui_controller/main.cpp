@@ -3,8 +3,6 @@
 #include "Defines.hpp"
 #include "MackieSenderReceiverUdp.hpp"
 
-#define MAX_14_BIT 16383.0
-
 bool MyApp::OnInit()
 {
 	MyFrame* frame = new MyFrame();
@@ -16,7 +14,6 @@ bool MyApp::OnInit()
 MyFrame::MyFrame()
 	: wxFrame(nullptr, wxID_ANY, "Hello World")
 {
-
 	main_layout = new wxBoxSizer(wxHORIZONTAL);
 
 	channel[0] = new Channel(this, 0, std::string("show buses"));
@@ -36,11 +33,76 @@ MyFrame::MyFrame()
 
 	this->mackie_sender_receiver = new MackieSenderReceiver("127.0.0.1", 14, 13);
 	//this->mackie_sender_receiver->initialize_midi(1, 1);
+	this->receive_thread = new wxOscReceiveThread(this, this->mackie_sender_receiver);
+	receive_thread->Run();
+	Bind(wxEVT_THREAD, &MyFrame::OnThreadUpdate, this);
+
+}
+
+void MyFrame::OnThreadUpdate(wxThreadEvent& event)
+{
+	// SAFE: runs on GUI thread
+	thread_message message;
+	message = event.GetPayload<thread_message>();
+	if (message.midi_message == false)
+		state_changed(event);
+	
+	switch (message.midi_data[0] & 0xf0) {
+	case 0x90:
+		switch (mackie::button_type(message.midi_data[1] / STRIPS_PER_CONTROLLER)) {
+		case mackie::RECORD:
+			break;
+		case mackie::SOLO:
+			break;
+		case mackie::MUTE:
+			break;
+		case mackie::SELECT:
+			break;
+		}
+		//note on
+		break;
+	case 0xa0:
+		//aftertouch
+		break;
+	case 0xb0:
+		//continuous controller
+		break;
+	case 0xc0:
+		//patch change
+		break;
+	case 0xd0:
+		//channel preassure
+		break;
+	case 0xe0:
+	{
+		int value = ((message.midi_data[1] | (message.midi_data[2] << 7)) - MAX_14_BIT) * - 1;
+		this->channel[message.midi_data[0] & 0x0f]->fader->SetValue(value);
+		//pitch bend
+	}
+		break;
+	case 0xf0:
+	{
+		wxString string;
+		long long test_data = 0;
+		for (int i = 7; i < (120 / 2); i++) {
+			string.append(message.midi_data[i]);
+			if (((i - 7) % 8) == 7) {
+				this->channel[(i - 7) / 8]->display->SetLabel(string);
+				string.erase();
+			}
+		}
+	}
+		break;
+	}
+	return;
 }
 
 Channel::Channel(wxWindow *parent, int index_input, std::string button_function)
 	: wxBoxSizer(wxVERTICAL)
 {
+	this->display = new wxStaticText(parent, wxID_ANY, "ddddddd\nddddddd");
+	this->display->SetFont(wxFont(wxFontInfo(15)));
+
 	this->fader = new wxSlider(parent, wxID_ANY, 300, 0, MAX_14_BIT, 
 		wxDefaultPosition, wxDefaultSize, wxSL_VERTICAL);
 	this->function_button = new wxButton(parent, wxID_ANY, button_function);
@@ -55,7 +117,7 @@ Channel::Channel(wxWindow *parent, int index_input, std::string button_function)
 	this->select->SetMinSize(wxSize(100, 20));
 
 	this->index = index_input;
-	
+	this->Add(display);
 	this->Add(function_button);
 	this->Add(record);
 	this->Add(solo);
@@ -74,31 +136,31 @@ Channel::Channel(wxWindow *parent, int index_input, std::string button_function)
 
 void MyFrame::state_changed(wxThreadEvent& event)
 {
-	channel_message message;
-	message = event.GetPayload<channel_message>();
+	thread_message message;
+	message = event.GetPayload<thread_message>();
+	if (message.midi_message == true)
+		return;
 	this->mackie_sender_receiver->send_data(message.type, message.index + 1, message.value);
 	return;
 }
 
 void Channel::OnSlider(wxCommandEvent& event)
 {
-	channel_message message;
+	thread_message message;
+	message.midi_message = false;
 	message.type = controller::STRIP_VOLUME;
 	message.value = ((float(event.GetInt()) / MAX_14_BIT) - 1) * - 1;
 	message.index = this->index;
 	//state_changed(message);
 	wxThreadEvent event_1 = wxThreadEvent(wxEVT_THREAD); // No specific id
 	event_1.SetPayload(message);
-	
-	// Add any data; sometimes the only information needed at the destination is the arrival of the event itself
-
-	// Then post the event
 	wxQueueEvent(handler, event_1.Clone());
 }
 
 void Channel::OnButton(wxCommandEvent& event)
 {
-	channel_message message;
+	thread_message message;
+	message.midi_message = false;
 	message.value = 1;
 	message.index = this->index;
 	wxString label(this->function_button->GetLabel());
