@@ -100,23 +100,13 @@ wxThread::ExitCode OscThread::Entry()
 {
 	int test = 0;
 	while (1) {
-
 		char buffer[1024];
 		int size = osc_controller->receive_data(buffer);
-		std::vector<char> data;
-		for (int i = 0; i < size; i++)
-			data.push_back(buffer[i]);
 
+		OscMessage message(buffer, size);
+		
 		wxThreadEvent event = wxThreadEvent();
-		event.SetPayload(data);
-		/*
-		wxSleep(2); // simulate work
-		test++;
-		// Create and send event
-		wxString string("hello");
-		string.append(std::to_string(test));
-		event.SetString(string);
-		*/
+		event.SetPayload(message);
 		wxQueueEvent(m_handler, event.Clone());
 	}
 	return nullptr;
@@ -152,12 +142,7 @@ void MyFrame::OnSlider_3(wxCommandEvent& event)
 void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 {
 	// SAFE: runs on GUI thread
-	std::vector<char> data;
-	data = event.GetPayload<std::vector<char>>();
-	char array[1024];
-	for (int i = 0; i < data.size(); i++)
-		array[i] = data.at(i);
-	OscMessage message(array, data.size());
+	OscMessage message = event.GetPayload<OscMessage>();
 	int index = message.get_int(0) - 1;
 	this->channel_name[index]->SetLabel(message.get_string(1));
 	this->channel_name[index]->SetSize(channel_name_panel[index]->GetSize());

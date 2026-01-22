@@ -46,17 +46,36 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 	message = event.GetPayload<thread_message>();
 	if (message.midi_message == false)
 		state_changed(event);
+
+	int button_nr = message.midi_data[1] % 8;
+	int value = message.midi_data[2];
 	
 	switch (message.midi_data[0] & 0xf0) {
 	case 0x90:
 		switch (mackie::button_type(message.midi_data[1] / STRIPS_PER_CONTROLLER)) {
 		case mackie::RECORD:
+			if(value)
+				channel[button_nr]->record->SetBackgroundColour(wxColour(255, 0, 0));
+			else
+				channel[button_nr]->record->SetBackgroundColour(wxColour(255, 255, 255));
 			break;
 		case mackie::SOLO:
+			if (value)
+				channel[button_nr]->solo->SetBackgroundColour(wxColour(255, 255, 0));
+			else
+				channel[button_nr]->solo->SetBackgroundColour(wxColour(255, 255, 255));
 			break;
 		case mackie::MUTE:
+			if (value)
+				channel[button_nr]->mute->SetBackgroundColour(wxColour(255, 255, 0));
+			else
+				channel[button_nr]->mute->SetBackgroundColour(wxColour(255, 255, 255));
 			break;
 		case mackie::SELECT:
+			if (value)
+				channel[button_nr]->select->SetBackgroundColour(wxColour(0, 0, 255));
+			else
+				channel[button_nr]->select->SetBackgroundColour(wxColour(255, 255, 255));
 			break;
 		}
 		//note on
@@ -75,24 +94,33 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		break;
 	case 0xe0:
 	{
-		int value = ((message.midi_data[1] | (message.midi_data[2] << 7)) - MAX_14_BIT) * - 1;
+		int value = ((message.midi_data[1] | (message.midi_data[2] << 7)) - MAX_14_BIT) * -1;
 		this->channel[message.midi_data[0] & 0x0f]->fader->SetValue(value);
 		//pitch bend
 	}
-		break;
+	break;
 	case 0xf0:
-	{
-		wxString string;
+		{
+		wxString string[8];
 		long long test_data = 0;
-		for (int i = 7; i < (120 / 2); i++) {
-			string.append(message.midi_data[i]);
-			if (((i - 7) % 8) == 7) {
-				this->channel[(i - 7) / 8]->display->SetLabel(string);
-				string.erase();
+		for (int i = 7; i < 120; i++) {
+			int line_nr = (i - 7) / 56;
+			int string_nr = ((i - 7 - (56 * line_nr))) / 7;
+			string[string_nr].append(message.midi_data[i]);
+		}
+		for (int i = 0; i < 8; i++) {
+
+			if (string[i].size() >= 8) {
+				string[i].Remove(6, 1);
+				string[i].insert(6, '\n');
 			}
 		}
-	}
+
+		for (int i = 0; i < 8; i++) 
+			this->channel[i]->display->SetLabel(string[i]);
+
 		break;
+		}
 	}
 	return;
 }
@@ -102,6 +130,7 @@ Channel::Channel(wxWindow *parent, int index_input, std::string button_function)
 {
 	this->display = new wxStaticText(parent, wxID_ANY, "ddddddd\nddddddd");
 	this->display->SetFont(wxFont(wxFontInfo(15)));
+	this->display->SetMinSize(wxSize(100, 50));
 
 	this->fader = new wxSlider(parent, wxID_ANY, 300, 0, MAX_14_BIT, 
 		wxDefaultPosition, wxDefaultSize, wxSL_VERTICAL);

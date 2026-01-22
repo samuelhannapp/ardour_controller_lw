@@ -181,7 +181,6 @@ void mackie_display_struct::fill_sysx_buffer()
 	}
 }
 
-
 //This is only for the Udp version of the MackieSenderReceiver
 ;void MackieSenderReceiver::send_data(struct MidiMessage message)
 {
@@ -202,10 +201,9 @@ void mackie_display_struct::fill_sysx_buffer()
 			osc_message.PushLongLong(temp[i]);
 		}
 	
-
-	int size = 0;
-	char* data_ptr = osc_message.GetBytes(size);
-	UdpSenderReceiver::send_data(data_ptr, size);
+		int size = 0;
+		char* data_ptr = osc_message.GetBytes(size);
+		UdpSenderReceiver::send_data(data_ptr, size);
 	}
 	return;
 }
