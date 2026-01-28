@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <array>
 
 struct plugin_parameter{
 	//int ssid;

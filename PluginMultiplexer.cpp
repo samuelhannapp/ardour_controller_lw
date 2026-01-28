@@ -1,6 +1,8 @@
 #include "PluginMultiplexer.hpp"
 #include "Defines.hpp"
 #include <array>
+#include <fstream>
+#include <filesystem>
 
 
 void plugin_multiplexer_struct::setup(std::string plugin_name)
@@ -57,4 +59,59 @@ void plugin_multiplexer_struct::setup(std::string plugin_name)
 		plugin_multiplexer_from_plugin[routing[1]] = routing[0];
 	}
 	return;
+}
+
+void plugin_multiplexer_struct::initialize_plugin_multiplexer()
+{
+#ifdef __linux__
+	std::string path = "/home/samuel/Documents/plugin_data";
+#endif
+
+#ifdef _WIN64
+	std::string path = "C:\\Users\\Samuel\\Documents\\plugin_data";
+#endif
+
+	std::vector<std::string> file_locations;
+	for (const auto& entry : std::filesystem::directory_iterator(path))
+		file_locations.push_back(entry.path().string());
+
+	struct plugin_routing temp;
+	plugin_multiplexer.resize(file_locations.size(), temp);
+
+	std::string line;
+	int temp_plugin_index = 0;
+	for (std::string file_location : file_locations) {
+		std::string plugin_name = file_location;
+
+#ifdef __linux__
+		int pos = plugin_name.find_last_of('/') + 1;
+#endif
+
+#ifdef _WIN64
+		int pos = plugin_name.find_last_of('\\') + 1;
+#endif
+
+		plugin_name.erase(0, pos);
+		pos = plugin_name.find(".txt");
+		plugin_name.erase(pos, plugin_name.size());
+		plugin_multiplexer.at(temp_plugin_index).plugin_name = plugin_name;
+
+		std::ifstream file(file_location);
+		int parameter_index = 0;
+		while (std::getline(file, line)) {
+			parameter_index++;
+			plugin_multiplexer.at(temp_plugin_index).from_controller.push_back(std::array<int, 2>{parameter_index, std::stoi(line)});
+		}
+
+		temp_plugin_index++;
+
+	}
+}
+
+void plugin_multiplexer_struct::initialize_plugin_multiplexer_from_controller_and_from_plugin()
+{
+	for(int i = 0; i < MAX_PLUGIN_PARAMETERS; i++){
+		plugin_multiplexer_from_plugin.push_back(i);
+		plugin_multiplexer_from_controller.push_back(i);
+	}
 }

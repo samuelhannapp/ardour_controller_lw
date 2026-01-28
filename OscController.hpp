@@ -51,26 +51,7 @@
 #include "MackieControl.hpp"
 
 
-enum default_strip_types {
-		AudioTracks, MidiTracks, AudioBusses, MidiBusses, VCAs, Master,
-		Monitor, FoldbackBusses, Selected, Hidden, Use_Group
-};
 
-enum default_feedback {
-		StripButtons, StripControls, SSIDasPathExtension, UseHeartBeat,
-		MasterSection, PHPasBarBeat, PHPasST, MeteringasFloat,
-		MeteringasLEDStrip, SignalPresent, PHPasSamples, PHPasMinutesSeconds,
-		PHPasperGuiClock, ExtraSelectOnlyFeedback, UseSlashReply, report_8x8_trigger_grid_status,
-		report_mixer_scene_status
-};
-
-enum plugin_descriptor_flags{
-		ENUMERATION, INTEGER_STEP, LOGARITHMIC, MAX_UNBOUND, MIN_UNBOUND, SAMPLE_RATE_DEPENDENT, TOGGLED, CONTROLLABLE, HIDDEN
-};
-
-enum channel_mode{
-		PanMode, SendMode, PluginMode, Default
-};
 
 #define PLUGIN_PAGES_SIZE 4
 

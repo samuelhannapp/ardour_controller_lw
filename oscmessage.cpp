@@ -106,6 +106,8 @@ OscMessage OscMessage::PushLongLong(long long data) {
 }
 
 // Internal function
+//only after this function is the /adress included in the data,
+//this is a pretty big kind of bug...
 char* OscMessage::GetBytes(int& size) {
 	std::vector<char> headerData;
 

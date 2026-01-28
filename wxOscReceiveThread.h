@@ -1,27 +1,21 @@
 #pragma once
 #include <wx/wx.h>
 #include <wx/thread.h>
-#include <UdpSenderReceiver.hpp>
+#include <OscSenderReceiver.hpp>
 
-struct thread_message {
-	bool midi_message;
-	enum controller::controller_message type;
-	float value;
-	int index;
+struct MidiMessage_v2 {
 	char midi_data[120];
 	int midi_data_size;
 };
 
 class wxOscReceiveThread : public wxThread {
 public:
-	wxOscReceiveThread(wxEvtHandler* handler, UdpSenderReceiver* osc_controller_object);
-	UdpSenderReceiver* osc_controller;
+	wxOscReceiveThread(wxEvtHandler* handler, OscSenderReceiver* osc_controller_object);
+	OscSenderReceiver* osc_controller;
 protected:
 	ExitCode Entry() override;
 	
 private:
 	wxEvtHandler* m_handler;
 };
-
-
 

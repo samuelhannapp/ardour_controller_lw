@@ -1,7 +1,7 @@
 #include "wxOscReceiveThread.h"
 #include "oscmessage.hpp"
 
-wxOscReceiveThread::wxOscReceiveThread(wxEvtHandler* handler, UdpSenderReceiver* osc_controller_object)
+wxOscReceiveThread::wxOscReceiveThread(wxEvtHandler* handler, OscSenderReceiver* osc_controller_object)
 	: wxThread(wxTHREAD_DETACHED), m_handler(handler)
 {
 	osc_controller = osc_controller_object;
@@ -12,6 +12,19 @@ wxOscReceiveThread::wxOscReceiveThread(wxEvtHandler* handler, UdpSenderReceiver*
 //thread->Run();
 //Bind(wxEVT_THREAD, &ReceivingClass...::OnThreadUpdate, this);
 
+wxThread::ExitCode wxOscReceiveThread::Entry()
+{
+	int test = 0;
+	while (1) {
+		OscMessage message(osc_controller->receive_data());
+
+		wxThreadEvent event = wxThreadEvent();
+		event.SetPayload(message);
+		wxQueueEvent(m_handler, event.Clone());
+	}
+	return nullptr;
+}
+/*
 wxThread::ExitCode wxOscReceiveThread::Entry()
 {
 	thread_message message;
@@ -31,15 +44,6 @@ wxThread::ExitCode wxOscReceiveThread::Entry()
 		if (osc_message.GetTypeList().at(0) == 'h') {
 			message.midi_data_size = 120;
 			if (osc_message.GetTypeList().size() == 15)
-				/*
-				for (int i = 0; i < 120; i++) {
-					int index = i / 8;
-					long long temp = (long long)(osc_message.get_long_long(index));
-					temp = temp & ((((long long)(0xff)) << ((i % 8) * 8)));
-					temp = temp >> ((i % 8) * 8);
-					message.midi_data[i] = temp;
-				}*/
-
 				for (int i = 0; i < 15; i++){
 					long long temp = osc_message.get_long_long(i);
 					char char_data[8] = { 0 };
@@ -61,6 +65,7 @@ wxThread::ExitCode wxOscReceiveThread::Entry()
 	}
 	return nullptr;
 }
+*/
 /*
 void ReceivingClass...::OnThreadUpdate(wxThreadEvent& event)
 {

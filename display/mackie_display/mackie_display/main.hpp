@@ -1,7 +1,8 @@
 #include <wx/wx.h>
 #include <wx/splitter.h>
 #include <wx/thread.h>
-#include "UdpSenderReceiver.hpp"
+#include "OscSenderReceiver.hpp"
+#include "wxOscReceiveThread.h"
 
 #define SPACE_SIZE_SIDE 40
 #define SPACE_SIZE 10
@@ -18,17 +19,18 @@ public:
 wxIMPLEMENT_APP(MyApp);
 
 #define CHANNEL_COUNT 8
-
+/*
 class OscThread : public wxThread {
 public:
 	OscThread(wxEvtHandler* handler);
-	UdpSenderReceiver* osc_controller;
+	OscSenderReceiver* osc_controller;
 protected:
 	ExitCode Entry() override;
 	
 private:
 	wxEvtHandler* m_handler;
 };
+*/
 
 class MyFrame : public wxFrame
 {
@@ -59,7 +61,8 @@ public:
 
 	void OnThreadUpdate(wxThreadEvent& event);
 
-	OscThread* thread;
+	wxOscReceiveThread* thread;
+	OscSenderReceiver* osc_sender_receiver;
 };
 
 class WindowScalerFrame : public wxFrame {

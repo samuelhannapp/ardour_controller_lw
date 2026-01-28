@@ -26,7 +26,7 @@ void MackieSenderReceiver::send_data(enum controller::controller_message type, i
 		uint16_t value_14_bit = uint16_t(value * float(MAX_14_BIT));
     	uint8_t value_low = value_14_bit & 0x7f;
     	uint8_t value_high = ((value_14_bit & 0x3f80) >> 7);
-        unsigned char midi_message[3]  = {(unsigned char)(0xe0 | (strip_nr - 1)), value_low, value_high};
+        unsigned char midi_message[3]  = {(unsigned char)(0xe0 | ((strip_nr - 1) % 8)), value_low, value_high};
 	    send_data(MidiMessage(midi_message, 3));
 		}
 		break;
@@ -210,9 +210,7 @@ void mackie_display_struct::fill_sysx_buffer()
 
 void MackieSenderReceiver::receive_data(MidiMessage &midi_message)
 {
-	char udp_data[1024];
-	int length = UdpSenderReceiver::receive_data(udp_data);
-	OscMessage osc_message(udp_data, length);
+	OscMessage osc_message(OscSenderReceiver::receive_data());
 	int midi_data = osc_message.get_int(0);
 	midi_message.data[0] = midi_data & 0xff;
 	midi_message.data[1] = (midi_data & 0xff00) >> 8;

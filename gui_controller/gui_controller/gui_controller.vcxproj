@@ -132,6 +132,7 @@
     <ClCompile Include="..\..\MackieSenderReceiver.cpp" />
     <ClCompile Include="..\..\MidiSenderReceiver.cpp" />
     <ClCompile Include="..\..\oscmessage.cpp" />
+    <ClCompile Include="..\..\OscSenderReceiver.cpp" />
     <ClCompile Include="..\..\UdpSenderReceiver.cpp" />
     <ClCompile Include="..\..\wxOscReceiveThread.cpp" />
     <ClCompile Include="main.cpp" />
@@ -139,6 +140,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\MackieSenderReceiver.hpp" />
     <ClInclude Include="..\..\MidiSenderReceiver.hpp" />
+    <ClInclude Include="..\..\OscSenderReceiver.hpp" />
     <ClInclude Include="..\..\wxOscReceiveThread.h" />
     <ClInclude Include="main.hpp" />
   </ItemGroup>

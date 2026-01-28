@@ -61,9 +61,9 @@ MyFrame::MyFrame()
 	main_layout->AddSpacer(SPACE_SIZE);
 
 	this->SetSizer(main_layout);
-
+	this->osc_sender_receiver = new OscSenderReceiver("127.0.0.1", 12, 11);
 	Bind(wxEVT_SIZE, &MyFrame::OnSize, this);
-	thread = new OscThread(this);
+	thread = new wxOscReceiveThread(this, osc_sender_receiver);
 	thread->Run();
 	Bind(wxEVT_THREAD, &MyFrame::OnThreadUpdate, this);
 }
@@ -88,28 +88,6 @@ void MyFrame::OnSize(wxSizeEvent& event)
 	this->Update();
 	event.Skip();
 	return;
-}
-
-OscThread::OscThread(wxEvtHandler* handler)
-	: wxThread(wxTHREAD_DETACHED), m_handler(handler) 
-{
-	osc_controller = new UdpSenderReceiver("127.0.0.1", 12, 11);
-}
-
-wxThread::ExitCode OscThread::Entry()
-{
-	int test = 0;
-	while (1) {
-		char buffer[1024];
-		int size = osc_controller->receive_data(buffer);
-
-		OscMessage message(buffer, size);
-		
-		wxThreadEvent event = wxThreadEvent();
-		event.SetPayload(message);
-		wxQueueEvent(m_handler, event.Clone());
-	}
-	return nullptr;
 }
 
 void MyFrame::OnSlider(wxCommandEvent& event)

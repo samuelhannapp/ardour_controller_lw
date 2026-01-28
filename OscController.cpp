@@ -116,7 +116,7 @@ void OscController::process_midi(MidiMessage message)
 						if(this->mode == PanMode)
 							msg = OscMessage("/bank_up");
 						if(this->mode == PluginMode){
-							if(local_strip_data.selected_strip.plugin_bank < PLUGIN_PAGES_SIZE)
+							if(local_strip_data.selected_strip.plugin_bank < (PLUGIN_PAGES_SIZE - 1))
 								local_strip_data.selected_strip.plugin_bank++;
 
 							this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
@@ -265,6 +265,8 @@ void OscController::ardour_receive_thread()
 		char buffer[1024];
 		int buffer_length = 0;
 		OscMessage message = ardour_sender_receiver.receive_data();
+
+		std::cout << message.GetAddress() << "\n";
 
 		//write_to_itm(message.GetAddress());
 
@@ -459,10 +461,6 @@ void strip_feedback::send_data(enum controller::controller_message type, std::st
 	}
 }
 
-
-
-
-
 //this shoudl also exist for the selected strip in osc...
 void ArdourSenderReceiver::get_plugin_list(int strip_number)
 {
@@ -551,57 +549,4 @@ void ArdourSenderReceiver::init_osc_controller()
 
 
 
-void plugin_multiplexer_struct::initialize_plugin_multiplexer()
-{
-#ifdef __linux__
-	std::string path = "/home/samuel/Documents/plugin_data";
-#endif
 
-#ifdef _WIN64
-	std::string path = "C:\\Users\\Samuel\\Documents\\plugin_data";
-#endif
-
-	std::vector<std::string> file_locations;
-	for (const auto& entry : std::filesystem::directory_iterator(path))
-		file_locations.push_back(entry.path().string());
-
-	struct plugin_routing temp;
-	plugin_multiplexer.resize(file_locations.size(), temp);
-
-	std::string line;
-	int temp_plugin_index = 0;
-	for (std::string file_location : file_locations) {
-		std::string plugin_name = file_location;
-
-#ifdef __linux__
-		int pos = plugin_name.find_last_of('/') + 1;
-#endif
-
-#ifdef _WIN64
-		int pos = plugin_name.find_last_of('\\') + 1;
-#endif
-
-		plugin_name.erase(0, pos);
-		pos = plugin_name.find(".txt");
-		plugin_name.erase(pos, plugin_name.size());
-		plugin_multiplexer.at(temp_plugin_index).plugin_name = plugin_name;
-
-		std::ifstream file(file_location);
-		int parameter_index = 0;
-		while (std::getline(file, line)) {
-			parameter_index++;
-			plugin_multiplexer.at(temp_plugin_index).from_controller.push_back(std::array<int, 2>{parameter_index, std::stoi(line)});
-		}
-
-		temp_plugin_index++;
-
-	}
-}
-
-void plugin_multiplexer_struct::initialize_plugin_multiplexer_from_controller_and_from_plugin()
-{
-	for(int i = 0; i < MAX_PLUGIN_PARAMETERS; i++){
-		plugin_multiplexer_from_plugin.push_back(i);
-		plugin_multiplexer_from_controller.push_back(i);
-	}
-}

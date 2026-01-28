@@ -3,14 +3,14 @@
 #include <vector>
 #include <string>
 
-#include "UdpSenderReceiver.hpp"
+#include "OscSenderReceiver.hpp"
 #include "Defines.hpp"
 #include "MackieDisplay.hpp"
 
-class MackieSenderReceiver : public UdpSenderReceiver{
+class MackieSenderReceiver : public OscSenderReceiver{
 public:
-	using UdpSenderReceiver::UdpSenderReceiver;
-	using UdpSenderReceiver::receive_data;
+	using OscSenderReceiver::OscSenderReceiver;
+	using OscSenderReceiver::receive_data;
 	struct mackie_display_struct mackie_display;
 	void initialize_mackie_display_formated();
 	void send_data(enum controller::controller_message type, int strip_nr, float value); //this is for controls

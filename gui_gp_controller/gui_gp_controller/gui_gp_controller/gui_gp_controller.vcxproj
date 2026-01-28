@@ -102,7 +102,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Samuel\Software\arduor_controller_lw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WXWIN)\include;$(WXWIN)\include\msvc;C:\Users\Samuel\Software\arduor_controller_lw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -125,12 +126,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\oscmessage.hpp" />
+    <ClInclude Include="..\..\..\OscSenderReceiver.hpp" />
+    <ClInclude Include="..\..\..\PluginMultiplexer.hpp" />
     <ClInclude Include="..\..\..\UdpSenderReceiver.hpp" />
+    <ClInclude Include="..\..\..\wxOscReceiveThread.h" />
     <ClInclude Include="GuiGpController.h" />
     <ClInclude Include="main.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\oscmessage.cpp" />
+    <ClCompile Include="..\..\..\OscSenderReceiver.cpp" />
+    <ClCompile Include="..\..\..\PluginMultiplexer.cpp" />
     <ClCompile Include="..\..\..\UdpSenderReceiver.cpp" />
+    <ClCompile Include="..\..\..\wxOscReceiveThread.cpp" />
     <ClCompile Include="GuiGpController.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>

@@ -2,10 +2,12 @@
 
 #include <wx/wx.h>
 #include <wx/thread.h>
-#include "MackieSenderReceiverUdp.hpp"
 #include "wxOscReceiveThread.h"
+#include "OscSenderReceiver.hpp"
+#include "PluginMultiplexer.hpp"
 
 #define CHANNEL_COUNT 8
+#define MAX_PLUGIN_PARAMETERS 200
 
 class MyApp : public wxApp
 {
@@ -16,32 +18,38 @@ public:
 wxIMPLEMENT_APP(MyApp);
 
 
+int bank = 0;
 
-
-class Channel : public wxBoxSizer
-{
-public:
-	Channel(wxWindow* parent, int index_input, std::string button_function);
-private:
-	int index;
-	void OnSlider(wxCommandEvent& event);
-	void OnButton(wxCommandEvent& event);
-	wxEvtHandler* handler;
-public:
-	wxStaticText* display;
+struct instance {
+	wxStaticText* name;
 	wxSlider* fader;
-	wxButton* function_button;
-	wxButton* record;
-	wxButton* solo;
-	wxButton* mute;
-	wxButton* select;
+	int index;
+	wxEvtHandler* handler;
+	void OnSlider(wxCommandEvent& event);
 };
+
+#define BANK_SIZE 4
+#define CONTROLLER_SIZE 16
 
 class MyFrame : public wxFrame
 {
 public:
 	MyFrame();
+	wxButton* bank_up;
+	wxButton* bank_down;
+	void bank_up_function(wxCommandEvent& event);
+	void bank_down_function(wxCommandEvent& event);
+	wxBoxSizer* button_layout;
+	wxBoxSizer* label_layout;
+	wxBoxSizer* fader_layout;
 	wxBoxSizer* main_layout;
+	OscSenderReceiver* osc_sender_receiver;
 	wxOscReceiveThread* receive_thread;
 	void OnThreadUpdate(wxThreadEvent& event);
+	plugin_parameter selected_plugin[MAX_PLUGIN_PARAMETERS];
+	instance controller[CONTROLLER_SIZE];
+	void update_controller();
+	plugin_multiplexer_struct* plugin_multiplexer;
+	std::string selected_plugin_name;
+	int selected_strip_number = 0;
 };

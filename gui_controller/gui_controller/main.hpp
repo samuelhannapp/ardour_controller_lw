@@ -3,6 +3,7 @@
 #include <wx/thread.h>
 #include "MackieSenderReceiverUdp.hpp"
 #include "wxOscReceiveThread.h"
+#include "OscMessage.hpp"
 
 #define CHANNEL_COUNT 8
 
@@ -42,9 +43,11 @@ public:
 	MyFrame();
 	wxBoxSizer* main_layout;
 	Channel* channel[CHANNEL_COUNT];
-	void state_changed(wxThreadEvent& event);
+	void process_gui_controller_data(wxThreadEvent& event);
+	void process_midi_data(wxThreadEvent& event);
 	MackieSenderReceiver *mackie_sender_receiver;
 	wxOscReceiveThread* receive_thread;
 	void OnThreadUpdate(wxThreadEvent& event);
+	MidiMessage_v2 get_midi_data(OscMessage message);
 };
 

@@ -11,10 +11,6 @@
 #define MAX_SEND_STRIPS 8
 #define SEND_ARRAY_SIZE (MAX_SEND_STRIPS + ONE_BASED) 
 
-#define MAX_PLUGIN_PARAMETERS 200
-
-
-
 struct send{
 		std::string name;
 		volatile float volume;
