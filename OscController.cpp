@@ -236,8 +236,6 @@ void OscController::process_midi(MidiMessage message)
     }
 }
 
-
-
 #ifdef __STM32F7xx_HAL_H
 static void write_to_itm(std::string string)
 {
@@ -269,7 +267,6 @@ void OscController::ardour_receive_thread()
 		std::cout << message.GetAddress() << "\n";
 
 		//write_to_itm(message.GetAddress());
-
 
 		if(!message.GetAddress().compare(0, 13, "/strip/fader\0")){
 			int strip_nr = message.get_int(0);

@@ -17,12 +17,21 @@ MyFrame::MyFrame()
 	label_layout = new wxBoxSizer(wxHORIZONTAL);
 	fader_layout = new wxBoxSizer(wxHORIZONTAL);
 
+	plugin_list_label = new wxStaticText(this, wxID_ANY, "plugin_list", wxDefaultPosition, wxSize(200, 30));
+
+
 	bank_down = new wxButton(this, wxID_ANY, "bank down");
 	bank_up = new wxButton(this, wxID_ANY, "bank up");
+	plugin_down = new wxButton(this, wxID_ANY, "plugin down");
+	plugin_up = new wxButton(this, wxID_ANY, "plugin up");
 	bank_down->Bind(wxEVT_BUTTON, &MyFrame::bank_down_function, this);
 	bank_up->Bind(wxEVT_BUTTON, &MyFrame::bank_up_function, this);
+	plugin_down->Bind(wxEVT_BUTTON, &MyFrame::plugin_down_function, this);
+	plugin_up->Bind(wxEVT_BUTTON, &MyFrame::plugin_up_function, this);
 	button_layout->Add(bank_down);
 	button_layout->Add(bank_up);
+	button_layout->Add(plugin_down);
+	button_layout->Add(plugin_up);
 	
 	for (int i = 0; i < 16; i++) {
 		controller[i].name = new wxStaticText(this, wxID_ANY, "test", wxDefaultPosition, wxSize(100, 30));
@@ -33,6 +42,7 @@ MyFrame::MyFrame()
 		fader_layout->Add(controller[i].fader);
 		controller[i].fader->Bind(wxEVT_SLIDER, &instance::OnSlider, &controller[i]);
 	}
+	main_layout->Add(plugin_list_label);
 	main_layout->Add(button_layout);
 	main_layout->Add(label_layout);
 	main_layout->Add(fader_layout);
@@ -47,7 +57,7 @@ MyFrame::MyFrame()
 	this->plugin_multiplexer->initialize_plugin_multiplexer_from_controller_and_from_plugin();
 
 	OscMessage setup_msg("/set_surface");
-	setup_msg.PushInt(8);
+	setup_msg.PushInt(1);
 	setup_msg.PushInt((1 << AudioTracks) | (1 << MidiTracks));
 	setup_msg.PushInt(1 << ExtraSelectOnlyFeedback);
 	setup_msg.PushInt(0b1000);
@@ -55,10 +65,7 @@ MyFrame::MyFrame()
 	this->osc_sender_receiver->send_data(setup_msg);
 
 }
-
-//the next thing now is to generalize the plugin multiplexer so that it can be also use for gp_controller
-//and sp_controller
-
+//these could also all be handled by the thread handler...
 void MyFrame::bank_up_function(wxCommandEvent& event)
 {
 	if (bank < (BANK_SIZE - 1))
@@ -70,6 +77,22 @@ void MyFrame::bank_down_function(wxCommandEvent& event)
 	if (bank > 0)
 		bank--;
 	this->update_controller();
+}
+
+void MyFrame::plugin_up_function(wxCommandEvent& event)
+{
+	OscMessage msg = OscMessage("/select/plugin");
+	msg.PushFloat(1);
+	this->osc_sender_receiver->send_data(msg);
+}
+
+void MyFrame::plugin_down_function(wxCommandEvent& event)
+{
+	//OscMessage msg = OscMessage("/strip/plugin/list");
+	//msg.PushInt(1);
+	OscMessage msg = OscMessage("/select/plugin");
+	msg.PushFloat(-1);
+	this->osc_sender_receiver->send_data(msg);
 }
 
 void MyFrame::update_controller()
@@ -87,6 +110,8 @@ void MyFrame::update_controller()
 //or another solution would be that there is another field like m_data,
 //wich is formated data, and there can be a function called, to initialize this, 
 //or it get's updated everytime the message is changed...
+
+//we also need the plugin list here...
 
 
 
@@ -118,6 +143,9 @@ void instance::OnSlider(wxCommandEvent& event)
 //selected one, so we don't need strip numbers, so this message would not be 
 //possible, that would mean we need a command like 
 //select/plugin/list, wich doesn't exist yet...
+
+//we can use all /strip/ commands!!!! we just have to use as ssid 1...
+//that will be the selected than
 
 void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 {
@@ -175,10 +203,34 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		std::string plugin_name = osc_message.get_string(0);
 		if (plugin_name.size() == 1)
 			return;
+
+		OscMessage get_plugin_list_message("/strip/plugin/list");
+		get_plugin_list_message.PushInt(1);
+		int size = 0;
+		//get_plugin_list_message.GetBytes(size);
+		this->osc_sender_receiver->send_data(get_plugin_list_message);
+
 		this->plugin_multiplexer->setup(plugin_name);
 		if (this->selected_plugin_name == plugin_name) //everything is already setup...
 			return;
 		this->selected_plugin_name = plugin_name;
+		
+	}
+
+	else if (!osc_message.GetAddress().compare("/strip/plugin/list")) {
+		this->plugin_list.clear();
+		//write_to_itm(std::to_string(message.GetTypeList().size()));
+		int plugin_quantity = (osc_message.GetTypeList().size() - 1) / 3;
+		std::string type_list = osc_message.GetTypeList();
+		for (int i = 0; i < plugin_quantity; i++)
+			this->plugin_list.push_back(osc_message.get_string(i + 2 + i * 2));
+		std::string temp_label;
+		for (std::string temp : this->plugin_list) {
+			temp_label.append(temp);
+			temp_label.push_back('\t');
+		}
+		this->plugin_list_label->SetLabel(temp_label);
+		//ardour_sender_receiver.request_plugin_descriptor(local_strip_data.selected_strip.number, local_strip_data.selected_strip.get_selected_plugin_index());
 	}
 	return;
 }

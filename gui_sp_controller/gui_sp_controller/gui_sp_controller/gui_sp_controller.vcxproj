@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{d5f1f969-414b-4bfa-b6d3-9eef7a22bc67}</ProjectGuid>
-    <RootNamespace>guigpcontroller</RootNamespace>
+    <ProjectGuid>{0524e4a6-fa1f-47dd-b084-43026c9f76b4}</ProjectGuid>
+    <RootNamespace>guispcontroller</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -126,20 +126,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\oscmessage.hpp" />
-    <ClInclude Include="..\..\..\OscSenderReceiver.hpp" />
-    <ClInclude Include="..\..\..\PluginMultiplexer.hpp" />
-    <ClInclude Include="..\..\..\UdpSenderReceiver.hpp" />
-    <ClInclude Include="..\..\..\wxOscReceiveThread.h" />
-    <ClInclude Include="main.hpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\..\..\oscmessage.cpp" />
     <ClCompile Include="..\..\..\OscSenderReceiver.cpp" />
     <ClCompile Include="..\..\..\PluginMultiplexer.cpp" />
     <ClCompile Include="..\..\..\UdpSenderReceiver.cpp" />
     <ClCompile Include="..\..\..\wxOscReceiveThread.cpp" />
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\oscmessage.hpp" />
+    <ClInclude Include="..\..\..\OscSenderReceiver.hpp" />
+    <ClInclude Include="..\..\..\PluginMultiplexer.hpp" />
+    <ClInclude Include="..\..\..\UdpSenderReceiver.hpp" />
+    <ClInclude Include="..\..\..\wxOscReceiveThread.h" />
+    <ClInclude Include="main.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
