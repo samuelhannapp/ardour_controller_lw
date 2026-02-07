@@ -21,6 +21,8 @@ public:
 	static double SwapFloat64(double num);
 	static float SwapFloat32(float num);
 
+	//why do all of these messages give back a copy of the OscMessage????????????????????????????????
+	//that doesn't make sense...
 	OscMessage PushString(std::string data);
 	OscMessage PushFloat(float data);
 	OscMessage PushDouble(double data);
@@ -43,18 +45,30 @@ public:
 	long long get_long_long(int where);
 	std::string get_string(int where);
 	std::string initialize_type_list(){return this->m_type;}
+	void FormatOscMessage();
 	char* GetBytes(int& size);
 
 private:
+	std::vector<char> initialize_message(char* buffer, int buffer_length);
 	std::vector<char> initialize_data(char* buffer, int buffer_length);
 	std::string get_type_list(char* buffer, int buffer_length);
 
 	int get_data_start_point();
+	int get_data_start_point(char* buffer, int buffer_length);
 	int get_argument_start_point(int where);
 	int get_string_length(int where);
 
 	bool m_readonly;
 	std::string m_address;
 	std::string m_type;
+	//m_message_formated is where we get data from and m_data is where we push data to...
+	//the thing is, if we would get data from m_data, than we would not have to do the 
+	//find starting point...
+	 
+	//this is the complete message with header(addres, and type_list) appended...
+	//this has to be initialised after a push was done...
+	//maybe we could do that automatically...
+	std::vector<char> m_message_formated;
+	//this is just the raw data(already formated) used by the push functions
 	std::vector<char> m_data;
 };

@@ -36,7 +36,7 @@ class MyFrame : public wxFrame
 {
 public:
 	MyFrame();
-	wxStaticText* plugin_list_label;
+	wxStaticText* plugin_name;
 	wxButton* bank_up;
 	wxButton* bank_down;
 	wxButton* plugin_up;

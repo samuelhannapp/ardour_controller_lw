@@ -7,5 +7,3 @@ public:
 	void send_data(OscMessage message);
 	OscMessage receive_data();
 };
-
-

@@ -17,7 +17,7 @@ MyFrame::MyFrame()
 	label_layout = new wxBoxSizer(wxHORIZONTAL);
 	fader_layout = new wxBoxSizer(wxHORIZONTAL);
 
-	plugin_list_label = new wxStaticText(this, wxID_ANY, "plugin_list", wxDefaultPosition, wxSize(200, 30));
+	plugin_name = new wxStaticText(this, wxID_ANY, "plugin_name", wxDefaultPosition, wxSize(200, 30));
 
 
 	bank_down = new wxButton(this, wxID_ANY, "bank down");
@@ -42,7 +42,7 @@ MyFrame::MyFrame()
 		fader_layout->Add(controller[i].fader);
 		controller[i].fader->Bind(wxEVT_SLIDER, &instance::OnSlider, &controller[i]);
 	}
-	main_layout->Add(plugin_list_label);
+	main_layout->Add(plugin_name);
 	main_layout->Add(button_layout);
 	main_layout->Add(label_layout);
 	main_layout->Add(fader_layout);
@@ -111,10 +111,6 @@ void MyFrame::update_controller()
 //wich is formated data, and there can be a function called, to initialize this, 
 //or it get's updated everytime the message is changed...
 
-//we also need the plugin list here...
-
-
-
 void instance::OnSlider(wxCommandEvent& event)
 {
 	OscMessage osc_message("/wxSlider");
@@ -125,27 +121,13 @@ void instance::OnSlider(wxCommandEvent& event)
 	float value_float = float(value) / 1000.0;
 	osc_message.PushFloat(value_float);
 
-	int size = 0;
-	char *array;
-	array = osc_message.GetBytes(size);
-	OscMessage osc_message_2(array, size);
+	//this should be automatically done every time something is pushed...
+	osc_message.FormatOscMessage(); 
 
 	wxThreadEvent event_1 = wxThreadEvent(wxEVT_THREAD); // No specific id
-	event_1.SetPayload(osc_message_2);
+	event_1.SetPayload(osc_message);
 	wxQueueEvent(handler, event_1.Clone());
 }
-
-//we have again here the problem I guess, that we won't get the plugin list, 
-//because there is no command like select/plugin/list as request...
-//the question here is now wether the strip number of the selected strip is 
-//feedbacked, than we could have it...
-//but this would not make sense, because we don't have strips here, only the 
-//selected one, so we don't need strip numbers, so this message would not be 
-//possible, that would mean we need a command like 
-//select/plugin/list, wich doesn't exist yet...
-
-//we can use all /strip/ commands!!!! we just have to use as ssid 1...
-//that will be the selected than
 
 void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 {
@@ -190,7 +172,7 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 	else if (!osc_message.GetAddress().compare("/wxSlider")) {
 		int index = osc_message.get_int(0);
 		float value = (float)osc_message.get_float(1);
-		int plugin_parameter_id_routed = this->plugin_multiplexer->plugin_multiplexer_from_controller[index + CONTROLLER_SIZE * bank];
+		int plugin_parameter_id_routed = this->plugin_multiplexer->plugin_multiplexer_from_controller[index];
 
 		OscMessage osc_message_to_ardour("/select/plugin/parameter");
 		osc_message_to_ardour.PushInt(plugin_parameter_id_routed);
@@ -203,34 +185,14 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		std::string plugin_name = osc_message.get_string(0);
 		if (plugin_name.size() == 1)
 			return;
-
-		OscMessage get_plugin_list_message("/strip/plugin/list");
-		get_plugin_list_message.PushInt(1);
-		int size = 0;
-		//get_plugin_list_message.GetBytes(size);
-		this->osc_sender_receiver->send_data(get_plugin_list_message);
-
+	
 		this->plugin_multiplexer->setup(plugin_name);
+
+		this->plugin_name->SetLabel(plugin_name);
 		if (this->selected_plugin_name == plugin_name) //everything is already setup...
 			return;
 		this->selected_plugin_name = plugin_name;
 		
-	}
-
-	else if (!osc_message.GetAddress().compare("/strip/plugin/list")) {
-		this->plugin_list.clear();
-		//write_to_itm(std::to_string(message.GetTypeList().size()));
-		int plugin_quantity = (osc_message.GetTypeList().size() - 1) / 3;
-		std::string type_list = osc_message.GetTypeList();
-		for (int i = 0; i < plugin_quantity; i++)
-			this->plugin_list.push_back(osc_message.get_string(i + 2 + i * 2));
-		std::string temp_label;
-		for (std::string temp : this->plugin_list) {
-			temp_label.append(temp);
-			temp_label.push_back('\t');
-		}
-		this->plugin_list_label->SetLabel(temp_label);
-		//ardour_sender_receiver.request_plugin_descriptor(local_strip_data.selected_strip.number, local_strip_data.selected_strip.get_selected_plugin_index());
 	}
 	return;
 }

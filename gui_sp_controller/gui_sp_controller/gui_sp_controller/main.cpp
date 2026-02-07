@@ -71,15 +71,6 @@ void instance::OnSlider(wxCommandEvent& event)
 //I just realised the plugin selected in the /select/plugin commands is not global!
 //each controller has it's own index
 
-//we can use here /strip/plugin/list, than we figure out wether the plugin the 
-//sp_controller controlls exist's in the selected strip, 
-//and than we can use the /strip/plugin/parameter command to controll the parameter...
-//if we would want to use feedback, the controller would have to use 
-//the /select/plugin/parameter command, and we would have to iterate to the repective plugin
-//via /select/plugin +1 or -1 and check everytime, wether the plugin was reached, wich would be 
-//a bit troublesome, but I guess it would work...
-
-//No actually it doesn't work, it'll allways give the plugin_list of the first strip...
 
 void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 {

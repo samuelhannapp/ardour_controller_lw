@@ -264,7 +264,7 @@ void OscController::ardour_receive_thread()
 		int buffer_length = 0;
 		OscMessage message = ardour_sender_receiver.receive_data();
 
-		std::cout << message.GetAddress() << "\n";
+		//std::cout << message.GetAddress() << "\n";
 
 		//write_to_itm(message.GetAddress());
 

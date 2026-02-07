@@ -11,6 +11,8 @@ OscMessage OscSenderReceiver::receive_data()
 {
 	char buffer[1024];
 	int length = UdpSenderReceiver::receive_data(buffer);
-	OscMessage message(buffer, length);
-	return message;
+	if (length == -1)
+		return OscMessage("nothing");
+	else
+		return OscMessage(buffer, length);
 }

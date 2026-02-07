@@ -211,6 +211,10 @@ void mackie_display_struct::fill_sysx_buffer()
 void MackieSenderReceiver::receive_data(MidiMessage &midi_message)
 {
 	OscMessage osc_message(OscSenderReceiver::receive_data());
+	if (!osc_message.GetAddress().compare("nothing")) {
+		midi_message.data[0] = 0;
+		return;
+	}
 	int midi_data = osc_message.get_int(0);
 	midi_message.data[0] = midi_data & 0xff;
 	midi_message.data[1] = (midi_data & 0xff00) >> 8;

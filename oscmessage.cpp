@@ -6,11 +6,12 @@
 
 
 OscMessage::OscMessage(const std::string& address)
-	: m_address(address), m_type(","), m_readonly(false)
+	: m_address(address), m_readonly(false)
 {
 	//HEKKYOSC_ASSERT(address.length() > 1, "The address is invalid!");
 	//HEKKYOSC_ASSERT(address[0] == '/', "The address is invalid! It should start with a '/'!");
 	m_data.reserve(OSC_MINIMUM_PACKET_BYTES);
+	this->FormatOscMessage();
 }
 
 OscMessage::OscMessage(char* buffer, int buffer_length)
@@ -20,6 +21,7 @@ OscMessage::OscMessage(char* buffer, int buffer_length)
 	//HEKKYOSC_ASSERT(m_address.at(0) == '/', "The address is invalid! It should start with a '/'!");
 	m_type = get_type_list(buffer, buffer_length);
 	m_data = initialize_data(buffer, buffer_length);
+	m_message_formated = initialize_message(buffer, buffer_length);
 	m_readonly = false;
 
 }
@@ -34,6 +36,7 @@ OscMessage OscMessage::PushString(std::string data) {
 	std::copy(data.begin(), data.end(), std::back_inserter(m_data));
 	m_data.insert(m_data.end(), GetAlignedStringLength(data) - data.length(), 0);
 	m_type += "s";
+	this->FormatOscMessage();
 	return *this;
 }
 
@@ -55,6 +58,7 @@ OscMessage OscMessage::PushFloat(float data) {
 		m_data.insert(m_data.end(), primitiveLiteral.c, primitiveLiteral.c + 4);
 		m_type += "f";
 	}
+	this->FormatOscMessage();
 	return *this;
 }
 OscMessage OscMessage::PushDouble(double data) {
@@ -74,6 +78,7 @@ OscMessage OscMessage::PushDouble(double data) {
 		m_data.insert(m_data.end(), primitiveLiteral.c, primitiveLiteral.c + 8);
 		m_type += "d";
 	}
+	this->FormatOscMessage();
 	return *this;
 }
 OscMessage OscMessage::PushInt(int data) {
@@ -88,6 +93,7 @@ OscMessage OscMessage::PushInt(int data) {
 
 	m_data.insert(m_data.end(), primitiveLiteral.c, primitiveLiteral.c + 4);
 	m_type += "i";
+	this->FormatOscMessage();
 	return *this;
 }
 OscMessage OscMessage::PushLongLong(long long data) {
@@ -102,30 +108,43 @@ OscMessage OscMessage::PushLongLong(long long data) {
 
 	m_data.insert(m_data.end(), primitiveLiteral.c, primitiveLiteral.c + 8);
 	m_type += "h";
+	this->FormatOscMessage();
 	return *this;
 }
 
 // Internal function
 //only after this function is the /adress included in the data,
-//this is a pretty big kind of bug...
-char* OscMessage::GetBytes(int& size) {
-	std::vector<char> headerData;
+//this is a pretty big kind of flaw...
+void OscMessage::FormatOscMessage() {
+	if (m_message_formated.size())
+		m_message_formated.erase(m_message_formated.begin(), m_message_formated.end());
 
 	// Append address
-	std::copy(m_address.begin(), m_address.end(), std::back_inserter(headerData));
-	headerData.insert(headerData.end(), GetAlignedStringLength(m_address) - m_address.length(), 0);
+	std::copy(m_address.begin(), m_address.end(), std::back_inserter(m_message_formated));
+	m_message_formated.insert(m_message_formated.end(), GetAlignedStringLength(m_address) - m_address.length(), 0);
 
 	// Append types
-	std::copy(m_type.begin(), m_type.end(), std::back_inserter(headerData));
-	headerData.insert(headerData.end(), GetAlignedStringLength(m_type) - m_type.length(), 0);
+	std::string temp_m_type(m_type);
+	temp_m_type.insert(0, 1, ',');
+	std::copy(temp_m_type.begin(), temp_m_type.end(), std::back_inserter(m_message_formated));
+	m_message_formated.insert(m_message_formated.end(), GetAlignedStringLength(temp_m_type) - temp_m_type.length(), 0);
 
-	// Add header to start of data block
-	m_data.insert(m_data.begin(), headerData.begin(), headerData.end());
+	//data is already formated according to the Osc protocol
+	std::copy(m_data.begin(), m_data.end(), std::back_inserter(m_message_formated));
+	//m_message_formated.insert(m_message_formated.end(), GetAlignedStringLength(m_data) - m_data.length(), 0);
+	//here it's not needed... because the data is already formated
+
+}
+
+char* OscMessage::GetBytes(int& size) {
+	if (!m_message_formated.size())
+		this->FormatOscMessage();
+
 
 	// Lock this packet
 	m_readonly = true;
-	size = static_cast<int>(m_data.size());
-	return m_data.data();
+	size = static_cast<int>(m_message_formated.size());
+	return m_message_formated.data();
 }
 
 std::string OscMessage::get_type_list(char* buffer, int buffer_length){
@@ -144,26 +163,43 @@ std::string OscMessage::get_type_list(char* buffer, int buffer_length){
 	return ret;
 }
 
-std::vector<char> OscMessage::initialize_data(char* buffer, int buffer_length){
+
+//that's the whole raw message
+std::vector<char> OscMessage::initialize_message(char* buffer, int buffer_length){
 	std::vector<char> out;
 	for(int i = 0; i < buffer_length; i++)
 		out.push_back(*(buffer + i));
 	return out;
 }
 
-int OscMessage::get_data_start_point(){
-		//std::string debug_string;
-		//bool debug_active = false;
-		//int c = 0;
-		//for(c = 0; c < this->m_data.size(); c++)
-			//debug_string.push_back(this->m_data.at(c));
-		//if(c != 0)
-			//debug_active = true;
+//that's the message only from the data on
+std::vector<char> OscMessage::initialize_data(char* buffer, int buffer_length){
+	std::vector<char> out;
+	int data_start_point = get_data_start_point(buffer, buffer_length);
+	
+	for(int i = data_start_point; i < buffer_length; i++)
+		out.push_back(*(buffer + i));
+	return out;
+}
 
+int OscMessage::get_data_start_point(){
 		int i = 0;
-		while (this->m_data[i] != ',')
+		while (this->m_message_formated[i] != ',')
 			i++;
-		while (this->m_data[i] != '\0')
+		while (this->m_message_formated[i] != '\0')
+			i++;
+		//we found the closing '\0' after the type string, now lets go one further...
+		i++;
+		while ((i % 4) != 0)
+			i++;
+		return i;
+}
+
+	int OscMessage::get_data_start_point(char* buffer, int buffer_length){
+		int i = 0;
+		while (buffer[i] != ',')
+			i++;
+		while (buffer[i] != '\0')
 			i++;
 		//we found the closing '\0' after the type string, now lets go one further...
 		i++;
@@ -173,8 +209,8 @@ int OscMessage::get_data_start_point(){
 }
 
 int OscMessage::get_string_length(int start_point){
-	size_t size = this->m_data.size();
-	while(this->m_data.at(start_point) != '\0')
+	size_t size = this->m_message_formated.size();
+	while(this->m_message_formated.at(start_point) != '\0')
 		start_point++;
 	//we found the closing '\0', now let's go one further
 	start_point++;
@@ -214,7 +250,7 @@ float OscMessage::get_float(int argument_nr){
 	unsigned char byte_array[4];
 	for (int i = 0; i < 4; i++)
 	{
-		byte_array[4 - (i + 1)] = this->m_data[argument_start_point + i];
+		byte_array[4 - (i + 1)] = this->m_message_formated[argument_start_point + i];
 	}
 
 	float ret = 0;
@@ -228,7 +264,7 @@ int OscMessage::get_int(int argument_nr)
 	int ret = 0;
 
 	for (int i = 0; i < 4; i++) {
-		ret |= (((unsigned char)this->m_data[argument_start_point++]) << (24 - (i * 8)));
+		ret |= (((unsigned char)this->m_message_formated[argument_start_point++]) << (24 - (i * 8)));
 	}
 
 	return ret;
@@ -240,7 +276,7 @@ long long OscMessage::get_long_long(int argument_nr)
 	long long ret = 0;
 
 	for (int i = 0; i < 8; i++) {
-		long long byte = (unsigned char)this->m_data[argument_start_point++];
+		long long byte = (unsigned char)this->m_message_formated[argument_start_point++];
 		ret |= byte << (56 - (i * 8));
 	}
 
@@ -253,7 +289,7 @@ double OscMessage::get_double(int argument_nr){
 	unsigned char byte_array[8];
 	for (int i = 0; i < 8; i++)
 	{
-		byte_array[8 - (i + 1)] = this->m_data[argument_start_point + i];
+		byte_array[8 - (i + 1)] = this->m_message_formated[argument_start_point + i];
 	}
 
 	double val = 0;
@@ -265,8 +301,8 @@ std::string OscMessage::get_string(int argument_nr){
 	int argument_start_point = this->get_argument_start_point(argument_nr);
 
 	std::string ret;
-	while (this->m_data[argument_start_point] != '\0')
-		ret.push_back(this->m_data[argument_start_point++]);
+	while (this->m_message_formated[argument_start_point] != '\0')
+		ret.push_back(this->m_message_formated[argument_start_point++]);
 	return ret;
 }
 
