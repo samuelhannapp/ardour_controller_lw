@@ -24,6 +24,7 @@
     <ProjectGuid>{bd5c55e3-38c5-4b0d-af2f-6d4c5f44119f}</ProjectGuid>
     <RootNamespace>visualstudio</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>base_controller</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -103,7 +104,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\Samuel\Software\arduor_controller_lw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Samuel\Software\arduor_controller_lw;C:\Users\Samuel\Software\OscSenderReceiver;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,28 +128,25 @@
   <ItemGroup>
     <ClInclude Include="..\..\ArdourSenderReceiver.hpp" />
     <ClInclude Include="..\..\Defines.hpp" />
-    <ClInclude Include="..\..\MackieControl.hpp" />
     <ClInclude Include="..\..\MackieDisplay.hpp" />
     <ClInclude Include="..\..\MackieSenderReceiverMidi.hpp" />
     <ClInclude Include="..\..\MackieSenderReceiverUdp.hpp" />
     <ClInclude Include="..\..\MidiSenderReceiver.hpp" />
-    <ClInclude Include="..\..\OscMessage.hpp" />
-    <ClInclude Include="..\..\OscSenderReceiver.hpp" />
-    <ClInclude Include="..\..\OscController.hpp" />
     <ClInclude Include="..\..\PluginMultiplexer.hpp" />
-    <ClInclude Include="..\..\UdpSenderReceiver.hpp" />
+    <ClInclude Include="MackieControl.hpp" />
+    <ClInclude Include="OscController.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\OscSenderReceiver\OscMessage.cpp" />
+    <ClCompile Include="..\..\..\OscSenderReceiver\OscSenderReceiver.cpp" />
+    <ClCompile Include="..\..\..\OscSenderReceiver\UdpSenderReceiver.cpp" />
     <ClCompile Include="..\..\ArdourSenderReceiver.cpp" />
-    <ClCompile Include="..\..\MackieControl.cpp" />
     <ClCompile Include="..\..\MackieSenderReceiver.cpp" />
-    <ClCompile Include="..\..\main.cpp" />
     <ClCompile Include="..\..\MidiSenderReceiver.cpp" />
-    <ClCompile Include="..\..\OscMessage.cpp" />
-    <ClCompile Include="..\..\OscSenderReceiver.cpp" />
-    <ClCompile Include="..\..\OscController.cpp" />
     <ClCompile Include="..\..\PluginMultiplexer.cpp" />
-    <ClCompile Include="..\..\UdpSenderReceiver.cpp" />
+    <ClCompile Include="MackieControl.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="OscController.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

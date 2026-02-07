@@ -24,16 +24,16 @@
     <ClCompile Include="..\..\MidiSenderReceiver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\UdpSenderReceiver.cpp">
+    <ClCompile Include="..\..\..\OscSenderReceiver\OscMessage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\oscmessage.cpp">
+    <ClCompile Include="..\..\..\OscSenderReceiver\OscSenderReceiver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wxOscReceiveThread.cpp">
+    <ClCompile Include="..\..\..\OscSenderReceiver\UdpSenderReceiver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\OscSenderReceiver.cpp">
+    <ClCompile Include="..\..\..\OscSenderReceiver\wxOscReceiveThread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -45,12 +45,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\MidiSenderReceiver.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\wxOscReceiveThread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\OscSenderReceiver.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
