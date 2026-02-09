@@ -1,6 +1,6 @@
 #include <wx/wx.h>
 #include "main.h"
-#include "oscmessage.hpp"
+#include "OscMessage.hpp"
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -52,15 +52,12 @@ bool App::OnInit() {
 	main_layout->Add(table);
 	window->SetSizerAndFit(main_layout);
 
-	ardour = new udp_sender_receiver("127.0.0.1", 9, 3819);
+	ardour = new OscSenderReceiver("127.0.0.1", 9, 3819);
 	ardour_receiver_thread = new std::thread(&App::receive_ardour_data, this);
 	ardour_receiver_thread->detach();
 	OscMessage setup_message("/set_surface/feedback");
 	setup_message.PushInt(1 << 13);
-	char *buffer;
-	int size;
-	buffer = setup_message.GetBytes(size);
-	ardour->send_udp_data_raw(buffer, size);
+	ardour->send_data(setup_message);
 	
 	window->Show();
 	return true;
@@ -94,20 +91,15 @@ void App::plugin_up_function(wxCommandEvent& event)
 {
 	OscMessage message("/select/plugin");
 	message.PushFloat(1);
-	char *buffer;
-	int size;
-	buffer = message.GetBytes(size);
-	ardour->send_udp_data_raw(buffer, size);	
+	
+	ardour->send_data(message);	
 }
 
 void App::plugin_down_function(wxCommandEvent& event)
 {
 	OscMessage message("/select/plugin");
 	message.PushFloat(- 1);
-	char *buffer;
-	int size;
-	buffer = message.GetBytes(size);
-	ardour->send_udp_data_raw(buffer, size);	
+	ardour->send_data(message);	
 }
 
 void App::reset_cell_function(wxCommandEvent& event)
@@ -148,8 +140,7 @@ void App::receive_ardour_data()
 	char buffer[1024];
 	int size = 0;
 	while (1) {
-		size = this->ardour->receive_udp_data_raw(buffer);
-		OscMessage message(buffer, size);
+		OscMessage message = this->ardour->receive_data();
 		if (!message.GetAddress().compare("/select/plugin/parameter/name")) {
 			int position = message.get_int(0) - 1;
 			std::string string(std::to_string(position + 1));

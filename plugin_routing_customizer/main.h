@@ -1,7 +1,7 @@
 #pragma once
 #include <wx/wx.h>
 #include <wx/grid.h>
-#include "udp_sender_receiver.hpp"
+#include "OscSenderReceiver.hpp"
 #include <thread>
 #include <vector>
 
@@ -28,7 +28,7 @@ public:
 	void cell_selected(wxGridEvent& event);
 	wxGridCellCoords selected_cell;
 
-	udp_sender_receiver *ardour;
+	OscSenderReceiver *ardour;
 	std::thread *ardour_receiver_thread;
 	void receive_ardour_data();
 
