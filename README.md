@@ -1,65 +1,67 @@
 # OscSenderReceiver 
 
-A simple lightweight Osc Library base on https://github.com/hyblocker/hekky-osc.git.
+This is the way how a DAW is supposed to be controlled.
+Main thing's are, navigation via spill feature and customized plugin control, meaning the user can route the plugin parameters 
+customized however he want's.
 
 ### Motivation
 
-An lightweight Osc library for communicating with Ardour DAW and potentially other DAW's.
-Supposed to work on Win/Lin/Mac and STM32 microcontroller
-Simple, expandable, fast
-Groundwork for future development of DAW controllers.
-I believe Osc is supposed to be the way how to control DAW's...
+Mackie Controller are very limited, because of two reason's.
+Fist is navigation, you can only navigate through all strips via banking, there is no feature like, folder categories, 
+buses or vcas where you could group strips together and spill them out on the control surface.
+Ardour Osc has the spill feature, so the first thing is, you can either via vca or bus select a category and than spill
+it on the surface.
+
+Second reason is, for most DAW's plugin control is limited to 8 parameters.
+Beause of this it's pretty useless, because lot's of channelstrips have significantly more than 8 plugin paramters.
+And also the knobs of the mackie control are teribble.
+
+This project  attempts to explore what is possible with Ardour osc.
+There are three types of controllers.
+
+One is a base controller. That can be a Mackie control. It has extended features as described above, and also 
+all of the standart features work.
+
+The second one is a General Purpose controller.
+This is a plugin controller with custom user defined paramter routing if wished.
+
+The third version is a Special Purpose controller.
+That means it's only controlling one specific plugin, for example an SSL EQ, and 
+every time a strip is selected with the respective plugin, no mether in wich place in 
+the strip, it will be represented in the Special purpose controller and can be controlled 
+from there.
+
+There are gui versions of these things for trying.
+Any DAW Controller with the Mackie Protocol is compatible.
+And I'll make some attempts to build some hardware versions for testing.
+The plane is to use endless potentiometers or quadrature encoders or 
+potentiometers with stepper motor's or three phase motors.
+
+When I started this project I just wanted to write custom software with Mackie protocol to 
+control plugins, after a while I realised this is so limited that its pretty much useless.
+Than I found the Osc protocol and Ardour and was very exited about the capabilities and 
+decided to test some thing's out, and it looks all very promising to me.
+
+Another nice thing is, there is a display for the base controller, wich can be an 
+alternative to the mackie LCD display and looks much more nice!!!!!!!!
+
+There will be manuals for all things to test and to build yourself.
+
+And maybe one day hardware could be produced and sold.
+
+I think in general the Osc protocol should be the way to go to control a DAW.
+
+I guess to make this happen it would have to be standardized, and than some 
+DAW companies have to implement it and the others will follow...
 
 ### License
 
-This project is licensed under the MIT license. hekky-osc is also licensed under the MIT license.
+This project is licensed under the MIT license.
 
 ---
 
-# Example
+# Setup
 
-```cpp
-#include "OscMessage.hpp"
-#include "OscSenderReceiver.hpp"
-
-
-int main() {
-
-	//Init osc controller with ardour
-	OscSenderReceiver* ardour = new OscSenderReceiver("127.0.0.1", 20, 3819);
-
-	//build osc message
-	OscMessage test_message("/strip/fader");
-	test_message.PushInt(2);
-	test_message.PushFloat(0.234);
-	ardour->send_data(test_message);
-	
-	//receive osc messages
-	while (1) {
-		OscMessage receive_message = ardour->receive_data();
-		std::string osc_address = receive_message.GetAddress();
-		std::string type_list = receive_message.GetTypeList();
-		int test_int;
-		float test_float;
-		std::string test_string;
-		if (type_list.size())
-			switch (type_list.at(0)) {
-			case 'i':
-				test_int = receive_message.get_int(0);
-				break;
-			case 'f':
-				test_float = receive_message.get_float(0);
-				break;
-			case 's':
-				test_string = receive_message.get_string(0);
-				break;
-			}
-	}
-	
-	return 1;
-}
-
-```
 
 ## Supported platforms
 
@@ -73,18 +75,20 @@ int main() {
 
 ## Goal
 
-This library aims to provide a simple and easy to use API for using OSC. It aims to conform to the entire OSC 1.0 specification. (Not yet achieved)
 
-| Feature                                         | Supported |
-| ----------------------------------------------- | --------- |
-| Sending OSC messages                            | ✅         |
-| Receiving OSC messages                          | ✅         |
-| Sending primitive data types (int, float, etc.) | ✅         |
-| 32-bit RGBA color                               | ❌         |
-| OSC Timetag                                     | ❌         |
-| MIDI                                            | ✅         |
-| 32-bit RGBA color                               | ❌         |
-| Null                                            | ❌         |
-| Arrays                                          | ❌         |
-| Bundles                                         | ❌         |
-| ASCII Character                                 | ❌         |
+| Feature                                         				| Supported |
+| ----------------------------------------------- 				| --------- |
+| Spill Feature                           						| ✅         |
+| Custom Plugin routing                         				| ✅         |
+| Mackie Control Protocol Compatibility 						| ✅         |
+| Base Controller Gui Version                       			| ✅         |
+| General Purpose Controller Gui Version            			| ✅         |
+| Special Purpose Controller Gui Version            			| ✅         |
+| Base Controller Hardware Version (Mackie)         			| ✅         |
+| General Purpose Controller Hardware Version potentiometer		| ❌         |
+| Special Purpose Controller Hardware Version potentiometer     | ❌         |
+| General Purpose Controller Hardware Version stepper           | ❌         |
+| Special Purpose Controller Hardware Version stepper           | ❌         |
+| General Purpose Controller Hardware Version quadrature        | ❌         |
+| Special Purpose Controller Hardware Version quadrature        | ❌         |
+| Base Controller Display                               		| ✅         |
