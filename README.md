@@ -42,6 +42,11 @@ control plugins, after a while I realised this is so limited that its pretty muc
 Than I found the Osc protocol and Ardour and was very exited about the capabilities and 
 decided to test some thing's out, and it looks all very promising to me.
 
+There is a version wich works on Win/Linux/Mac and also on STM32 Microcontroller.
+
+There are some flaws in the software and the OSC protocol.
+I'll try later to addres them...
+
 Another nice thing is, there is a display for the base controller, wich can be an 
 alternative to the mackie LCD display and looks much more nice!!!!!!!!
 
