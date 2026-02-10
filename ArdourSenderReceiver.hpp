@@ -1,6 +1,6 @@
 #pragma once
 #include "UdpSenderReceiver.hpp"
-#include "oscmessage.hpp"
+#include "OscMessage.hpp"
 #include "PluginMultiplexer.hpp"
 #include "Defines.hpp"
 

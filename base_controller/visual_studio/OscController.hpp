@@ -42,13 +42,15 @@
 #include "stm32_sock.h"
 #endif
 
-#include "oscmessage.hpp"
 #include "UdpSenderReceiver.hpp"
 //#include "MackieSenderReceiver.hpp"
 #include "PluginMultiplexer.hpp"
 #include "ArdourSenderReceiver.hpp"
 #include "OscSenderReceiver.hpp"
 #include "MackieControl.hpp"
+
+#include "OscMessage.hpp"
+#include "OscSenderReceiver.hpp"
 
 
 

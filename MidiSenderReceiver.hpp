@@ -9,6 +9,10 @@
 #pragma comment(lib, "winmm.lib")
 #endif
 
+#ifdef __linux__
+#include <alsa/asoundlib.h>
+#endif
+
 #include "Defines.hpp"
 
 class MidiSenderReceiver {

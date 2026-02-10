@@ -1,5 +1,6 @@
 #include "MidiSenderReceiver.hpp"
 #include <vector>
+#include <string>
 
 #ifdef _WIN64
 struct midi_message_struct{
@@ -48,6 +49,25 @@ int MidiSenderReceiver::initialize_midi(int port_in, int port_out)
 }
 #endif
 
+#ifdef __linux__
+MidiSenderReceiver::MidiSenderReceiver(int port_in, int port_out)
+{
+	int status;
+	std::string port_number = std::to_string(port_out);//this shoule be single digit for now...
+	std::string port_name("hw:2,0,0");
+	port_name.replace(3, 1, port_number);
+	if ((status = snd_rawmidi_open(NULL, &MidiDeviceOut, port_name.c_str(), SND_RAWMIDI_SYNC)) < 0) {
+      printf("Problem opening MIDI output: %s", snd_strerror(status));
+   }
+	port_number = std::to_string(port_in);//this shoule be single digit for now...
+	std::string port_name_2("hw:2,0,0");
+	port_name_2.replace(3, 1, port_number);
+	if ((status = snd_rawmidi_open(&MidiDeviceIn, NULL, port_name_2.c_str(), SND_RAWMIDI_SYNC)) < 0) {
+      printf("Problem opening MIDI input: %s", snd_strerror(status));
+   	}
+}
+#endif
+
 #ifdef _WIN64
 int MidiSenderReceiver::initialize_midi(int port_in, int port_out)
 {
@@ -66,7 +86,6 @@ if (result != MMSYSERR_NOERROR) {
 		midiInStart(MidiDeviceIn);
 	}
 
-
 	result = midiOutOpen(&MidiDeviceOut, port_out, 0, 0, CALLBACK_WINDOW);
 	if (result)
 		printf("There was an error opening MIDI Mapper!\r\n");
@@ -74,7 +93,7 @@ if (result != MMSYSERR_NOERROR) {
 	return 0;
 }
 #endif
-
+#ifdef _WIN64
 MidiSenderReceiver::MidiSenderReceiver(int port_in, int port_out)
 {
 	MMRESULT result;
@@ -98,6 +117,7 @@ if (result != MMSYSERR_NOERROR) {
 		printf("There was an error opening MIDI Mapper!\r\n");
 
 }
+#endif
 
 #ifdef _WIN64
 	void MidiSenderReceiver::receive_data(char *buffer)
@@ -127,9 +147,9 @@ void MidiSenderReceiver::receive_data(char *buffer)
 #endif
 
 #ifdef __linux__
-void MidiSenderReceiver::send_data(unsigned char * message, int size)
+void MidiSenderReceiver::send_data(struct MidiMessage message)
 {
-	snd_rawmidi_write(MidiDeviceOut, message, size);	
+	snd_rawmidi_write(MidiDeviceOut, message.data, message.length);	
 }
 #endif
 
