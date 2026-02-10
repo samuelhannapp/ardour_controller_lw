@@ -117,7 +117,12 @@ void App::reset_table_function(wxCommandEvent& event)
 void App::save_plugin_function(wxCommandEvent& event)
 {
 	std::fstream file;
+	#ifdef __linux__
+	std::string file_location("home/samuel/plugin_data"); 
+	#endif
+	#ifdef _WIN64
 	std::string file_location("C:\\Users\\Samuel\\Documents\\plugin_data"); 
+	#endif
 	file_location.append("\\");
 	file_location.append(plugin_name->GetLabelText());
 	file_location.append(".txt");
