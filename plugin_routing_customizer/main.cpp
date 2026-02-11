@@ -11,7 +11,7 @@
 #define TABLE_COLS 8
 
 bool App::OnInit() {
-	//init_plugin_routing();
+	init_plugin_routing();
 	window = new wxFrame(NULL, wxID_ANY, "Plugin Router", wxDefaultPosition, wxSize(600, 400));
 	button_layout = new wxBoxSizer(wxHORIZONTAL);
 	main_layout = new wxBoxSizer(wxVERTICAL);
@@ -53,14 +53,66 @@ bool App::OnInit() {
 	window->SetSizerAndFit(main_layout);
 
 	ardour = new OscSenderReceiver("127.0.0.1", 9, 3819);
-	ardour_receiver_thread = new std::thread(&App::receive_ardour_data, this);
-	ardour_receiver_thread->detach();
+	//ardour_receiver_thread = new std::thread(&App::receive_ardour_data, this);
+	//ardour_receiver_thread->detach();
+	wx_osc_receive_thread = new wxOscReceiveThread(this, this->ardour);
+	wx_osc_receive_thread->Run();
+	Bind(wxEVT_THREAD, &App::OnThreadUpdate, this);
 	OscMessage setup_message("/set_surface/feedback");
 	setup_message.PushInt(1 << 13);
 	ardour->send_data(setup_message);
 	
 	window->Show();
 	return true;
+}
+
+
+void App::OnThreadUpdate(wxThreadEvent& event)
+{
+;	OscMessage message = event.GetPayload<OscMessage>();
+
+	if (!message.GetAddress().compare("/select/plugin/parameter/name")) {
+		int position = message.get_int(0) - 1;
+		std::string string(std::to_string(position + 1));
+		string.push_back(' ');
+		string.append(message.get_string(1));
+
+		//if the string exist's already at the same place
+		if (plugin_parameter_list->GetCount() > position)
+			if (plugin_parameter_list->GetString(position).compare(string))
+				return;
+
+		//if the string is the next position
+		if (plugin_parameter_list->GetCount() == position)
+			plugin_parameter_list->Append(string);
+
+		//if the position is within the list
+		if (plugin_parameter_list->GetCount() > position) {
+			plugin_parameter_list->Insert(string, position);
+			plugin_parameter_list->Delete(position + 1);
+		}
+	}
+
+	int ctr = 0;
+
+	if (!message.GetAddress().compare("/select/plugin/name")) {
+		reset_plugin_parameter_list();
+		std::string string(message.get_string(0));
+		plugin_name->SetLabel(string);
+			
+		for (plugin_routing plugin : plugin_routing_list)
+			if (!string.compare(plugin.plugin_name)) {
+				break;
+			}
+			else
+				ctr++;
+
+		if (ctr != plugin_routing_list.size())
+			for (int r = 0; r < TABLE_ROWS; r++)
+				for (int c = 0; c < TABLE_COLS; c++)
+					table->SetCellValue(wxGridCellCoords(r, c), plugin_routing_list.at(ctr).routing_list[(r * TABLE_COLS) + c]);
+	}
+
 }
 
 void App::reset_plugin_parameter_list()
@@ -139,7 +191,7 @@ void App::save_plugin_function(wxCommandEvent& event)
 		}
 	file << plugin_data;
 }
-
+/*
 void App::receive_ardour_data()
 {
 	char buffer[1024];
@@ -189,6 +241,7 @@ void App::receive_ardour_data()
 		}
 	}
 }
+*/
 
 
 //we need a version of this function wich initializes a specific plugin, after it was saved...

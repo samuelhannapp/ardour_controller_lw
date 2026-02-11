@@ -135,6 +135,7 @@
     <ClCompile Include="..\..\..\..\OscSenderReceiver\OscMessage.cpp" />
     <ClCompile Include="..\..\..\..\OscSenderReceiver\OscSenderReceiver.cpp" />
     <ClCompile Include="..\..\..\..\OscSenderReceiver\UdpSenderReceiver.cpp" />
+    <ClCompile Include="..\..\..\..\OscSenderReceiver\wxOscReceiveThread.cpp" />
     <ClCompile Include="..\..\main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -103,14 +103,6 @@ void MyFrame::update_controller()
 	}
 }
 
-//there is a major flaw in the OscMessage modul, before the function GetBytes is called, 
-//the address is not part of the data, and after the function GetButes is called, 
-//it is part of the data, but the data is wrongly formated, the ',' is part of the types...
-//it would be good that at all times, the data would be rightly formated, 
-//or another solution would be that there is another field like m_data,
-//wich is formated data, and there can be a function called, to initialize this, 
-//or it get's updated everytime the message is changed...
-
 void instance::OnSlider(wxCommandEvent& event)
 {
 	OscMessage osc_message("/wxSlider");

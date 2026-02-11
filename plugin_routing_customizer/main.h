@@ -4,6 +4,7 @@
 #include "OscSenderReceiver.hpp"
 #include <thread>
 #include <vector>
+#include "wxOscReceiveThread.h"
 
 struct plugin_routing {
 	std::string plugin_name;
@@ -29,9 +30,10 @@ public:
 	wxGridCellCoords selected_cell;
 
 	OscSenderReceiver *ardour;
-	std::thread *ardour_receiver_thread;
+	//std::thread *ardour_receiver_thread;
+	wxOscReceiveThread* wx_osc_receive_thread;
 	void receive_ardour_data();
-
+	void OnThreadUpdate(wxThreadEvent& event);
 	void plugin_up_function(wxCommandEvent& event);
 	void plugin_down_function(wxCommandEvent& event);
 	void reset_cell_function(wxCommandEvent& event);
@@ -41,7 +43,6 @@ public:
 	std::vector<plugin_routing> plugin_routing_list;
 	void init_plugin_routing();
 	void reset_plugin_parameter_list();
-
 };
 
 wxIMPLEMENT_APP(App);
