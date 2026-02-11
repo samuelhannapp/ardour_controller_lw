@@ -11,7 +11,7 @@
 #define TABLE_COLS 8
 
 bool App::OnInit() {
-	init_plugin_routing();
+	//init_plugin_routing();
 	window = new wxFrame(NULL, wxID_ANY, "Plugin Router", wxDefaultPosition, wxSize(600, 400));
 	button_layout = new wxBoxSizer(wxHORIZONTAL);
 	main_layout = new wxBoxSizer(wxVERTICAL);
@@ -118,7 +118,7 @@ void App::save_plugin_function(wxCommandEvent& event)
 {
 	std::fstream file;
 	#ifdef __linux__
-	std::string file_location("home/samuel/plugin_data"); 
+	std::string file_location("home/samuel/Documents/plugin_data"); 
 	#endif
 	#ifdef _WIN64
 	std::string file_location("C:\\Users\\Samuel\\Documents\\plugin_data"); 
@@ -174,6 +174,7 @@ void App::receive_ardour_data()
 			reset_plugin_parameter_list();
 			std::string string(message.get_string(0));
 			plugin_name->SetLabel(string);
+				
 			for (plugin_routing plugin : plugin_routing_list)
 				if (!string.compare(plugin.plugin_name)) {
 					break;
@@ -194,7 +195,12 @@ void App::receive_ardour_data()
 //another version would be, every time a new plugin is called we look it up on the disc...
 void App::init_plugin_routing()
 {
-	std::string path = "C:\\Users\\Samuel\\Documents\\plugin_data";
+	#ifdef __linux__
+	std::string path("home/samuel/Documents/plugin_data"); 
+	#endif
+	#ifdef _WIN64
+	std::string path("C:\\Users\\Samuel\\Documents\\plugin_data"); 
+	#endif
 	std::vector<std::string> file_names;
 	for (std::filesystem::directory_entry entry : std::filesystem::directory_iterator(path))
 		file_names.push_back(entry.path().string());
@@ -219,4 +225,5 @@ void App::init_plugin_routing()
 		}
 		ctr++;
 	}
+	return;
 }
