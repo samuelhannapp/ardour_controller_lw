@@ -10,7 +10,6 @@ bool MyApp::OnInit()
 	return true;
 }
 
-
 MyFrame::MyFrame()
 	: wxFrame(nullptr, wxID_ANY, "Hello World")
 {

@@ -38,6 +38,7 @@ public:
 	void plugin_down_function(wxCommandEvent& event);
 	void reset_cell_function(wxCommandEvent& event);
 	void reset_table_function(wxCommandEvent& event);
+	void reset_table_function();
 	void save_plugin_function(wxCommandEvent& event);
 
 	std::vector<plugin_routing> plugin_routing_list;

@@ -12,7 +12,7 @@
 
 bool App::OnInit() {
 	init_plugin_routing();
-	window = new wxFrame(NULL, wxID_ANY, "Plugin Router", wxDefaultPosition, wxSize(600, 400));
+	window = new wxFrame(NULL, wxID_ANY, "Plugin Router", wxDefaultPosition, wxSize(800, 400));
 	button_layout = new wxBoxSizer(wxHORIZONTAL);
 	main_layout = new wxBoxSizer(wxVERTICAL);
 
@@ -69,7 +69,7 @@ bool App::OnInit() {
 
 void App::OnThreadUpdate(wxThreadEvent& event)
 {
-;	OscMessage message = event.GetPayload<OscMessage>();
+	OscMessage message = event.GetPayload<OscMessage>();
 
 	if (!message.GetAddress().compare("/select/plugin/parameter/name")) {
 		int position = message.get_int(0) - 1;
@@ -92,11 +92,10 @@ void App::OnThreadUpdate(wxThreadEvent& event)
 			plugin_parameter_list->Delete(position + 1);
 		}
 	}
-
 	int ctr = 0;
-
 	if (!message.GetAddress().compare("/select/plugin/name")) {
 		reset_plugin_parameter_list();
+		reset_table_function();
 		std::string string(message.get_string(0));
 		plugin_name->SetLabel(string);
 			
@@ -112,7 +111,6 @@ void App::OnThreadUpdate(wxThreadEvent& event)
 				for (int c = 0; c < TABLE_COLS; c++)
 					table->SetCellValue(wxGridCellCoords(r, c), plugin_routing_list.at(ctr).routing_list[(r * TABLE_COLS) + c]);
 	}
-
 }
 
 void App::reset_plugin_parameter_list()
@@ -161,6 +159,11 @@ void App::reset_cell_function(wxCommandEvent& event)
 
 void App::reset_table_function(wxCommandEvent& event)
 {
+	reset_table_function();	
+}
+
+void App::reset_table_function()
+{
 	for(int r = 0; r < TABLE_ROWS; r++)
 		for(int c = 0; c < TABLE_COLS; c++)
 			table->SetCellValue(wxGridCellCoords(r, c), "");
@@ -170,12 +173,13 @@ void App::save_plugin_function(wxCommandEvent& event)
 {
 	std::fstream file;
 	#ifdef __linux__
-	std::string file_location("home/samuel/Documents/plugin_data"); 
+	std::string file_location("/home/samuel/Documents/plugin_data"); 
+	file_location.append("/");
 	#endif
 	#ifdef _WIN64
 	std::string file_location("C:\\Users\\Samuel\\Documents\\plugin_data"); 
-	#endif
 	file_location.append("\\");
+	#endif
 	file_location.append(plugin_name->GetLabelText());
 	file_location.append(".txt");
 	file.open(file_location, std::ios::out);
@@ -190,66 +194,21 @@ void App::save_plugin_function(wxCommandEvent& event)
 			plugin_data.push_back('\n');
 		}
 	file << plugin_data;
+
+	file.close();
+
+	init_plugin_routing();
 }
-/*
-void App::receive_ardour_data()
-{
-	char buffer[1024];
-	int size = 0;
-	while (1) {
-		OscMessage message = this->ardour->receive_data();
-		if (!message.GetAddress().compare("/select/plugin/parameter/name")) {
-			int position = message.get_int(0) - 1;
-			std::string string(std::to_string(position + 1));
-			string.push_back(' ');
-			string.append(message.get_string(1));
-
-			//if the string exist's already at the same place
-			if (plugin_parameter_list->GetCount() > position)
-				if (plugin_parameter_list->GetString(position).compare(string))
-					continue;
-
-			//if the string is the next position
-			if (plugin_parameter_list->GetCount() == position)
-				plugin_parameter_list->Append(string);
-
-			//if the position is within the list
-			if (plugin_parameter_list->GetCount() > position) {
-				plugin_parameter_list->Insert(string, position);
-				plugin_parameter_list->Delete(position + 1);
-			}
-		}
-
-		int ctr = 0;
-
-		if (!message.GetAddress().compare("/select/plugin/name")) {
-			reset_plugin_parameter_list();
-			std::string string(message.get_string(0));
-			plugin_name->SetLabel(string);
-				
-			for (plugin_routing plugin : plugin_routing_list)
-				if (!string.compare(plugin.plugin_name)) {
-					break;
-				}
-				else
-					ctr++;
-
-			if (ctr != plugin_routing_list.size())
-				for (int r = 0; r < TABLE_ROWS; r++)
-					for (int c = 0; c < TABLE_COLS; c++)
-						table->SetCellValue(wxGridCellCoords(r, c), plugin_routing_list.at(ctr).routing_list[(r * TABLE_COLS) + c]);
-		}
-	}
-}
-*/
-
 
 //we need a version of this function wich initializes a specific plugin, after it was saved...
 //another version would be, every time a new plugin is called we look it up on the disc...
 void App::init_plugin_routing()
 {
+	if(plugin_routing_list.size())
+		plugin_routing_list.clear();
+
 	#ifdef __linux__
-	std::string path("home/samuel/Documents/plugin_data"); 
+	std::string path("/home/samuel/Documents/plugin_data"); 
 	#endif
 	#ifdef _WIN64
 	std::string path("C:\\Users\\Samuel\\Documents\\plugin_data"); 
@@ -262,7 +221,12 @@ void App::init_plugin_routing()
 
 	for (std::string directory : file_names) {
 		struct plugin_routing temp;
+		#ifdef _WIN64
 		temp.plugin_name = directory.substr(directory.find_last_of('\\') + 1);
+		#endif
+		#ifdef __linux__
+		temp.plugin_name = directory.substr(directory.find_last_of('/') + 1);
+		#endif
 		temp.plugin_name.erase(temp.plugin_name.size() - filename_extension.size(), filename_extension.size());
 		plugin_routing_list.push_back(temp);
 	}

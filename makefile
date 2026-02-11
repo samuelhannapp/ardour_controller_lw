@@ -12,6 +12,3 @@ MidiSenderReceiver.o: MidiSenderReceiver.cpp
 
 PluginMultiplexer.o: PluginMultiplexer.cpp
 	g++ -g -c PluginMultiplexer.cpp -I/home/samuel/Osc-Sender-Receiver
-
-
-
