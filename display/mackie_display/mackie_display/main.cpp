@@ -1,5 +1,5 @@
 #include "main.hpp"
-#include "oscmessage.hpp"
+#include "OscMessage.hpp"
 #include <vector>
 
 bool MyApp::OnInit()
@@ -44,7 +44,10 @@ MyFrame::MyFrame()
 		panel[i]->SetBackgroundColour(wxColor(210, 210, 210));
 		channel_name_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10) , wxSize(80, 50), wxBORDER_SUNKEN);
 		channel_name_panel[i]->SetMinSize(wxSize(80, 50));
+		plugin_parameter_name_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10) , wxSize(80, 50), wxBORDER_SUNKEN);
+		plugin_parameter_name_panel[i]->SetMinSize(wxSize(80, 50));
 		channel_name[i] = new wxStaticText(channel_name_panel[i], wxID_ANY, "drums\nmic sm58", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
+		plugin_parameter_name[i] = new wxStaticText(plugin_parameter_name_panel[i], wxID_ANY, "plugin\nnames", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
 		wxFont font = channel_name[i]->GetFont();
 		font.SetWeight(wxFONTWEIGHT_BOLD);
 		font.SetPointSize(10);
@@ -121,9 +124,18 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 {
 	// SAFE: runs on GUI thread
 	OscMessage message = event.GetPayload<OscMessage>();
-	int index = message.get_int(0) - 1;
-	this->channel_name[index]->SetLabel(message.get_string(1));
-	this->channel_name[index]->SetSize(channel_name_panel[index]->GetSize());
+	if(!message.GetAddress().compare("/strip/name"))
+	{
+		int index = message.get_int(0) - 1;
+		this->channel_name[index]->SetLabel(message.get_string(1));
+		this->channel_name[index]->SetSize(channel_name_panel[index]->GetSize());
+	}
+	if(!message.GetAddress().compare("/select/plugin/parameter/name"))
+	{
+		int index = message.get_int(0) - 1;
+		this->plugin_parameter_name[index]->SetLabel(message.get_string(1));
+		this->plugin_parameter_name[index]->SetSize(plugin_parameter_name_panel[index]->GetSize());
+	}
 }
 
 void MyFrame::OnExit(wxCommandEvent& event)

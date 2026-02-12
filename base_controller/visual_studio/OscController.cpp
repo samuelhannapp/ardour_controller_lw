@@ -260,8 +260,6 @@ void OscController::ardour_receive_thread()
 {
 
 	do{
-		char buffer[1024];
-		int buffer_length = 0;
 		OscMessage message = ardour_sender_receiver.receive_data();
 
 		//std::cout << message.GetAddress() << "\n";
@@ -332,8 +330,9 @@ void OscController::ardour_receive_thread()
 			int send_nr = message.get_int(0);
 			std::string string = message.get_string(1);
 			local_strip_data.selected_strip.update_selected_strip(controller::SEND_NAME, send_nr, string);
-			if(this->mode == SendMode)
+			if(this->mode == SendMode){
 				mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.sends);
+			}
 			continue;
 		}
 		else if(!message.GetAddress().compare("/select/send_fader")){
@@ -364,8 +363,17 @@ void OscController::ardour_receive_thread()
 			if (plugin_parameter_id < 0)
 				continue;
 			this->local_strip_data.selected_strip.update_selected_strip(controller::PLUGIN_PARAMETER_NAME, plugin_parameter_id, plugin_parameter_name);
-			if(this->mode == PluginMode)
+			if(this->mode == PluginMode){
 				this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
+				int plugin_parameter_id_in_controller = this->plugin_multiplexer.plugin_multiplexer_from_plugin[plugin_parameter_id];
+				if((plugin_parameter_id_in_controller / 8) == this->local_strip_data.selected_strip.plugin_bank){
+					OscMessage display_message("/select/plugin/parameter/name");
+					display_message.PushInt(plugin_parameter_id_in_controller);
+					display_message.PushString(plugin_parameter_name);
+					display.send_data(display_message);
+				}
+			}
+				
 			continue;
 		}
 		else if(!message.GetAddress().compare("/select/plugin/parameter")){
