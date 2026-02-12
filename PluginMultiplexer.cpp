@@ -84,16 +84,18 @@ void plugin_multiplexer_struct::initialize_plugin_multiplexer()
 		std::string plugin_name = file_location;
 
 #ifdef __linux__
-		int pos = plugin_name.find_last_of('/') + 1;
+		int name_position = plugin_name.find_last_of('/') + 1;
 #endif
 
 #ifdef _WIN64
 		int pos = plugin_name.find_last_of('\\') + 1;
 #endif
+		plugin_name.erase(0, name_position);
 
-		plugin_name.erase(0, pos);
-		pos = plugin_name.find(".txt");
-		plugin_name.erase(pos, plugin_name.size());
+		int file_suffix_position = plugin_name.find(".txt");
+		if(file_suffix_position == -1) //if it's not a .txt file
+			continue;
+		plugin_name.erase(file_suffix_position, plugin_name.size());
 		plugin_multiplexer.at(temp_plugin_index).plugin_name = plugin_name;
 
 		std::ifstream file(file_location);

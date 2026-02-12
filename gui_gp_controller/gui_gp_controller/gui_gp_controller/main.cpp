@@ -10,7 +10,7 @@ bool MyApp::OnInit()
 }
 
 MyFrame::MyFrame()
-	: wxFrame(nullptr, wxID_ANY, "Hello World")
+	: wxFrame(nullptr, wxID_ANY, "General Purpose Controller (gp_controller)")
 {
 	main_layout = new wxBoxSizer(wxVERTICAL);
 	button_layout = new wxBoxSizer(wxHORIZONTAL);

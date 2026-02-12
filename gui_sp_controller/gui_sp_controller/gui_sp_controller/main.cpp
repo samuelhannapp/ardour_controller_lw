@@ -10,12 +10,14 @@ bool MyApp::OnInit()
 }
 
 MyFrame::MyFrame()
-	: wxFrame(nullptr, wxID_ANY, "Hello World")
+	: wxFrame(nullptr, wxID_ANY, "Special Purpose Controller (sp_controller)")
 {
 	main_layout = new wxBoxSizer(wxVERTICAL);
 	fader_layout = new wxBoxSizer(wxHORIZONTAL);
 	
-	this->m_sp_controller_plugin_name = std::string("bx_console SSL 4000 E");
+	//this->m_sp_controller_plugin_name = std::string("bx_console SSL 4000 E");
+	this->m_sp_controller_plugin_name = std::string("ACE Compressor (stereo)");
+	
 	this->previous_selected_plugin_name = std::string("nothing");
 
 	for (int i = 0; i < CONTROLLER_SIZE; i++) {
@@ -44,7 +46,6 @@ MyFrame::MyFrame()
 	setup_msg.PushInt(0b1000);
 
 	this->osc_sender_receiver->send_data(setup_msg);
-
 }
 
 void instance::OnSlider(wxCommandEvent& event)
@@ -77,7 +78,7 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 	// SAFE: runs on GUI thread
 	OscMessage osc_message = event.GetPayload<OscMessage>();
 
-	std::cout << osc_message.GetAddress();
+	//std::cout << osc_message.GetAddress();
 
 	if (!osc_message.GetAddress().compare("/select/plugin/parameter/name")) {
 		int plugin_parameter_id = osc_message.get_int(0);
@@ -97,6 +98,10 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 	else if (!osc_message.GetAddress().compare("/select/plugin/parameter")) {
 		int plugin_parameter_id = osc_message.get_int(0);
 		float plugin_parameter_value = osc_message.initialize_type_list().at(1) == 'f' ? osc_message.get_float(1) : osc_message.get_double(1);
+
+		//if the selected plugin is not sp_controller plugin
+		if(this->selected_plugin_name.compare(this->m_sp_controller_plugin_name))
+			return;
 
 		if (plugin_parameter_id >= this->plugin_multiplexer->plugin_multiplexer_from_plugin.size())
 			return;

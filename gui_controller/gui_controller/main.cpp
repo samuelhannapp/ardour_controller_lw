@@ -11,7 +11,7 @@ bool MyApp::OnInit()
 }
 
 MyFrame::MyFrame()
-	: wxFrame(nullptr, wxID_ANY, "Hello World")
+	: wxFrame(nullptr, wxID_ANY, "Mackie Control Gui Simulation (base_controller)")
 {
 	main_layout = new wxBoxSizer(wxHORIZONTAL);
 
@@ -44,9 +44,9 @@ MidiMessage_v2 MyFrame::get_midi_data(OscMessage osc_message)
 	if (osc_message.GetTypeList().at(0) == 'i') {
 		message.midi_data_size = 3;
 		int midi_data = osc_message.get_int(0);
-		message.midi_data[0] = unsigned char(midi_data & 0xff);
-		message.midi_data[1] = unsigned char((midi_data & 0xff00) >> 8);
-		message.midi_data[2] = unsigned char((midi_data & 0xff0000) >> 16);
+		message.midi_data[0] = (unsigned char)(midi_data & 0xff);
+		message.midi_data[1] = (unsigned char)((midi_data & 0xff00) >> 8);
+		message.midi_data[2] = (unsigned char)((midi_data & 0xff0000) >> 16);
 	}
 	if (osc_message.GetTypeList().at(0) == 'h') {
 		message.midi_data_size = 120;
@@ -54,14 +54,14 @@ MidiMessage_v2 MyFrame::get_midi_data(OscMessage osc_message)
 			for (int i = 0; i < 15; i++){
 				long long temp = osc_message.get_long_long(i);
 				char char_data[8] = { 0 };
-				char_data[7] = long long(temp & long long(0xff) << 56) >> 56;
-				char_data[6] = long long(temp & long long(0xff) << 48) >> 48;
-				char_data[5] = long long(temp & long long(0xff) << 40) >> 40;
-				char_data[4] = long long(temp & long long(0xff) << 32) >> 32;
-				char_data[3] = (temp & long long(0xff << 24)) >> 24;
-				char_data[2] = (temp & long long(0xff << 16)) >> 16;
-				char_data[1] = (temp & long long(0xff << 8)) >> 8;
-				char_data[0] = (temp & long long(0xff << 0)) >> 0;
+				char_data[7] = (long long)(temp & (long long)(0xff) << 56) >> 56;
+				char_data[6] = (long long)(temp & (long long)(0xff) << 48) >> 48;
+				char_data[5] = (long long)(temp & (long long)(0xff) << 40) >> 40;
+				char_data[4] = (long long)(temp & (long long)(0xff) << 32) >> 32;
+				char_data[3] = (temp & (long long)(0xff << 24)) >> 24;
+				char_data[2] = (temp & (long long)(0xff << 16)) >> 16;
+				char_data[1] = (temp & (long long)(0xff << 8)) >> 8;
+				char_data[0] = (temp & (long long)(0xff << 0)) >> 0;
 				for (int o = 0; o < 8; o++)
 					message.midi_data[o + 8 * i] = char_data[o];
 			}
@@ -197,10 +197,13 @@ void MyFrame::process_midi_data(wxThreadEvent& event)
 		{
 		wxString string[8];
 		long long test_data = 0;
-		for (int i = 7; i < 120; i++) {
+		for (int i = 7; i < 119; i++) {
 			int line_nr = (i - 7) / 56;
 			int string_nr = ((i - 7 - (56 * line_nr))) / 7;
-			string[string_nr].append(message.midi_data[i]);
+			if(message.midi_data[i] >= 0)
+				string[string_nr].append(message.midi_data[i]);
+			else 
+				string[string_nr].append(' ');
 		}
 		for (int i = 0; i < 8; i++) {
 
