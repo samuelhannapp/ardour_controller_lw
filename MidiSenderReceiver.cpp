@@ -120,9 +120,8 @@ if (result != MMSYSERR_NOERROR) {
 #endif
 
 #ifdef _WIN64
-	void MidiSenderReceiver::receive_data(char *buffer)
+	void MidiSenderReceiver::receive_data(MidiMessage& message)
 	{
-		uint32_t message = 0;
 		HMIDIIN midi_connection;
 		int midi_connection_number = -1;
 		for (int i = 0; i < midi_input_buffer.size(); i++)
@@ -131,9 +130,9 @@ if (result != MMSYSERR_NOERROR) {
 
 		while (midi_input_buffer.at(midi_connection_number).midi_data.size() == 0)
 			Sleep(1);
-		buffer[0] = midi_input_buffer.at(midi_connection_number).midi_data.back().data[0];
-		buffer[1] = midi_input_buffer.at(midi_connection_number).midi_data.back().data[1];
-		buffer[2] = midi_input_buffer.at(midi_connection_number).midi_data.back().data[2];
+		message.data[0] = midi_input_buffer.at(midi_connection_number).midi_data.back().data[0];
+		message.data[1] = midi_input_buffer.at(midi_connection_number).midi_data.back().data[1];
+		message.data[2] = midi_input_buffer.at(midi_connection_number).midi_data.back().data[2];
 		midi_input_buffer.at(midi_connection_number).midi_data.pop_back();
 		return;
 	}

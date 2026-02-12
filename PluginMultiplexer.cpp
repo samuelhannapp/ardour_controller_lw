@@ -88,7 +88,7 @@ void plugin_multiplexer_struct::initialize_plugin_multiplexer()
 #endif
 
 #ifdef _WIN64
-		int pos = plugin_name.find_last_of('\\') + 1;
+		int name_position = plugin_name.find_last_of('\\') + 1;
 #endif
 		plugin_name.erase(0, name_position);
 
