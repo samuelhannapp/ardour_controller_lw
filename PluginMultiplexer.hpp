@@ -25,6 +25,8 @@ struct plugin_routing{
 struct plugin_multiplexer_struct{
 	std::vector<unsigned char> plugin_multiplexer_from_plugin;
 	std::vector<unsigned char> plugin_multiplexer_from_controller;
+	int get_plugin_to_controller(int plugin_index);
+	int get_controller_to_plugin(int controller_index);
 	std::vector<plugin_routing> plugin_multiplexer;
 	void initialize_plugin_multiplexer();
 	void initialize_plugin_multiplexer_from_controller_and_from_plugin();

@@ -133,6 +133,7 @@
     <ClInclude Include="..\..\MackieSenderReceiverUdp.hpp" />
     <ClInclude Include="..\..\MidiSenderReceiver.hpp" />
     <ClInclude Include="..\..\PluginMultiplexer.hpp" />
+    <ClInclude Include="display.hpp" />
     <ClInclude Include="MackieControl.hpp" />
     <ClInclude Include="OscController.hpp" />
   </ItemGroup>
@@ -144,6 +145,7 @@
     <ClCompile Include="..\..\MackieSenderReceiver.cpp" />
     <ClCompile Include="..\..\MidiSenderReceiver.cpp" />
     <ClCompile Include="..\..\PluginMultiplexer.cpp" />
+    <ClCompile Include="display.cpp" />
     <ClCompile Include="MackieControl.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OscController.cpp" />

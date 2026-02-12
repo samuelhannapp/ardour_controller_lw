@@ -61,6 +61,21 @@ void plugin_multiplexer_struct::setup(std::string plugin_name)
 	return;
 }
 
+int plugin_multiplexer_struct::get_plugin_to_controller(int plugin_index)
+{
+	if (plugin_index < this->plugin_multiplexer_from_plugin.size())
+		return this->plugin_multiplexer_from_plugin[plugin_index];
+	else 
+		return 0;
+}
+int plugin_multiplexer_struct::get_controller_to_plugin(int controller_index)
+{
+	if (controller_index < this->plugin_multiplexer_from_controller.size())
+		return this->plugin_multiplexer_from_controller[controller_index];
+	else 
+		return 0;
+}
+
 void plugin_multiplexer_struct::initialize_plugin_multiplexer()
 {
 #ifdef __linux__

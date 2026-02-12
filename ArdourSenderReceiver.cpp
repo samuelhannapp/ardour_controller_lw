@@ -1,4 +1,16 @@
 #include "ArdourSenderReceiver.hpp"
+#include "PluginMultiplexer.hpp"
+
+//this one need's the plugin multiplexer...
+std::vector<std::string> selected_strip_struct::get_selected_plugin_parameter_names(plugin_multiplexer_struct *plugin_multiplexer)
+{
+	std::vector<std::string> output;
+	for (int i = 1; i <= STRIPS_PER_CONTROLLER; i++) {
+		int index = plugin_multiplexer->get_controller_to_plugin(i + (STRIPS_PER_CONTROLLER * this->plugin_bank));
+		output.push_back(this->selected_plugin[index].name);
+	}
+	return output;
+}
 
 void selected_strip_struct::update_selected_strip(enum controller::controller_message type, int nr, float value)
 {

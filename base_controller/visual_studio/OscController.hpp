@@ -48,9 +48,8 @@
 #include "ArdourSenderReceiver.hpp"
 #include "OscSenderReceiver.hpp"
 #include "MackieControl.hpp"
-
+#include "display.hpp"
 #include "OscMessage.hpp"
-#include "OscSenderReceiver.hpp"
 
 
 
@@ -67,9 +66,11 @@ public:
 	void mackie_receive_thread();
 	void ardour_receive_thread();
 
+	bool is_index_within_bank(int index, int bank_nr, int bank_size);
+
 	MackieControl *mackie_sender_receiver;
 	ArdourSenderReceiver ardour_sender_receiver;
-	OscSenderReceiver display;
+	display display_object;
 	struct plugin_multiplexer_struct plugin_multiplexer;	
 	volatile enum channel_mode mode = PanMode;
 	void switch_channel_mode();
