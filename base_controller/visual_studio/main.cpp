@@ -21,7 +21,7 @@ int main()
     //for Linux:
     //for midi input and output id put "amidi -l" into terminal
     //number for input and output is usually the same
-    OscController controller_1("127.0.0.1", 9, 3819, 2, 2);
+    OscController controller_1("127.0.0.1", 9, 3819, 3, 3);
 	#endif
     #ifdef _WIN64
     //for Windows:

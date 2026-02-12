@@ -16,6 +16,7 @@
 #include "Defines.hpp"
 
 class MidiSenderReceiver {
+	protected:
 	#ifdef __linux__
 	snd_rawmidi_t* MidiDeviceIn;
 	snd_rawmidi_t* MidiDeviceOut;
@@ -27,7 +28,7 @@ class MidiSenderReceiver {
 public:
 	MidiSenderReceiver(int port_in, int port_out);
 	int initialize_midi(int port_in, int port_out);
-	void receive_data(char *buffer);
+	void receive_data(MidiMessage& message);
 	//I changed this function from void send_data(char *data, int size) to this
 	//because it was identical to the function of the UdpSenderReceiver, because 
 	//for the udp version it means raw udp data, and for the midi version it means 
@@ -38,6 +39,6 @@ public:
 	//parent, MidiSenderReceiver, and in case the udp version is used, 
 	//it will use this function wich is redirectin an OscMessage to the 
 	//OscSenderReceiver 
-	void send_data(struct MidiMessage message);
+	virtual void send_data(struct MidiMessage message);
 
 };

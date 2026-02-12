@@ -139,6 +139,8 @@ if (result != MMSYSERR_NOERROR) {
 	}
 #endif
 
+
+
 #ifdef __STM32F7xx_HAL_H
 void MidiSenderReceiver::receive_data(char *buffer)
 {
@@ -147,6 +149,12 @@ void MidiSenderReceiver::receive_data(char *buffer)
 #endif
 
 #ifdef __linux__
+	void MidiSenderReceiver::receive_data(MidiMessage& message)
+	{
+		snd_rawmidi_read(MidiDeviceIn, message.data, 3);
+		return;
+	}
+
 void MidiSenderReceiver::send_data(struct MidiMessage message)
 {
 	snd_rawmidi_write(MidiDeviceOut, message.data, message.length);	

@@ -1,8 +1,12 @@
-//#include "MackieSenderReceiverMidi.hpp"
+#include "Defines.hpp"
+#ifdef MACKIE_CONTROL_MIDI_VERSION
+#include "MackieSenderReceiverMidi.hpp"
+#endif
+#ifdef MACKIE_CONTROL_UDP_VERSION
 #include "MackieSenderReceiverUdp.hpp"
+#endif
 #include "ArdourSenderReceiver.hpp"
 #include "OscMessage.hpp"
-#include "Defines.hpp"
 
 #ifdef __STM32F7xx_HAL_H
 extern uint8_t IP_ADDRESS[4];
@@ -182,7 +186,8 @@ void mackie_display_struct::fill_sysx_buffer()
 }
 
 //This is only for the Udp version of the MackieSenderReceiver
-;void MackieSenderReceiver::send_data(struct MidiMessage message)
+#ifdef MACKIE_CONTROL_UDP_VERSION
+void MackieSenderReceiver::send_data(struct MidiMessage message)
 {
 	OscMessage osc_message("/Midi");
 	if (message.length == 3) {
@@ -221,3 +226,4 @@ void MackieSenderReceiver::receive_data(MidiMessage &midi_message)
 	midi_message.data[2] = (midi_data & 0xff0000) >> 16;
 	midi_message.data[3] = 0;
 }
+#endif
