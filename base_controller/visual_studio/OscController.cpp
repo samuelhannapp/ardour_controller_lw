@@ -528,17 +528,20 @@ void OscController::switch_channel_mode()
 		this->mode = SendMode;
 		this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.sends);
 		this->mackie_sender_receiver->update_faders(this->local_strip_data.selected_strip.sends);
+		display_object.update_display(this->mode);
 		break;
 	case SendMode:
 		this->mode = PluginMode;
 		this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
 		this->mackie_sender_receiver->update_faders(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
 		display_object.update_display(this->local_strip_data.selected_strip.get_selected_plugin_parameter_names(&this->plugin_multiplexer));
+		display_object.update_display(this->mode);
 		break;
 	case PluginMode:
 		this->mode = PanMode;
 		this->mackie_sender_receiver->update_display(this->local_strip_data.strips);
 		this->mackie_sender_receiver->update_faders(this->local_strip_data.strips);
+		display_object.update_display(this->mode);
 		break;
 	default:
 		break;

@@ -2,6 +2,7 @@
 #include "OscMessage.hpp"
 #include <vector>
 #include <fstream>
+#include "Defines.hpp"
 
 bool MyApp::OnInit()
 {
@@ -60,8 +61,8 @@ MyFrame::MyFrame(std::string udp_port_in, std::string udp_port_out)
 		knob_name_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10) , wxSize(80, 20), wxBORDER_SUNKEN); 
 		knob_name_panel[i]->SetMinSize(wxSize(80, 20));
 		channel_name[i] = new wxStaticText(channel_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
-		plugin_parameter_name[i] = new wxStaticText(plugin_parameter_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
-		knob_name[i] = new wxStaticText(knob_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
+		plugin_parameter_name[i] = new wxStaticText(plugin_parameter_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_CENTER);
+		knob_name[i] = new wxStaticText(knob_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_CENTER);
 		wxFont font = channel_name[i]->GetFont();
 		font.SetWeight(wxFONTWEIGHT_BOLD);
 		font.SetPointSize(10);
@@ -129,6 +130,8 @@ void MyFrame::adjust_window(wxSize size)
 	for (int i = 0; i < CHANNEL_COUNT; i++) {
 		panel[i]->SetMinSize(panel_size);
 		channel_name_panel[i]->SetSize(channel_name_size);
+		knob_name_panel[i]->SetSize(channel_name_size);
+		plugin_parameter_name_panel[i]->SetSize(channel_name_size);
 		channel_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 30));
 		plugin_parameter_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 80));
 		knob_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset + 30));
@@ -174,7 +177,6 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		int index = message.get_int(0) - 1;
 		this->channel_name[index]->SetLabel(message.get_string(1));
 		this->channel_name[index]->SetSize(channel_name_panel[index]->GetSize());
-		this->plugin_parameter_name[index]->SetLabel(" ");
 	}
 	if(!message.GetAddress().compare("/select/plugin/parameter/name"))
 	{
@@ -200,6 +202,21 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		wxSize temp_size(600, 600);
 		this->SetSize(temp_size);
 		this->SetSize(original_size);
+	}
+	if(!message.GetAddress().compare("/base_controller/mode_switch")){
+		
+		switch(message.get_int(0)){
+		case channel_mode::PanMode:
+			for(int i = 0; i < CHANNEL_COUNT; i++)
+				plugin_parameter_name[i]->SetLabel(" ");
+			break; 
+		case channel_mode::SendMode:
+			for(int i = 0; i < CHANNEL_COUNT; i++)
+				plugin_parameter_name[i]->SetLabel(" ");
+			break; 
+		case channel_mode::PluginMode:
+			break;
+		}
 	}
 	
 }
