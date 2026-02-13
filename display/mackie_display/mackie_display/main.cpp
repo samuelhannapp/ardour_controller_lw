@@ -19,7 +19,7 @@ bool MyApp::OnInit()
 }
 
 MyFrame::MyFrame(std::string udp_port_in, std::string udp_port_out)
-    : wxFrame(nullptr, wxID_ANY, "Base Controller (Mackie Control) Display", wxDefaultPosition, wxSize(800, 800))
+    : wxFrame(nullptr, wxID_ANY, "Base Controller (Mackie Control) Display", wxDefaultPosition, wxSize(800, 400))
 {
     wxMenu* menuConnections = new wxMenu;
     menuConnections->Append(ID_Hello, "&display format", "setup ip address for controller");
@@ -60,9 +60,12 @@ MyFrame::MyFrame(std::string udp_port_in, std::string udp_port_out)
 		plugin_parameter_name_panel[i]->SetMinSize(wxSize(80, 50));
 		knob_name_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10) , wxSize(80, 20), wxBORDER_SUNKEN); 
 		knob_name_panel[i]->SetMinSize(wxSize(80, 20));
+		send_name_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10) , wxSize(80, 20), wxBORDER_SUNKEN); 
+		send_name_panel[i]->SetMinSize(wxSize(80, 20));
 		channel_name[i] = new wxStaticText(channel_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
 		plugin_parameter_name[i] = new wxStaticText(plugin_parameter_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_CENTER);
 		knob_name[i] = new wxStaticText(knob_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_CENTER);
+		send_name[i] = new wxStaticText(send_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_CENTER);
 		wxFont font = channel_name[i]->GetFont();
 		font.SetWeight(wxFONTWEIGHT_BOLD);
 		font.SetPointSize(10);
@@ -132,8 +135,10 @@ void MyFrame::adjust_window(wxSize size)
 		channel_name_panel[i]->SetSize(channel_name_size);
 		knob_name_panel[i]->SetSize(channel_name_size);
 		plugin_parameter_name_panel[i]->SetSize(channel_name_size);
+		send_name_panel[i]->SetSize(channel_name_size);
 		channel_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 30));
 		plugin_parameter_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 80));
+		send_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 140));
 		knob_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset + 30));
 		channel_name[i]->SetSize(channel_name_size);
 	}
@@ -178,6 +183,12 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		this->channel_name[index]->SetLabel(message.get_string(1));
 		this->channel_name[index]->SetSize(channel_name_panel[index]->GetSize());
 	}
+	if(!message.GetAddress().compare("/select/send_name"))
+	{
+		int index = message.get_int(0) - 1;
+		this->send_name[index]->SetLabel(message.get_string(1));
+	}
+
 	if(!message.GetAddress().compare("/select/plugin/parameter/name"))
 	{
 		int index = message.get_int(0) - 1;
@@ -209,12 +220,16 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		case channel_mode::PanMode:
 			for(int i = 0; i < CHANNEL_COUNT; i++)
 				plugin_parameter_name[i]->SetLabel(" ");
+			for(int i = 0; i < CHANNEL_COUNT; i++)
+				send_name[i]->SetLabel(" ");
 			break; 
 		case channel_mode::SendMode:
 			for(int i = 0; i < CHANNEL_COUNT; i++)
 				plugin_parameter_name[i]->SetLabel(" ");
 			break; 
 		case channel_mode::PluginMode:
+			for(int i = 0; i < CHANNEL_COUNT; i++)
+				send_name[i]->SetLabel(" ");
 			break;
 		}
 	}

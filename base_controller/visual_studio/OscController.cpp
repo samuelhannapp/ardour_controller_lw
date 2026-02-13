@@ -97,7 +97,7 @@ void OscController::process_midi(MidiMessage message)
 						msg = OscMessage("/set_surface/strip_types");
 						msg.PushInt(1 << VCAs);
 						break;
-					case 3:
+					case 3: //bank down
 						if(this->mode == PanMode)
 							msg = OscMessage("/bank_down");
 						if(this->mode == PluginMode){
@@ -105,14 +105,14 @@ void OscController::process_midi(MidiMessage message)
 								local_strip_data.selected_strip.plugin_bank--;
 							this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
                             this->mackie_sender_receiver->update_faders(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
-							this->display_object.update_display(this->local_strip_data.selected_strip.get_selected_plugin_parameter_names(&this->plugin_multiplexer));
+							this->display_object.update_display(OscMessage("/select/plugin/parameter/name"), this->local_strip_data.selected_strip.get_selected_plugin_parameter_names(&this->plugin_multiplexer));
 						}
 						if(this->mode == SendMode){
 							msg = OscMessage("/select/send_page");
 							msg.PushFloat(-1);
 						}
 						break;
-					case 4:
+					case 4: //bank up
 						if(this->mode == PanMode)
 							msg = OscMessage("/bank_up");
 						if(this->mode == PluginMode){
@@ -121,7 +121,7 @@ void OscController::process_midi(MidiMessage message)
 
 							this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
                             this->mackie_sender_receiver->update_faders(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
-							this->display_object.update_display(this->local_strip_data.selected_strip.get_selected_plugin_parameter_names(&this->plugin_multiplexer));
+							this->display_object.update_display(OscMessage("/select/plugin/parameter/name"), this->local_strip_data.selected_strip.get_selected_plugin_parameter_names(&this->plugin_multiplexer));
 						}
 						if(this->mode == SendMode){
 							msg = OscMessage("/select/send_page");
@@ -321,7 +321,6 @@ void OscController::ardour_receive_thread()
 		else if(!message.GetAddress().compare("/strip/meter")){
 			int strip_nr = message.get_int(0);
 			float value = message.get_float(1);
-
 			mackie_sender_receiver->send_data(controller::METER, strip_nr, value);
 			continue;
 		}
@@ -338,6 +337,7 @@ void OscController::ardour_receive_thread()
 			local_strip_data.selected_strip.update_selected_strip(controller::SEND_NAME, send_nr, string);
 			if(this->mode == SendMode){
 				mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.sends);
+				display_object.send_data(message);
 			}
 			continue;
 		}
@@ -373,7 +373,8 @@ void OscController::ardour_receive_thread()
 				this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
 				int plugin_parameter_id_in_controller = this->plugin_multiplexer.get_plugin_to_controller(plugin_parameter_id);
 				if(is_index_within_bank(plugin_parameter_id_in_controller, this->local_strip_data.selected_strip.plugin_bank, STRIPS_PER_CONTROLLER) ){
-					display_object.update_display(this->local_strip_data.selected_strip.get_selected_plugin_parameter_names(&this->plugin_multiplexer));
+					//we should here only send a single one, not the whole list...
+					display_object.update_display(OscMessage("/select/plugin/parameter/name"), this->local_strip_data.selected_strip.get_selected_plugin_parameter_names(&this->plugin_multiplexer));
 				}
 			}
 			continue;
@@ -525,19 +526,21 @@ void OscController::switch_channel_mode()
 {
 	switch(this->mode){
 	case PanMode:
-		this->mode = SendMode;
-		this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.sends);
-		this->mackie_sender_receiver->update_faders(this->local_strip_data.selected_strip.sends);
-		display_object.update_display(this->mode);
-		break;
-	case SendMode:
 		this->mode = PluginMode;
 		this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
 		this->mackie_sender_receiver->update_faders(this->local_strip_data.selected_strip.selected_plugin, &this->plugin_multiplexer, this->local_strip_data.selected_strip.plugin_bank);
-		display_object.update_display(this->local_strip_data.selected_strip.get_selected_plugin_parameter_names(&this->plugin_multiplexer));
+		display_object.update_display(OscMessage("/select/plugin/parameter/name"), this->local_strip_data.selected_strip.get_selected_plugin_parameter_names(&this->plugin_multiplexer));
 		display_object.update_display(this->mode);
 		break;
+		
 	case PluginMode:
+		this->mode = SendMode;
+		this->mackie_sender_receiver->update_display(this->local_strip_data.selected_strip.sends);
+		this->mackie_sender_receiver->update_faders(this->local_strip_data.selected_strip.sends);
+		display_object.update_display(OscMessage("/select/send_name"), this->local_strip_data.selected_strip.get_selected_strip_send_names()); 
+		display_object.update_display(this->mode);
+		break;	
+	case SendMode:
 		this->mode = PanMode;
 		this->mackie_sender_receiver->update_display(this->local_strip_data.strips);
 		this->mackie_sender_receiver->update_faders(this->local_strip_data.strips);

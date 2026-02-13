@@ -49,9 +49,11 @@ private:
 	wxStaticText* channel_name[CHANNEL_COUNT];
 	wxStaticText* plugin_parameter_name[CHANNEL_COUNT];
 	wxStaticText* knob_name[CHANNEL_COUNT];
+	wxStaticText* send_name[CHANNEL_COUNT];
 	wxPanel* channel_name_panel[CHANNEL_COUNT];
 	wxPanel* plugin_parameter_name_panel[CHANNEL_COUNT];
 	wxPanel* knob_name_panel[CHANNEL_COUNT];
+	wxPanel* send_name_panel[CHANNEL_COUNT];
 	wxPanel* panel[CHANNEL_COUNT];
 
 	int space_size_side = SPACE_SIZE_SIDE;

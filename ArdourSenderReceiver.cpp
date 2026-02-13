@@ -12,6 +12,14 @@ std::vector<std::string> selected_strip_struct::get_selected_plugin_parameter_na
 	return output;
 }
 
+std::vector<std::string> selected_strip_struct::get_selected_strip_send_names()
+{
+	std::vector<std::string> output;
+	for(int i = 1; i <= STRIPS_PER_CONTROLLER; i++)
+		output.push_back(sends[i].name);
+	return output;
+}
+
 void selected_strip_struct::update_selected_strip(enum controller::controller_message type, int nr, float value)
 {
 	switch(type){
@@ -72,7 +80,7 @@ int selected_strip_struct::get_selected_plugin_index()
 void selected_strip_struct::initialize_selected_plugin_descriptor()
 {
 	for(int i = 0; i < MAX_PLUGIN_PARAMETERS; i++){
-		this->selected_plugin[i].name = std::string("default");
+		this->selected_plugin[i].name = std::string(" ");
 		this->selected_plugin[i].value = 0;
 	}
 }
@@ -80,12 +88,12 @@ void selected_strip_struct::initialize_selected_plugin_descriptor()
 void selected_strip_struct::initialize_selected_strip_sends()
 {
 	for (int i = 0; i < SEND_ARRAY_SIZE; i++)
-		this->sends[i].name = std::string("default");
+		this->sends[i].name = std::string(" ");
 }
 
 void selected_strip_struct::initialize_selected_strip_plugin_list(){
 	for(int i = 0; i < 16; i++)
-		this->plugin_list.push_back("default");
+		this->plugin_list.push_back(" ");
 	return;
 }
 

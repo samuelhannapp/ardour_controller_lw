@@ -10,12 +10,13 @@ void display::update_display(enum channel_mode mode)
 	this->send_data(message);
 }
 
-void display::update_display(std::vector<std::string> data)
+//maybe we rather just give a string as command...
+void display::update_display(OscMessage message, std::vector<std::string> data)
 {
 for (int i = 0; i < data.size(); i++) {
-	OscMessage message("/select/plugin/parameter/name");
-	message.PushInt(i + 1);
-	message.PushString(data[i]);
-	OscSenderReceiver::send_data(message);
+	OscMessage temp_message(message.GetAddress());
+	temp_message.PushInt(i + 1);
+	temp_message.PushString(data[i]);
+	OscSenderReceiver::send_data(temp_message);
 }
 }

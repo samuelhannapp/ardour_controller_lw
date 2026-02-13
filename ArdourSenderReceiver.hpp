@@ -27,6 +27,7 @@ struct selected_strip_struct{
 	int plugin_bank;
 	//void update_global_state(enum controller::controller_message type, int strip_nr, float value);
 	std::vector<std::string> get_selected_plugin_parameter_names(plugin_multiplexer_struct *plugin_multiplexer);
+	std::vector<std::string> get_selected_strip_send_names();
 	void update_selected_strip(enum controller::controller_message type, int nr, float value);
 	void update_selected_strip(enum controller::controller_message type, int nr, std::string string);
 	bool controller_channel_nr_is_within_plugin_bank(int fader_id);
