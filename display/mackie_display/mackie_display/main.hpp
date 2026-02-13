@@ -38,6 +38,9 @@ public:
     MyFrame();
 
 private:
+	void adjust_window(wxSize size);
+	wxColor channel_not_selected_color;
+	wxColor channel_selected_color;
 	wxBoxSizer* channel_layout;
 	std::vector<wxSizerItem*> spacers;
 	wxSizerItem* top_spacer;
@@ -45,8 +48,10 @@ private:
 
 	wxStaticText* channel_name[CHANNEL_COUNT];
 	wxStaticText* plugin_parameter_name[CHANNEL_COUNT];
+	wxStaticText* knob_name[CHANNEL_COUNT];
 	wxPanel* channel_name_panel[CHANNEL_COUNT];
 	wxPanel* plugin_parameter_name_panel[CHANNEL_COUNT];
+	wxPanel* knob_name_panel[CHANNEL_COUNT];
 	wxPanel* panel[CHANNEL_COUNT];
 
 	int space_size_side = SPACE_SIZE_SIDE;
@@ -70,13 +75,20 @@ public:
 class WindowScalerFrame : public wxFrame {
 public:
 	WindowScalerFrame(MyFrame *parent, wxWindowID wxID_ANY, const wxString& title = "scale window", const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
+	void SaveScaling(wxCommandEvent& event);
+	void OpenScaling(wxCommandEvent& event);
 	void OnSlider_1(wxCommandEvent& event);
 	void OnSlider_2(wxCommandEvent& event);
 	void OnSlider_3(wxCommandEvent& event);
 
+	MyFrame *main_window;
+
 	wxStaticText* slider_value_1;
 	wxStaticText* slider_value_2;
 	wxStaticText* slider_value_3;
+	wxSlider* slider_1;
+	wxSlider* slider_2;
+	wxSlider* slider_3;
 };
 
 enum

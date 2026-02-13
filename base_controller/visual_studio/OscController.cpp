@@ -306,6 +306,7 @@ void OscController::ardour_receive_thread()
 			float value = message.get_float(1);
 			local_strip_data.selected_strip.update_selected_strip(controller::SELECT, strip_nr, value);
 			mackie_sender_receiver->send_data(controller::SELECT, strip_nr, value);
+			display_object.send_data(message);
 			continue;
 		}
 		else if(!message.GetAddress().compare("/strip/pan_stereo_position")){

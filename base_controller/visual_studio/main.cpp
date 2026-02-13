@@ -1,7 +1,8 @@
 #include "OscController.hpp"
 #include <array>
+#include <string>
 
-int main()
+int main(int argc, char *argv[])
 {
     //before you start this program you have to stop the audio midi engine
     //in ardour via Window -> Audio/Midi Setup and press Stop
@@ -14,14 +15,28 @@ int main()
     //use the ip address of the computer on wich ardour runs
     //in case the ardour controller run's on another computer
     //for example "192.168.10.226"
-    //osc_controller controller_1("ip address of the computer where ardour runs", 9, 3819, 2, 2);
+    //osc_contr oller controller_1("ip address of the computer where ardour runs", 9, 3819, 2, 2);
+   
     
+    //program input is as following:
+    //int udp_port_in, int udp_port_out,  int midi_port_in,  int midi_port_out
+
+    if(argc != 5){
+        printf("arguments have to be: int udp_port_in, int udp_port_out,  int midi_port_in,  int midi_port_out");
+        exit(0);
+    }
+
+    std::string arguments[4];
+    arguments[0] = std::string(argv[1]);
+    arguments[1] = std::string(argv[2]);
+    arguments[2] = std::string(argv[3]);
+    arguments[3] = std::string(argv[4]);
 
     #ifdef __linux__
     //for Linux:
     //for midi input and output id put "amidi -l" into terminal
     //number for input and output is usually the same
-    OscController controller_1("127.0.0.1", 9, 3819, 3, 3);
+    OscController controller_1("127.0.0.1", std::stoi(arguments[0]), std::stoi(arguments[1]), std::stoi(arguments[2]), std::stoi(arguments[3]));
 	#endif
     #ifdef _WIN64
     //for Windows:
