@@ -10,7 +10,7 @@
 #include <functional>
 #include "Defines.hpp"
 
-OscController::OscController(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out, unsigned int midi_port_in, unsigned int midi_port_out)
+OscController::OscController(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out, unsigned int midi_port_in, unsigned int midi_port_out, unsigned int display_port_in, unsigned int display_port_out)
 {
 	this->plugin_multiplexer.initialize_plugin_multiplexer();
 	this->local_strip_data.selected_strip.initialize_selected_plugin_descriptor();
@@ -34,7 +34,7 @@ OscController::OscController(std::string destination_ip_address, unsigned int ud
 	std::thread ardour_thread(&OscController::ardour_receive_thread, this);
 	ardour_thread.detach();
 
-	display_object = display("127.0.0.1", 11, 12);
+	display_object = display("127.0.0.1", display_port_in, display_port_out);
 
 	this->ardour_sender_receiver.init_osc_controller();
 }

@@ -21,22 +21,24 @@ int main(int argc, char *argv[])
     //program input is as following:
     //int udp_port_in, int udp_port_out,  int midi_port_in,  int midi_port_out
 
-    if(argc != 5){
-        printf("arguments have to be: int udp_port_in, int udp_port_out,  int midi_port_in,  int midi_port_out");
+    if(argc != 7){
+        printf("arguments have to be: int udp_port_in, int udp_port_out,  int midi_port_in,  int midi_port_out, display_port_in display_port_out");
         exit(0);
     }
 
-    std::string arguments[4];
+    std::string arguments[6];
     arguments[0] = std::string(argv[1]);
     arguments[1] = std::string(argv[2]);
     arguments[2] = std::string(argv[3]);
     arguments[3] = std::string(argv[4]);
+    arguments[4] = std::string(argv[5]);
+    arguments[5] = std::string(argv[6]);
 
     #ifdef __linux__
     //for Linux:
     //for midi input and output id put "amidi -l" into terminal
     //number for input and output is usually the same
-    OscController controller_1("127.0.0.1", std::stoi(arguments[0]), std::stoi(arguments[1]), std::stoi(arguments[2]), std::stoi(arguments[3]));
+    OscController controller_1("127.0.0.1", std::stoi(arguments[0]), std::stoi(arguments[1]), std::stoi(arguments[2]), std::stoi(arguments[3]), std::stoi(arguments[4]), std::stoi(arguments[5]));
 	#endif
     #ifdef _WIN64
     //for Windows:

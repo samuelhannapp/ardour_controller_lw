@@ -35,7 +35,7 @@ private:
 class MyFrame : public wxFrame
 {
 public:
-    MyFrame();
+    MyFrame(std::string udp_port_in, std::string udp_port_out);
 
 private:
 	void adjust_window(wxSize size);

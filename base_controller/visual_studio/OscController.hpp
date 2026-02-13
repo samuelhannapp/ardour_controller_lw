@@ -60,7 +60,7 @@
 
 class OscController{
 public:
-	OscController(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out, unsigned int midi_port_in, unsigned int midi_port_out);
+	OscController(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out, unsigned int midi_port_in, unsigned int midi_port_out, unsigned int display_port_in, unsigned int display_port_out);
 
 	void process_midi(MidiMessage message);
 	void mackie_receive_thread();

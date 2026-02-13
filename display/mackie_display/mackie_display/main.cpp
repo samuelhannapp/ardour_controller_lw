@@ -5,12 +5,19 @@
 
 bool MyApp::OnInit()
 {
-    MyFrame* frame = new MyFrame();
+
+	if(wxApp::argc != 3){
+		printf("arguments have to be: udp port in, udp port out\n");
+		exit(0);	
+	}
+	std::string arg_1(wxApp::argv[1]);
+	std::string arg_2(wxApp::argv[2]);
+    MyFrame* frame = new MyFrame(arg_1, arg_2);
     frame->Show();
     return true;
 }
 
-MyFrame::MyFrame()
+MyFrame::MyFrame(std::string udp_port_in, std::string udp_port_out)
     : wxFrame(nullptr, wxID_ANY, "Base Controller (Mackie Control) Display", wxDefaultPosition, wxSize(800, 800))
 {
     wxMenu* menuConnections = new wxMenu;
@@ -31,9 +38,6 @@ MyFrame::MyFrame()
     //CreateStatusBar();
     //SetStatusText("Welcome to wxWidgets!");
 
-
-	
-
     Bind(wxEVT_MENU, &MyFrame::OnHello, this, ID_Hello);
     Bind(wxEVT_MENU, &MyFrame::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
@@ -45,7 +49,6 @@ MyFrame::MyFrame()
 
 	channel_not_selected_color = wxColor(210, 210, 210);
 	channel_selected_color = wxColor(230, 230, 230);
-	channel_selected_color;
 	for (int i = 0; i < CHANNEL_COUNT; i++) {
 		panel[i] = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_SUNKEN);
 		panel[i]->SetMinSize(wxSize(100, 100));
@@ -84,7 +87,9 @@ MyFrame::MyFrame()
 	main_layout->AddSpacer(SPACE_SIZE);
 
 	this->SetSizer(main_layout);
-	this->osc_sender_receiver = new OscSenderReceiver("127.0.0.1", 12, 11);
+
+
+	this->osc_sender_receiver = new OscSenderReceiver("127.0.0.1", std::stoi(udp_port_in), std::stoi(udp_port_out));
 	Bind(wxEVT_SIZE, &MyFrame::OnSize, this);
 	thread = new wxOscReceiveThread(this, osc_sender_receiver);
 	thread->Run();
@@ -164,9 +169,12 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 	OscMessage message = event.GetPayload<OscMessage>();
 	if(!message.GetAddress().compare("/strip/name"))
 	{
+		//when the message /strip/name arrives the plugin_parameter window
+		//can be deleted...
 		int index = message.get_int(0) - 1;
 		this->channel_name[index]->SetLabel(message.get_string(1));
 		this->channel_name[index]->SetSize(channel_name_panel[index]->GetSize());
+		this->plugin_parameter_name[index]->SetLabel(" ");
 	}
 	if(!message.GetAddress().compare("/select/plugin/parameter/name"))
 	{
