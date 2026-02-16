@@ -6,7 +6,7 @@
 
 #define SPACE_SIZE_SIDE 40
 #define SPACE_SIZE 10
-#define CHANNEL_NAME_HEIGHT 50 
+#define CHANNEL_NAME_HEIGHT 20 
 #define MENU_SIZE 80
 #define PANEL_OFFSET 400
 
@@ -31,6 +31,9 @@ private:
 	wxEvtHandler* m_handler;
 };
 */
+
+
+std::string file_name_scaling;
 
 class MyFrame : public wxFrame
 {

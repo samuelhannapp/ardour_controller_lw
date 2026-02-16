@@ -4,17 +4,21 @@
 #include <fstream>
 #include "Defines.hpp"
 
+
 bool MyApp::OnInit()
 {
-
+	MyFrame* frame;
 	if(wxApp::argc != 3){
 		printf("arguments have to be: udp port in, udp port out\n");
-		exit(0);	
+		frame = new MyFrame(std::string(), std::string());
 	}
-	std::string arg_1(wxApp::argv[1]);
-	std::string arg_2(wxApp::argv[2]);
-    MyFrame* frame = new MyFrame(arg_1, arg_2);
-    frame->Show();
+	else {
+		std::string arg_1(wxApp::argv[1]);
+		std::string arg_2(wxApp::argv[2]);
+		frame = new MyFrame(arg_1, arg_2);
+	}
+		
+	frame->Show();
     return true;
 }
 
@@ -56,21 +60,21 @@ MyFrame::MyFrame(std::string udp_port_in, std::string udp_port_out)
 		panel[i]->SetBackgroundColour(channel_not_selected_color);
 		channel_name_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10) , wxSize(80, 50), wxBORDER_SUNKEN);
 		channel_name_panel[i]->SetMinSize(wxSize(80, 50));
-		plugin_parameter_name_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10) , wxSize(80, 50), wxBORDER_SUNKEN);
-		plugin_parameter_name_panel[i]->SetMinSize(wxSize(80, 50));
-		knob_name_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10) , wxSize(80, 20), wxBORDER_SUNKEN); 
-		knob_name_panel[i]->SetMinSize(wxSize(80, 20));
-		send_name_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10) , wxSize(80, 20), wxBORDER_SUNKEN); 
-		send_name_panel[i]->SetMinSize(wxSize(80, 20));
+		plugin_parameter_name_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10) , wxSize(80, CHANNEL_NAME_HEIGHT), wxBORDER_SUNKEN);
+		plugin_parameter_name_panel[i]->SetMinSize(wxSize(80, CHANNEL_NAME_HEIGHT));
+		knob_name_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10) , wxSize(80, CHANNEL_NAME_HEIGHT), wxBORDER_SUNKEN); 
+		knob_name_panel[i]->SetMinSize(wxSize(80, CHANNEL_NAME_HEIGHT));
+		send_name_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10) , wxSize(80, CHANNEL_NAME_HEIGHT), wxBORDER_SUNKEN); 
+		send_name_panel[i]->SetMinSize(wxSize(80, CHANNEL_NAME_HEIGHT));
 		channel_name[i] = new wxStaticText(channel_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
-		plugin_parameter_name[i] = new wxStaticText(plugin_parameter_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_CENTER);
+		plugin_parameter_name[i] = new wxStaticText(plugin_parameter_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, CHANNEL_NAME_HEIGHT), wxALIGN_CENTER);
 		knob_name[i] = new wxStaticText(knob_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_CENTER);
 		send_name[i] = new wxStaticText(send_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_CENTER);
 		wxFont font = channel_name[i]->GetFont();
 		font.SetWeight(wxFONTWEIGHT_BOLD);
 		font.SetPointSize(10);
 		channel_name[i]->SetFont(font);
-		channel_name[i]->SetBackgroundColour(wxColor(230, 230, 230));
+		channel_name[i]->SetBackgroundColour(channel_selected_color);
 		channel_layout->Add(panel[i], 0, wxEXPAND);
 		if(i != (CHANNEL_COUNT - 1))
 			spacers.push_back(channel_layout->AddSpacer(SPACE_SIZE));
@@ -89,29 +93,40 @@ MyFrame::MyFrame(std::string udp_port_in, std::string udp_port_out)
 	top_spacer = main_layout->AddSpacer(SPACE_SIZE);
 	main_layout->Add(channel_layout);
 	main_layout->AddSpacer(SPACE_SIZE);
-
+	
 	this->SetSizer(main_layout);
+	
 
-
+	if (!udp_port_in.size())
+		udp_port_in = std::string("100");
+	if (!udp_port_out.size())
+		udp_port_out = std::string("101");
 	this->osc_sender_receiver = new OscSenderReceiver("127.0.0.1", std::stoi(udp_port_in), std::stoi(udp_port_out));
 	Bind(wxEVT_SIZE, &MyFrame::OnSize, this);
 	thread = new wxOscReceiveThread(this, osc_sender_receiver);
 	thread->Run();
 	Bind(wxEVT_THREAD, &MyFrame::OnThreadUpdate, this);
-
-	std::ifstream file("/home/samuel/Documents/display_scaling.txt");
-	std::string line;
-	OscMessage message("/wxSliderUpdate");
-	std::getline(file, line);
-	space_size_side	= std::stoi(line)  / 14;
-	std::getline(file, line);
-	left_spacer_size = std::stoi(line)  / 3;
-	std::getline(file, line);
-	panel_offset = std::stoi(line);
-	wxSize original_size = this->GetSize();
-	wxSize temp_size(600, 600);
-	this->SetSize(temp_size);
-	this->SetSize(original_size);
+	#ifdef __linux__
+	this->file_name_scaling = std::string("/home/samuel/Documents/display_scaling.txt");
+	#endif
+	#ifdef _WIN64
+	file_name_scaling = std::string("C:\\Users\\Samuel\\Documents\\display_scaling.txt");
+	#endif
+	std::ifstream file(file_name_scaling);
+	if (file.is_open()) {
+		std::string line;
+		OscMessage message("/wxSliderUpdate");
+		std::getline(file, line);
+		space_size_side = std::stoi(line) / 14;
+		std::getline(file, line);
+		left_spacer_size = std::stoi(line) / 3;
+		std::getline(file, line);
+		panel_offset = std::stoi(line);
+		wxSize original_size = this->GetSize();
+		wxSize temp_size(600, 600);
+		this->SetSize(temp_size);
+		this->SetSize(original_size);
+	}
 }
 
 void MyFrame::OnSize(wxSizeEvent& event)
@@ -125,22 +140,23 @@ void MyFrame::OnSize(wxSizeEvent& event)
 void MyFrame::adjust_window(wxSize size)
 {
 	wxSize panel_size;
-	panel_size = wxSize(size.GetWidth() / 8 - SPACE_SIZE - (space_size_side), size.GetHeight() - MENU_SIZE - SPACE_SIZE - panel_offset);
+	panel_size = wxSize(size.GetWidth() / 8 - SPACE_SIZE - (space_size_side), size.GetHeight() - MENU_SIZE - SPACE_SIZE - panel_offset + 20);
 	spacers[0]->SetMinSize(wxSize(left_spacer_size, 0));
 	top_spacer->SetMinSize(wxSize(0, panel_offset));
 	
-	wxSize channel_name_size(panel_size.GetWidth() - SPACE_SIZE * 2, CHANNEL_NAME_HEIGHT);
+	wxSize panel_height(panel_size.GetWidth() - SPACE_SIZE * 2, CHANNEL_NAME_HEIGHT);
+	wxSize channel_name_panel_height(panel_size.GetWidth() - SPACE_SIZE * 2, CHANNEL_NAME_HEIGHT + 30);
 	for (int i = 0; i < CHANNEL_COUNT; i++) {
 		panel[i]->SetMinSize(panel_size);
-		channel_name_panel[i]->SetSize(channel_name_size);
-		knob_name_panel[i]->SetSize(channel_name_size);
-		plugin_parameter_name_panel[i]->SetSize(channel_name_size);
-		send_name_panel[i]->SetSize(channel_name_size);
+		channel_name_panel[i]->SetSize(channel_name_panel_height);
+		knob_name_panel[i]->SetSize(panel_height);
+		plugin_parameter_name_panel[i]->SetSize(panel_height);
+		send_name_panel[i]->SetSize(panel_height);
 		channel_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 30));
-		plugin_parameter_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 80));
-		send_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 140));
-		knob_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset + 30));
-		channel_name[i]->SetSize(channel_name_size);
+		plugin_parameter_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 20 - 30));
+		send_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 40 - 30));
+		knob_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset + 20));
+		//channel_name[i]->SetSize(channel_name_size);
 	}
 }
 
@@ -203,6 +219,7 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 			this->panel[index - 1]->SetBackgroundColour(channel_selected_color);
 		else
 			this->panel[index - 1]->SetBackgroundColour(channel_not_selected_color);
+		this->panel[index - 1]->Refresh();
 	}
 	if(!message.GetAddress().compare("/wxSliderUpdate"))
 	{
@@ -220,16 +237,48 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		case channel_mode::PanMode:
 			for(int i = 0; i < CHANNEL_COUNT; i++)
 				plugin_parameter_name[i]->SetLabel(" ");
+
 			for(int i = 0; i < CHANNEL_COUNT; i++)
 				send_name[i]->SetLabel(" ");
+
+			for (int i = 0; i < CHANNEL_COUNT; i++) {
+				plugin_parameter_name_panel[i]->SetBackgroundColour(channel_not_selected_color); 
+				plugin_parameter_name_panel[i]->Refresh();
+			}
+
+			for (int i = 0; i < CHANNEL_COUNT; i++) {
+				send_name_panel[i]->SetBackgroundColour(channel_not_selected_color); 
+				send_name_panel[i]->Refresh();
+			}
+
+			for (int i = 0; i < CHANNEL_COUNT; i++) {
+				channel_name_panel[i]->SetBackgroundColour(channel_selected_color); 
+				channel_name_panel[i]->Refresh();
+			}
 			break; 
 		case channel_mode::SendMode:
 			for(int i = 0; i < CHANNEL_COUNT; i++)
 				plugin_parameter_name[i]->SetLabel(" ");
+			for (int i = 0; i < CHANNEL_COUNT; i++) {
+				plugin_parameter_name_panel[i]->SetBackgroundColour(channel_not_selected_color); 
+				plugin_parameter_name_panel[i]->Refresh();
+			}
+			for (int i = 0; i < CHANNEL_COUNT; i++) {
+				send_name_panel[i]->SetBackgroundColour(channel_selected_color); 
+				send_name_panel[i]->Refresh();
+			}
 			break; 
 		case channel_mode::PluginMode:
 			for(int i = 0; i < CHANNEL_COUNT; i++)
 				send_name[i]->SetLabel(" ");
+			for (int i = 0; i < CHANNEL_COUNT; i++) {
+				send_name_panel[i]->SetBackgroundColour(channel_not_selected_color); 
+				send_name_panel[i]->Refresh();
+			}
+			for (int i = 0; i < CHANNEL_COUNT; i++) {
+				plugin_parameter_name_panel[i]->SetBackgroundColour(channel_selected_color); 
+				plugin_parameter_name_panel[i]->Refresh();
+			}
 			break;
 		}
 	}
@@ -302,16 +351,18 @@ WindowScalerFrame::WindowScalerFrame(MyFrame *parent, wxWindowID id, const wxStr
 
 void WindowScalerFrame::SaveScaling(wxCommandEvent& event)
 {
-	std::ofstream file("/home/samuel/Documents/display_scaling.txt");
-	file << slider_value_1->GetLabel() << '\n';
-	file << slider_value_2->GetLabel() << '\n';
-	file << slider_value_3->GetLabel();
-	file.close();
+	std::ofstream file(file_name_scaling);
+	if (file.is_open()) {
+		file << slider_value_1->GetLabel().ToStdString() << '\n';
+		file << slider_value_2->GetLabel().ToStdString() << '\n';
+		file << slider_value_3->GetLabel().ToStdString();
+		file.close();
+	}
 }
 
 void WindowScalerFrame::OpenScaling(wxCommandEvent& event)
 {
-	std::ifstream file("/home/samuel/Documents/display_scaling.txt");
+	std::ifstream file(file_name_scaling);
 	std::string line;
 	OscMessage message("/wxSliderUpdate");
 	std::getline(file, line);

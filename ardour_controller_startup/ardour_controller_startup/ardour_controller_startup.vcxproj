@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{0fd9b191-e15f-48bb-93ea-db5bf4f595b9}</ProjectGuid>
-    <RootNamespace>mackiedisplay</RootNamespace>
+    <ProjectGuid>{cc56636f-e38f-422e-a1a7-adecbb798b2f}</ProjectGuid>
+    <RootNamespace>ardourcontrollerstartup</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -103,7 +103,6 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\Samuel\Software\arduor_controller_lw;$(WXWIN)\include\msvc;$(WXWIN)\include;C:\Users\Samuel\Software\OscSenderReceiver</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -126,14 +125,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\OscSenderReceiver\OscMessage.cpp" />
-    <ClCompile Include="..\..\..\..\OscSenderReceiver\OscSenderReceiver.cpp" />
-    <ClCompile Include="..\..\..\..\OscSenderReceiver\UdpSenderReceiver.cpp" />
-    <ClCompile Include="..\..\..\..\OscSenderReceiver\wxOscReceiveThread.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClInclude Include="main.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="main.hpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

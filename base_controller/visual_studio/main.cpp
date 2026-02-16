@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     //for Windows:
     //use tool like MIDI-OX to find device id's for input and output of midi
     //normally it's ascending, meaning for example, input is 1, output is 2
-    OscController controller_1("127.0.0.1", 9, 3819, 0, 1);
+    OscController controller_1("127.0.0.1", std::stoi(arguments[0]), std::stoi(arguments[1]), std::stoi(arguments[2]), std::stoi(arguments[3]), std::stoi(arguments[4]), std::stoi(arguments[5]));
     //OscController controller_2("127.0.0.1", 10, 3819, 1, 2);
 	#endif
 
