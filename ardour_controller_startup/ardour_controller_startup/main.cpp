@@ -170,7 +170,7 @@ void MyFrame::OnAddController(wxCommandEvent& event)
 
     wxSpinCtrl* spin_control_receive_port_from_display = new wxSpinCtrl(this, wxID_ANY, std::to_string(port_nr + 2));
     spin_control_receive_port_from_display->SetMinSize(wxSize(WIDGET_WIDTH, 20));
-    receive_port_form_display.push_back(spin_control_receive_port_from_display);
+    receive_port_from_display.push_back(spin_control_receive_port_from_display);
 
     this->controller_layout.push_back(new wxBoxSizer(wxHORIZONTAL));
     this->controller_layout.back()->Add(choice);
@@ -187,19 +187,79 @@ void MyFrame::OnAddController(wxCommandEvent& event)
     event.Skip();
 }
 
+int MyFrame::get_midi_in(std::string controller_name)
+{
+    for (int i = 0; i < this->midi_in_devices.size(); i++) {
+        if (!this->midi_in_devices.at(i).compare(controller_name))
+            return i;
+    }
+    return -1;
+}
+
+int MyFrame::get_midi_out(std::string controller_name)
+{
+    for (int i = 0; i < this->midi_out_devices.size(); i++) {
+        if (!this->midi_out_devices.at(i).compare(controller_name))
+            return i;
+    }
+    return -1;
+}
+
 void MyFrame::OnStartController(wxCommandEvent& event)
 {
+    int how_many_controllers = this->controllers.size();
 
-    std::wstring base_controller_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\mackie_display\\x64\\Debug\\mackie_display.exe");
-    std::wstring arguments;
-    int in = 10;
-    int out = 11;
-    arguments.push_back(' ');
-    arguments.append(std::to_wstring(out));
-    arguments.push_back(' ');
-    arguments.append(std::to_wstring(in));
+    std::wstring base_controller_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\base_controller\\x64\\Debug\\base_controller.exe");
+    std::wstring display_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\mackie_display\\x64\\Debug\\mackie_display.exe");
+    bool controller_exist = false;
+    for (int i = 0; i < how_many_controllers; i++) {
+        controller_exist = true;
+         std::string controller_name = this->controllers.at(i)->GetStringSelection().ToStdString();
+         if (controller_name.empty()) {
+             wxMessageBox("You have to select a controller first",
+                 "No controller selected", wxOK | wxICON_INFORMATION);
+             return;
+         }
 
-    start_process(base_controller_exe_path, arguments);
+        
+        int ardour_controller_in_port = receive_port_from_ardour.at(i)->GetValue();
+        int ardour_controller_out_port = send_port_to_ardour.at(i)->GetValue();
+
+        int midi_in_nr = this->get_midi_in(controller_name);
+        int midi_out_nr = this->get_midi_out(controller_name);
+
+        int display_in = this->receive_port_from_display.at(i)->GetValue();
+        int display_out = this->send_port_to_display.at(i)->GetValue();
+
+        bool display_enabled = this->display_enable_check_box.at(i)->GetValue();
+
+		std::wstring base_controller_arguments;
+		base_controller_arguments.push_back(L' ');
+		base_controller_arguments.append(std::to_wstring(ardour_controller_in_port));
+		base_controller_arguments.push_back(L' ');
+		base_controller_arguments.append(std::to_wstring(ardour_controller_out_port));
+		base_controller_arguments.push_back(L' ');
+		base_controller_arguments.append(std::to_wstring(midi_in_nr));
+		base_controller_arguments.push_back(L' ');
+		base_controller_arguments.append(std::to_wstring(midi_out_nr));
+		base_controller_arguments.push_back(L' ');
+		base_controller_arguments.append(std::to_wstring(display_in));
+		base_controller_arguments.push_back(L' ');
+		base_controller_arguments.append(std::to_wstring(display_out));
+
+        std::wstring display_arguments;
+        display_arguments.push_back(L' ');
+		display_arguments.append(std::to_wstring(display_out));
+		display_arguments.push_back(L' ');
+		display_arguments.append(std::to_wstring(display_in));
+
+		start_process(base_controller_exe_path, base_controller_arguments);
+        if(display_enabled)
+            start_process(display_exe_path, display_arguments);
+    }
+    if(controller_exist == false)
+        wxMessageBox("You have to add a controller first",
+        "No controller added", wxOK | wxICON_INFORMATION);
     event.Skip();
 }
 

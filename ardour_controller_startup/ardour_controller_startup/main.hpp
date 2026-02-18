@@ -23,6 +23,9 @@ public:
     void OnAddController(wxCommandEvent& event);
     void PrintMidiDevices();
     void start_process(std::wstring path, std::wstring arguments);
+
+    int get_midi_in(std::string controller_name);
+    int get_midi_out(std::string controller_name);
     
     std::vector<std::string>midi_in_devices;
     std::vector<std::string>midi_out_devices;
@@ -38,13 +41,11 @@ public:
     std::vector<wxCheckBox*> display_enable_check_box;
     std::vector<wxTextCtrl*> display_network_address;
     std::vector<wxSpinCtrl*> send_port_to_display;
-    std::vector<wxSpinCtrl*> receive_port_form_display;
+    std::vector<wxSpinCtrl*> receive_port_from_display;
     wxBoxSizer* main_sizer;
     wxBoxSizer* header_sizer;
     std::vector<wxBoxSizer*> controller_layout;
     wxSizer* button_sizer;
     wxButton* add_controller_button;
     wxButton* start_ardour_controller_button;
-
-
 };
