@@ -4,19 +4,29 @@
 
 bool MyApp::OnInit()
 {
-	MyFrame* frame = new MyFrame();
+
+	MyFrame* frame;
+	if (wxApp::argc != 3) {
+		printf("arguments have to be: udp port in, udp port out\n");
+		frame = new MyFrame(std::string(), std::string());
+	}
+	else {
+		std::string arg_1(wxApp::argv[1]);
+		std::string arg_2(wxApp::argv[2]);
+		frame = new MyFrame(arg_1, arg_2);
+	}
 	frame->Show();
 	return true;
 }
 
-MyFrame::MyFrame()
+MyFrame::MyFrame(std::string udp_input_port, std::string udp_output_port)
 	: wxFrame(nullptr, wxID_ANY, "Special Purpose Controller (sp_controller)")
 {
 	main_layout = new wxBoxSizer(wxVERTICAL);
 	fader_layout = new wxBoxSizer(wxHORIZONTAL);
 	
-	//this->m_sp_controller_plugin_name = std::string("bx_console SSL 4000 E");
-	this->m_sp_controller_plugin_name = std::string("ACE Compressor (stereo)");
+	this->m_sp_controller_plugin_name = std::string("bx_console SSL 4000 E");
+	//this->m_sp_controller_plugin_name = std::string("ACE Compressor (stereo)");
 	
 	this->previous_selected_plugin_name = std::string("nothing");
 
@@ -29,7 +39,7 @@ MyFrame::MyFrame()
 	}
 	main_layout->Add(fader_layout);
 	this->SetSizerAndFit(main_layout);
-	this->osc_sender_receiver = new OscSenderReceiver("127.0.0.1", 17, 3819);
+	this->osc_sender_receiver = new OscSenderReceiver("127.0.0.1", std::stoi(udp_input_port), std::stoi(udp_output_port));
 	this->receive_thread = new wxOscReceiveThread(this, this->osc_sender_receiver);
 	receive_thread->Run();
 	Bind(wxEVT_THREAD, &MyFrame::OnThreadUpdate, this);

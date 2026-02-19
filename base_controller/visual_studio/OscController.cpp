@@ -24,7 +24,7 @@ OscController::OscController(std::string destination_ip_address, unsigned int ud
 	this->mackie_sender_receiver = new MackieControl(midi_port_in, midi_port_out);
 #endif
 #ifdef MACKIE_CONTROL_UDP_VERSION
-	this->mackie_sender_receiver = new MackieControl("127.0.0.1", 13, 14);
+	this->mackie_sender_receiver = new MackieControl("127.0.0.1", midi_port_in, midi_port_out);
 #endif
 	this->mackie_sender_receiver->initialize_mackie_display_formated();//this should be inside the constructor...
 

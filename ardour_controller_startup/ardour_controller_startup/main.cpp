@@ -61,7 +61,6 @@ MyFrame::MyFrame()
     button_sizer->Add(add_controller_button);
     button_sizer->Add(start_ardour_controller_button);
 
-
     for (int i = 0; i < 8; i++)
         header_panels.push_back(new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(WIDGET_WIDTH, 20), wxBORDER_RAISED));
 
@@ -102,11 +101,14 @@ MyFrame::MyFrame()
     header_sizer->Add(header_panels.at(6));
     header_sizer->Add(header_panels.at(7));
 
-
     main_sizer = new wxBoxSizer(wxVERTICAL);
     main_sizer->Add(button_sizer);
     main_sizer->Add(header_sizer);
-    
+
+    this->gui_controllers.push_back(plugin_routing_customizer_string);
+    this->gui_controllers.push_back(gp_controller_string);
+    this->gui_controllers.push_back(sp_controller_string);
+    this->gui_controllers.push_back(mackie_controller_gui_version_string);
 
     PrintMidiDevices();
     this->SetSizerAndFit(main_sizer);
@@ -140,6 +142,8 @@ void MyFrame::OnAddController(wxCommandEvent& event)
     choice->SetMinSize(wxSize(WIDGET_WIDTH, 20));
     wxArrayString choices;
     for (std::string controller_name : this->midi_in_devices)
+        choices.Add(controller_name);
+    for (std::string controller_name : this->gui_controllers)
         choices.Add(controller_name);
     choice->Set(choices);
     this->controllers.push_back(choice);
@@ -205,61 +209,197 @@ int MyFrame::get_midi_out(std::string controller_name)
     return -1;
 }
 
+void MyFrame::start_plugin_routing_customizer()
+{
+    std::wstring plugin_routing_customizer_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\plugin_routing_customizer\\plugin_router\\x64\\Debug\\plugin_router.exe");
+    start_process(plugin_routing_customizer_exe_path);
+}
+
+void MyFrame::start_base_controller_udp(int index)
+{
+    std::wstring base_controller_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\base_controller\\x64\\udp_version\\base_controller.exe");
+    std::wstring gui_controller_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_controller\\x64\\Debug\\gui_controller.exe");
+    std::wstring display_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\mackie_display\\x64\\Debug\\mackie_display.exe");
+
+    int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
+	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
+
+    std::string controller_name = this->controllers.at(index)->GetStringSelection().ToStdString();
+
+	//int midi_in_nr = this->get_midi_in(controller_name);
+	//int midi_out_nr = this->get_midi_out(controller_name);
+
+	int display_in = this->receive_port_from_display.at(index)->GetValue();
+	int display_out = this->send_port_to_display.at(index)->GetValue();
+
+    //I just use now an offset from the display udp port's, let's see wether this is a good Idea...
+    int midi_in_nr = display_in + 50;
+    int midi_out_nr = display_out + 50;
+
+	bool display_enabled = this->display_enable_check_box.at(index)->GetValue();
+
+	std::wstring base_controller_arguments;
+	base_controller_arguments.push_back(L' ');
+	base_controller_arguments.append(std::to_wstring(ardour_controller_in_port));
+	base_controller_arguments.push_back(L' ');
+	base_controller_arguments.append(std::to_wstring(ardour_controller_out_port));
+	base_controller_arguments.push_back(L' ');
+	base_controller_arguments.append(std::to_wstring(midi_in_nr));
+	base_controller_arguments.push_back(L' ');
+	base_controller_arguments.append(std::to_wstring(midi_out_nr));
+	base_controller_arguments.push_back(L' ');
+	base_controller_arguments.append(std::to_wstring(display_in));
+	base_controller_arguments.push_back(L' ');
+	base_controller_arguments.append(std::to_wstring(display_out));
+
+    std::wstring gui_controller_arguments;
+    gui_controller_arguments.push_back(L' ');
+    gui_controller_arguments.append(std::to_wstring(midi_out_nr));
+    gui_controller_arguments.push_back(L' ');
+    gui_controller_arguments.append(std::to_wstring(midi_in_nr));
+
+	std::wstring display_arguments;
+	display_arguments.push_back(L' ');
+	display_arguments.append(std::to_wstring(display_out));
+	display_arguments.push_back(L' ');
+	display_arguments.append(std::to_wstring(display_in));
+
+	start_process(base_controller_exe_path, base_controller_arguments);
+    start_process(gui_controller_exe_path, gui_controller_arguments);
+	if(display_enabled)
+		start_process(display_exe_path, display_arguments);
+}
+
+void MyFrame::start_base_controller_midi(int index)
+{
+    std::wstring base_controller_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\base_controller\\x64\\midi_version\\base_controller.exe");
+    std::wstring display_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\mackie_display\\x64\\Debug\\mackie_display.exe");
+
+    int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
+	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
+
+    std::string controller_name = this->controllers.at(index)->GetStringSelection().ToStdString();
+
+	int midi_in_nr = this->get_midi_in(controller_name);
+	int midi_out_nr = this->get_midi_out(controller_name);
+
+	int display_in = this->receive_port_from_display.at(index)->GetValue();
+	int display_out = this->send_port_to_display.at(index)->GetValue();
+
+	bool display_enabled = this->display_enable_check_box.at(index)->GetValue();
+
+	std::wstring base_controller_arguments;
+	base_controller_arguments.push_back(L' ');
+	base_controller_arguments.append(std::to_wstring(ardour_controller_in_port));
+	base_controller_arguments.push_back(L' ');
+	base_controller_arguments.append(std::to_wstring(ardour_controller_out_port));
+	base_controller_arguments.push_back(L' ');
+	base_controller_arguments.append(std::to_wstring(midi_in_nr));
+	base_controller_arguments.push_back(L' ');
+	base_controller_arguments.append(std::to_wstring(midi_out_nr));
+	base_controller_arguments.push_back(L' ');
+	base_controller_arguments.append(std::to_wstring(display_in));
+	base_controller_arguments.push_back(L' ');
+	base_controller_arguments.append(std::to_wstring(display_out));
+
+	std::wstring display_arguments;
+	display_arguments.push_back(L' ');
+	display_arguments.append(std::to_wstring(display_out));
+	display_arguments.push_back(L' ');
+	display_arguments.append(std::to_wstring(display_in));
+
+	start_process(base_controller_exe_path, base_controller_arguments);
+	if(display_enabled)
+		start_process(display_exe_path, display_arguments);
+}
+
+void MyFrame::start_gui_controller(int index)
+{
+    std::string controller_name = this->controllers.at(index)->GetStringSelection().ToStdString();
+    if(!controller_name.compare(this->gp_controller_string))
+        start_gp_controller(index);
+    if(!controller_name.compare(this->sp_controller_string))
+        start_sp_controller(index);
+    if (!controller_name.compare(this->plugin_routing_customizer_string))
+        start_plugin_routing_customizer();
+    if (!controller_name.compare(this->mackie_controller_gui_version_string))
+        start_base_controller_udp(index);
+}
+
+void MyFrame::start_gp_controller(int index)
+{
+    std::wstring gp_controller_gui_version_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_gp_controller\\gui_gp_controller\\x64\\Debug\\gui_gp_controller.exe");
+    int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
+	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
+
+    std::wstring gp_controller_arguments;
+	gp_controller_arguments.push_back(L' ');
+	gp_controller_arguments.append(std::to_wstring(ardour_controller_in_port));
+	gp_controller_arguments.push_back(L' ');
+	gp_controller_arguments.append(std::to_wstring(ardour_controller_out_port));
+    start_process(gp_controller_gui_version_exe_path, gp_controller_arguments);
+
+    return;
+}
+
+void MyFrame::start_sp_controller(int index)
+{
+    std::wstring sp_controller_gui_version_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_sp_controller\\gui_sp_controller\\x64\\Debug\\gui_sp_controller.exe");
+    int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
+	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
+
+    std::wstring sp_controller_arguments;
+	sp_controller_arguments.push_back(L' ');
+	sp_controller_arguments.append(std::to_wstring(ardour_controller_in_port));
+	sp_controller_arguments.push_back(L' ');
+	sp_controller_arguments.append(std::to_wstring(ardour_controller_out_port));
+    start_process(sp_controller_gui_version_exe_path, sp_controller_arguments);
+
+    return;
+}
+
+bool MyFrame::is_controller_gui_controller(std::string name)
+{
+    for (std::string controller_name : this->gui_controllers)
+        if (!name.compare(controller_name))
+            return true;
+    return false;
+}
+
 void MyFrame::OnStartController(wxCommandEvent& event)
 {
     int how_many_controllers = this->controllers.size();
 
-    std::wstring base_controller_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\base_controller\\x64\\Debug\\base_controller.exe");
-    std::wstring display_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\mackie_display\\x64\\Debug\\mackie_display.exe");
+
+    std::wstring base_controller_gui_version_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_controller\\x64\\Debug\\gui_controller.exe");
+    
+
+
     bool controller_exist = false;
+
     for (int i = 0; i < how_many_controllers; i++) {
+
         controller_exist = true;
+
          std::string controller_name = this->controllers.at(i)->GetStringSelection().ToStdString();
+
          if (controller_name.empty()) {
              wxMessageBox("You have to select a controller first",
                  "No controller selected", wxOK | wxICON_INFORMATION);
              return;
          }
 
+        if(is_controller_gui_controller(controller_name)){
+            start_gui_controller(i);
+            continue;
+        }
         
-        int ardour_controller_in_port = receive_port_from_ardour.at(i)->GetValue();
-        int ardour_controller_out_port = send_port_to_ardour.at(i)->GetValue();
-
-        int midi_in_nr = this->get_midi_in(controller_name);
-        int midi_out_nr = this->get_midi_out(controller_name);
-
-        int display_in = this->receive_port_from_display.at(i)->GetValue();
-        int display_out = this->send_port_to_display.at(i)->GetValue();
-
-        bool display_enabled = this->display_enable_check_box.at(i)->GetValue();
-
-		std::wstring base_controller_arguments;
-		base_controller_arguments.push_back(L' ');
-		base_controller_arguments.append(std::to_wstring(ardour_controller_in_port));
-		base_controller_arguments.push_back(L' ');
-		base_controller_arguments.append(std::to_wstring(ardour_controller_out_port));
-		base_controller_arguments.push_back(L' ');
-		base_controller_arguments.append(std::to_wstring(midi_in_nr));
-		base_controller_arguments.push_back(L' ');
-		base_controller_arguments.append(std::to_wstring(midi_out_nr));
-		base_controller_arguments.push_back(L' ');
-		base_controller_arguments.append(std::to_wstring(display_in));
-		base_controller_arguments.push_back(L' ');
-		base_controller_arguments.append(std::to_wstring(display_out));
-
-        std::wstring display_arguments;
-        display_arguments.push_back(L' ');
-		display_arguments.append(std::to_wstring(display_out));
-		display_arguments.push_back(L' ');
-		display_arguments.append(std::to_wstring(display_in));
-
-		start_process(base_controller_exe_path, base_controller_arguments);
-        if(display_enabled)
-            start_process(display_exe_path, display_arguments);
+        start_base_controller_midi(i);
     }
+
     if(controller_exist == false)
-        wxMessageBox("You have to add a controller first",
-        "No controller added", wxOK | wxICON_INFORMATION);
+        wxMessageBox("You have to add a controller first", "No controller added", wxOK | wxICON_INFORMATION);
+
     event.Skip();
 }
 
@@ -344,6 +484,51 @@ void MyFrame::PrintMidiDevices() {
 #endif
 
 #ifdef _WIN64 
+
+void MyFrame::start_process(std::wstring path)
+{
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+
+    wchar_t wchar_command[200];
+    std::wstring std_wstring_command;
+    
+    std_wstring_command.append(path);
+
+    int index = 0;
+    for (index = 0; index < std_wstring_command.size(); index++)
+        wchar_command[index] = std_wstring_command[index];
+    wchar_command[index] = '\0';
+
+    // Start the child process. 
+    if (!CreateProcess(
+        wchar_command,
+        NULL,        // Command line
+        NULL,           // Process handle not inheritable
+        NULL,           // Thread handle not inheritable
+        FALSE,          // Set handle inheritance to FALSE
+        0,              // No creation flags
+        NULL,           // Use parent's environment block
+        NULL,           // Use parent's starting directory 
+        &si,            // Pointer to STARTUPINFO structure
+        &pi)           // Pointer to PROCESS_INFORMATION structure
+        )
+    {
+        printf("CreateProcess failed (%d).\n", GetLastError());
+        return;
+    }
+
+    // Wait until child process exits.
+    //WaitForSingleObject(pi.hProcess, INFINITE);
+
+    // Close process and thread handles. 
+    //CloseHandle(pi.hProcess);
+    //CloseHandle(pi.hThread);
+}
 void MyFrame::start_process(std::wstring path, std::wstring arguments)
 {
     STARTUPINFO si;

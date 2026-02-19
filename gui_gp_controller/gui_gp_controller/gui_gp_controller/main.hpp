@@ -35,7 +35,7 @@ struct instance {
 class MyFrame : public wxFrame
 {
 public:
-	MyFrame();
+	MyFrame(std::string udp_input_port, std::string udp_output_port);
 	wxStaticText* plugin_name;
 	wxButton* bank_up;
 	wxButton* bank_down;

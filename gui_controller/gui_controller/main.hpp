@@ -40,7 +40,7 @@ public:
 class MyFrame : public wxFrame
 {
 public:
-	MyFrame();
+	MyFrame(std::string udp_input_port, std::string udp_output_port);
 	wxBoxSizer* main_layout;
 	Channel* channel[CHANNEL_COUNT];
 	void process_gui_controller_data(wxThreadEvent& event);

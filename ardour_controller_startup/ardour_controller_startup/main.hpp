@@ -17,18 +17,36 @@ public:
     wxMenu* menuDisplayFormat;
     void OnStartArdourController(wxCommandEvent& event);
     void OnStartController(wxCommandEvent& event);
+    
     void OnExit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
     void OnSize(wxSizeEvent& event);
     void OnAddController(wxCommandEvent& event);
     void PrintMidiDevices();
+
     void start_process(std::wstring path, std::wstring arguments);
+    void start_process(std::wstring path);
+
+    void start_base_controller_midi(int index); //this is mackie control
+    void start_base_controller_udp(int index);
+    void start_gui_controller(int index);
+    void start_gp_controller(int index);
+    void start_sp_controller(int index);
+    void start_plugin_routing_customizer();
+
+    bool is_controller_gui_controller(std::string name);
 
     int get_midi_in(std::string controller_name);
     int get_midi_out(std::string controller_name);
     
+    const std::string plugin_routing_customizer_string = "plugin routing customizer";
+    const std::string gp_controller_string = "gp controller";
+    const std::string sp_controller_string = "sp controller";
+    const std::string mackie_controller_gui_version_string = "mackie controller gui";
+    
     std::vector<std::string>midi_in_devices;
     std::vector<std::string>midi_out_devices;
+    std::vector<std::string>gui_controllers;
     int send_port_to_ardour_udp_nr = 3819;
 
     std::vector<wxPanel*> header_panels;
@@ -48,4 +66,5 @@ public:
     wxSizer* button_sizer;
     wxButton* add_controller_button;
     wxButton* start_ardour_controller_button;
+    wxButton* start_plugin_routing_customizer_button;
 };

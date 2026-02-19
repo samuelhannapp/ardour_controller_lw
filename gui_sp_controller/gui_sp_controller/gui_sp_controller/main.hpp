@@ -32,7 +32,7 @@ struct instance {
 class MyFrame : public wxFrame
 {
 public:
-	MyFrame();
+	MyFrame(std::string udp_input_port, std::string udp_output_port);
 private:
 	wxBoxSizer* fader_layout;
 	wxBoxSizer* main_layout;
