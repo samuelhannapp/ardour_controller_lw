@@ -1,4 +1,4 @@
-# OscSenderReceiver 
+# Ardour OSC Controller 
 
 This is the way how a DAW is supposed to be controlled.
 Main thing's are, navigation via spill feature and customized plugin control, meaning the user can route the plugin parameters 
@@ -55,9 +55,8 @@ There will be manuals for all things to test and to build yourself.
 And maybe one day hardware could be produced and sold.
 
 I think in general the Osc protocol should be the way to go to control a DAW.
-
-I guess to make this happen it would have to be standardized, and than some 
-DAW companies have to implement it and the others will follow...
+It would be a very nice thing if more DAW's would implement it.
+Ardour will be a rolemodel for that.
 
 ### License
 
