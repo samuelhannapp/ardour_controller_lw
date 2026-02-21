@@ -24,8 +24,8 @@ public:
     void OnAddController(wxCommandEvent& event);
     void PrintMidiDevices();
 
-    void start_process(std::wstring path, std::wstring arguments);
-    void start_process(std::wstring path);
+    void start_process(std::string path, std::vector<std::string> arguments);
+    void start_process(std::string path);
 
     void start_base_controller_midi(int index); //this is mackie control
     void start_base_controller_udp(int index);

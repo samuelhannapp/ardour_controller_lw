@@ -1,5 +1,7 @@
 #include "main.hpp"
 #include <sstream>
+#include <cstdlib>
+#include <clocale>
 
 #ifdef _WIN64
 #include <SDKDDKVer.h>
@@ -214,7 +216,7 @@ int MyFrame::get_midi_out(std::string controller_name)
 void MyFrame::start_plugin_routing_customizer()
 {
     #ifdef _WIN64
-        std::wstring plugin_routing_customizer_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\plugin_routing_customizer\\plugin_router\\x64\\Debug\\plugin_router.exe");
+        std::string plugin_routing_customizer_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\plugin_routing_customizer\\plugin_router\\x64\\Debug\\plugin_router.exe");
     #endif
     #ifdef __linux__
         std::wstring plugin_routing_customizer_exe_path = (L"/home/samuel/ardour_controller_lw/plugin_routing_customizer/plugin_routing_customizer.out");
@@ -224,9 +226,9 @@ void MyFrame::start_plugin_routing_customizer()
 
 void MyFrame::start_base_controller_udp(int index)
 {
-    std::wstring base_controller_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\base_controller\\x64\\udp_version\\base_controller.exe");
-    std::wstring gui_controller_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_controller\\x64\\Debug\\gui_controller.exe");
-    std::wstring display_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\mackie_display\\x64\\Debug\\mackie_display.exe");
+    std::string base_controller_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\base_controller\\x64\\udp_version\\base_controller.exe");
+    std::string gui_controller_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_controller\\x64\\Debug\\gui_controller.exe");
+    std::string display_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\mackie_display\\x64\\Debug\\mackie_display.exe");
 
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
 	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
@@ -245,31 +247,21 @@ void MyFrame::start_base_controller_udp(int index)
 
 	bool display_enabled = this->display_enable_check_box.at(index)->GetValue();
 
-	std::wstring base_controller_arguments;
-	base_controller_arguments.push_back(L' ');
-	base_controller_arguments.append(std::to_wstring(ardour_controller_in_port));
-	base_controller_arguments.push_back(L' ');
-	base_controller_arguments.append(std::to_wstring(ardour_controller_out_port));
-	base_controller_arguments.push_back(L' ');
-	base_controller_arguments.append(std::to_wstring(midi_in_nr));
-	base_controller_arguments.push_back(L' ');
-	base_controller_arguments.append(std::to_wstring(midi_out_nr));
-	base_controller_arguments.push_back(L' ');
-	base_controller_arguments.append(std::to_wstring(display_in));
-	base_controller_arguments.push_back(L' ');
-	base_controller_arguments.append(std::to_wstring(display_out));
+	std::vector<std::string> base_controller_arguments;
+	base_controller_arguments.push_back(std::to_string(ardour_controller_in_port));
+	base_controller_arguments.push_back(std::to_string(ardour_controller_out_port));
+	base_controller_arguments.push_back(std::to_string(midi_in_nr));
+	base_controller_arguments.push_back(std::to_string(midi_out_nr));
+	base_controller_arguments.push_back(std::to_string(display_in));
+	base_controller_arguments.push_back(std::to_string(display_out));
 
-    std::wstring gui_controller_arguments;
-    gui_controller_arguments.push_back(L' ');
-    gui_controller_arguments.append(std::to_wstring(midi_out_nr));
-    gui_controller_arguments.push_back(L' ');
-    gui_controller_arguments.append(std::to_wstring(midi_in_nr));
+    std::vector<std::string> gui_controller_arguments;
+    gui_controller_arguments.push_back(std::to_string(midi_out_nr));
+    gui_controller_arguments.push_back(std::to_string(midi_in_nr));
 
-	std::wstring display_arguments;
-	display_arguments.push_back(L' ');
-	display_arguments.append(std::to_wstring(display_out));
-	display_arguments.push_back(L' ');
-	display_arguments.append(std::to_wstring(display_in));
+	std::vector<std::string> display_arguments;
+	display_arguments.push_back(std::to_string(display_out));
+	display_arguments.push_back(std::to_string(display_in));
 
 	start_process(base_controller_exe_path, base_controller_arguments);
     start_process(gui_controller_exe_path, gui_controller_arguments);
@@ -279,8 +271,8 @@ void MyFrame::start_base_controller_udp(int index)
 
 void MyFrame::start_base_controller_midi(int index)
 {
-    std::wstring base_controller_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\base_controller\\x64\\midi_version\\base_controller.exe");
-    std::wstring display_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\mackie_display\\x64\\Debug\\mackie_display.exe");
+    std::string base_controller_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\base_controller\\x64\\midi_version\\base_controller.exe");
+    std::string display_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\mackie_display\\x64\\Debug\\mackie_display.exe");
 
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
 	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
@@ -295,25 +287,17 @@ void MyFrame::start_base_controller_midi(int index)
 
 	bool display_enabled = this->display_enable_check_box.at(index)->GetValue();
 
-	std::wstring base_controller_arguments;
-	base_controller_arguments.push_back(L' ');
-	base_controller_arguments.append(std::to_wstring(ardour_controller_in_port));
-	base_controller_arguments.push_back(L' ');
-	base_controller_arguments.append(std::to_wstring(ardour_controller_out_port));
-	base_controller_arguments.push_back(L' ');
-	base_controller_arguments.append(std::to_wstring(midi_in_nr));
-	base_controller_arguments.push_back(L' ');
-	base_controller_arguments.append(std::to_wstring(midi_out_nr));
-	base_controller_arguments.push_back(L' ');
-	base_controller_arguments.append(std::to_wstring(display_in));
-	base_controller_arguments.push_back(L' ');
-	base_controller_arguments.append(std::to_wstring(display_out));
+	std::vector<std::string> base_controller_arguments;
+	base_controller_arguments.push_back(std::to_string(ardour_controller_in_port));
+	base_controller_arguments.push_back(std::to_string(ardour_controller_out_port));
+	base_controller_arguments.push_back(std::to_string(midi_in_nr));
+	base_controller_arguments.push_back(std::to_string(midi_out_nr));
+	base_controller_arguments.push_back(std::to_string(display_in));
+	base_controller_arguments.push_back(std::to_string(display_out));
 
-	std::wstring display_arguments;
-	display_arguments.push_back(L' ');
-	display_arguments.append(std::to_wstring(display_out));
-	display_arguments.push_back(L' ');
-	display_arguments.append(std::to_wstring(display_in));
+	std::vector<std::string> display_arguments;
+	display_arguments.push_back(std::to_string(display_out));
+	display_arguments.push_back(std::to_string(display_in));
 
 	start_process(base_controller_exe_path, base_controller_arguments);
 	if(display_enabled)
@@ -336,7 +320,7 @@ void MyFrame::start_gui_controller(int index)
 void MyFrame::start_gp_controller(int index)
 {
     #ifdef _WIN64
-    std::wstring gp_controller_gui_version_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_gp_controller\\gui_gp_controller\\x64\\Debug\\gui_gp_controller.exe");
+    std::string gp_controller_gui_version_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_gp_controller\\gui_gp_controller\\x64\\Debug\\gui_gp_controller.exe");
     #endif
     #ifdef __linux__
     std::wstring gp_controller_gui_version_exe_path = (L"/home/samuel/ardour_controller_lw/gui_gp_controller/gui_gp_controller/gui_gp_controller/gui_gp_controller.out");
@@ -344,11 +328,9 @@ void MyFrame::start_gp_controller(int index)
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
 	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
 
-    std::wstring gp_controller_arguments;
-	gp_controller_arguments.push_back(L' ');
-	gp_controller_arguments.append(std::to_wstring(ardour_controller_in_port));
-	gp_controller_arguments.push_back(L' ');
-	gp_controller_arguments.append(std::to_wstring(ardour_controller_out_port));
+    std::vector<std::string> gp_controller_arguments;
+	gp_controller_arguments.push_back(std::to_string(ardour_controller_in_port));
+	gp_controller_arguments.push_back(std::to_string(ardour_controller_out_port));
     start_process(gp_controller_gui_version_exe_path, gp_controller_arguments);
 
     return;
@@ -356,15 +338,13 @@ void MyFrame::start_gp_controller(int index)
 
 void MyFrame::start_sp_controller(int index)
 {
-    std::wstring sp_controller_gui_version_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_sp_controller\\gui_sp_controller\\x64\\Debug\\gui_sp_controller.exe");
+    std::string sp_controller_gui_version_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_sp_controller\\gui_sp_controller\\x64\\Debug\\gui_sp_controller.exe");
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
 	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
 
-    std::wstring sp_controller_arguments;
-	sp_controller_arguments.push_back(L' ');
-	sp_controller_arguments.append(std::to_wstring(ardour_controller_in_port));
-	sp_controller_arguments.push_back(L' ');
-	sp_controller_arguments.append(std::to_wstring(ardour_controller_out_port));
+    std::vector<std::string> sp_controller_arguments;
+	sp_controller_arguments.push_back(std::to_string(ardour_controller_in_port));
+	sp_controller_arguments.push_back(std::to_string(ardour_controller_out_port));
     start_process(sp_controller_gui_version_exe_path, sp_controller_arguments);
 
     return;
@@ -542,7 +522,7 @@ void MyFrame::start_process(std::wstring path, std::wstring arguments)
 
 #ifdef _WIN64 
 
-void MyFrame::start_process(std::wstring path)
+void MyFrame::start_process(std::string path)
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -551,14 +531,15 @@ void MyFrame::start_process(std::wstring path)
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
 
-    wchar_t wchar_command[200];
-    std::wstring std_wstring_command;
-    
-    std_wstring_command.append(path);
+    wchar_t temp_array[200];
+    int size = 0;
+    size = std::mbstowcs(temp_array, path.c_str(), path.size());
+    std::wstring std_wstring_path(temp_array, size);
 
+    wchar_t wchar_command[200];    
     int index = 0;
-    for (index = 0; index < std_wstring_command.size(); index++)
-        wchar_command[index] = std_wstring_command[index];
+    for (index = 0; index < std_wstring_path.size(); index++)
+        wchar_command[index] = std_wstring_path[index];
     wchar_command[index] = '\0';
 
     // Start the child process. 
@@ -586,7 +567,7 @@ void MyFrame::start_process(std::wstring path)
     //CloseHandle(pi.hProcess);
     //CloseHandle(pi.hThread);
 }
-void MyFrame::start_process(std::wstring path, std::wstring arguments)
+void MyFrame::start_process(std::string path, std::vector<std::string> arguments)
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -595,15 +576,31 @@ void MyFrame::start_process(std::wstring path, std::wstring arguments)
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
 
-    wchar_t wchar_command[200];
-    std::wstring std_wstring_command;
-    
-    std_wstring_command.append(path);
-    std_wstring_command.append(arguments);
 
+    wchar_t temp_array[200];
+    int size = 0;
+    size = std::mbstowcs(temp_array, path.c_str(), path.size());
+    std::wstring std_wstring_path(temp_array, size);
+     
+    
+    std::wstring std_wstring_arguments;
+    for (std::string argument : arguments) {
+        size = std::mbstowcs(temp_array, argument.c_str(), argument.size());
+        std_wstring_arguments.push_back(L' ');
+        std_wstring_arguments.append(std::wstring(temp_array, size));
+    }
+
+
+    wchar_t wchar_arguments[200];
+
+    std::wstring input;
+    input.append(std_wstring_path);
+    input.append(std_wstring_arguments);
+
+    wchar_t wchar_command[200];
     int index = 0;
-    for (index = 0; index < std_wstring_command.size(); index++)
-        wchar_command[index] = std_wstring_command[index];
+    for (index = 0; index < input.size(); index++)
+        wchar_command[index] = input[index];
     wchar_command[index] = '\0';
 
     // Start the child process. 
