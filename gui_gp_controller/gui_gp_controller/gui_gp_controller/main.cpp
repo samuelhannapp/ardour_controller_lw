@@ -7,8 +7,9 @@ bool MyApp::OnInit()
 
 	MyFrame* frame;
 	if (wxApp::argc != 3) {
-		printf("arguments have to be: udp port in, udp port out\n");
-		frame = new MyFrame(std::string(), std::string());
+		printf("arguments have to be: udp port in, udp port out, EXIT\n");
+		exit(0);
+		frame = new MyFrame(std::string(std::to_string(30)), std::string(std::to_string(3819)));
 	}
 	else {
 		std::string arg_1(wxApp::argv[1]);

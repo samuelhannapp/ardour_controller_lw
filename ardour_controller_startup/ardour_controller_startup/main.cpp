@@ -1,4 +1,5 @@
 #include "main.hpp"
+#include <sstream>
 
 #ifdef _WIN64
 #include <SDKDDKVer.h>
@@ -8,9 +9,10 @@
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib")
 #endif
-
-#ifdef _linux
+#ifdef __linux__
 #include <alsa/asoundlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
 #endif
 
 #define WIDGET_WIDTH 150
@@ -211,7 +213,12 @@ int MyFrame::get_midi_out(std::string controller_name)
 
 void MyFrame::start_plugin_routing_customizer()
 {
-    std::wstring plugin_routing_customizer_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\plugin_routing_customizer\\plugin_router\\x64\\Debug\\plugin_router.exe");
+    #ifdef _WIN64
+        std::wstring plugin_routing_customizer_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\plugin_routing_customizer\\plugin_router\\x64\\Debug\\plugin_router.exe");
+    #endif
+    #ifdef __linux__
+        std::wstring plugin_routing_customizer_exe_path = (L"/home/samuel/ardour_controller_lw/plugin_routing_customizer/plugin_routing_customizer.out");
+    #endif
     start_process(plugin_routing_customizer_exe_path);
 }
 
@@ -328,7 +335,12 @@ void MyFrame::start_gui_controller(int index)
 
 void MyFrame::start_gp_controller(int index)
 {
+    #ifdef _WIN64
     std::wstring gp_controller_gui_version_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_gp_controller\\gui_gp_controller\\x64\\Debug\\gui_gp_controller.exe");
+    #endif
+    #ifdef __linux__
+    std::wstring gp_controller_gui_version_exe_path = (L"/home/samuel/ardour_controller_lw/gui_gp_controller/gui_gp_controller/gui_gp_controller/gui_gp_controller.out");
+    #endif
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
 	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
 
@@ -436,17 +448,13 @@ void MyFrame::PrintMidiDevices()
     }
 }
 #endif
-
-#ifdef _linux 
+#ifdef __linux__
 void MyFrame::PrintMidiDevices() {
     snd_seq_t* seq_handle;
     int err;
     err = snd_seq_open(&seq_handle, "default", SND_SEQ_OPEN_INPUT, 0);
     if (err < 0) {
-        QMessageBox message_box(this);
-        message_box.setText("There are no midi devices connected to this computer...\n");
-        message_box.exec();
-        message_box.show();
+        printf("There are no midi devices connected to this computer...\n");
     }
     snd_seq_set_client_name(seq_handle, "My Client");
 
@@ -457,29 +465,78 @@ void MyFrame::PrintMidiDevices() {
     snd_seq_client_info_alloca(&info);
 
     status = snd_seq_get_any_client_info(seq_handle, 0, info);
-    ui->mackie_control_in_1->addItem(QString("none"));
-    ui->mackie_control_in_2->addItem(QString("none"));
-    ui->mackie_control_in_3->addItem(QString("none"));
-    ui->mackie_control_in_4->addItem(QString("none"));
-    ui->mackie_control_out_1->addItem(QString("none"));
-    ui->mackie_control_out_2->addItem(QString("none"));
-    ui->mackie_control_out_3->addItem(QString("none"));
-    ui->mackie_control_out_4->addItem(QString("none"));
     while (status >= 0) {
         count += 1;
         int id = snd_seq_client_info_get_client(info);
         char const* name = snd_seq_client_info_get_name(info);
         std::string str(name);
-        QString in = QString::fromLocal8Bit(str.c_str());
         //QString in(caps.szPname);
-        ui->mackie_control_in_1->addItem(in);
-        ui->mackie_control_in_2->addItem(in);
-        ui->mackie_control_in_3->addItem(in);
-        ui->mackie_control_in_4->addItem(in);
+        this->midi_in_devices.push_back(str);
+        this->midi_out_devices.push_back(str);
         int num_ports = snd_seq_client_info_get_num_ports(info);
-        printf("Client “%s” #%i, with %i ports\n", name, id, num_ports);
+        printf("Client ï¿½%sï¿½ #%i, with %i ports\n", name, id, num_ports);
         status = snd_seq_query_next_client(seq_handle, info);
     }
+}
+#endif
+
+#ifdef __linux__
+void MyFrame::start_process(std::wstring path)
+{
+   // first we fork the process
+    char executable_cstr[200];
+    char *args[] = {NULL};
+    int size = path.size();
+    std::wcstombs(executable_cstr, path.c_str(), path.size());
+    executable_cstr[size] = '\0';
+    //"/home/samuel/ardour_controller_lw/plugin_routing_customizer/plugin_routing_customizer.out"
+    int pid = fork();
+    if(pid == 0)
+        execvp(executable_cstr, args);
+        //execvp(executable_cstr, args);
+}
+
+//we maybe have to change the default to std::string and than convert it to wstring...
+//this whole wstring nonesense is so annoying...
+
+//we actually could just do arguments with no content, and that would fulfill the purpose easier 
+//than having two seperate functions...
+void MyFrame::start_process(std::wstring path, std::wstring arguments)
+{
+    char arguments_cstr[200];
+    std::wcstombs(arguments_cstr, arguments.c_str(), arguments.size());
+    arguments_cstr[arguments.size()] = '\0'; 
+    std::string arguments_std_string(arguments_cstr);
+    std::stringstream stream;
+    stream.str(arguments_std_string);
+    std::vector<std::string> argument_list;
+    std::string segment;
+    while(std::getline(stream, segment, ' '))
+        argument_list.push_back(segment);
+
+    int last_slash = path.find_last_of('/');
+    int path_size = last_slash;
+
+    std::wstring program_name = path.substr(path_size + 1, path.size());
+
+    char executable_cstr[200];
+    std::wcstombs(executable_cstr, path.c_str(), path.size());
+    executable_cstr[path.size()] = '\0';
+
+    char program_name_cstr[200];
+    std::wcstombs(program_name_cstr, program_name.c_str(), program_name.size());
+    program_name_cstr[program_name.size()] = '\0';
+    char arg_1[] = "20";
+    char arg_2[] = "3819";
+    char *args[] = {program_name_cstr, arg_1, arg_2, NULL};
+    //char *args[] = {NULL};
+    //int arguments_size = arguments.size();
+    //std::wcstombs(args_cstr, arguments.c_str(), arguments.size());
+    //args_cstr[size] = '\0';
+
+    int pid = fork();
+    if(pid == 0)
+        execvp(executable_cstr, args);
 }
 #endif
 
