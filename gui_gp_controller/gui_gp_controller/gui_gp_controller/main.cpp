@@ -30,7 +30,6 @@ MyFrame::MyFrame(std::string udp_input_port, std::string udp_output_port)
 
 	plugin_name = new wxStaticText(this, wxID_ANY, "plugin_name", wxDefaultPosition, wxSize(200, 30));
 
-
 	bank_down = new wxButton(this, wxID_ANY, "bank down");
 	bank_up = new wxButton(this, wxID_ANY, "bank up");
 	plugin_down = new wxButton(this, wxID_ANY, "plugin down");

@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     //int udp_port_in, int udp_port_out,  int midi_port_in,  int midi_port_out
 
     if(argc != 7){
-        printf("arguments have to be: int udp_port_in, int udp_port_out,  int midi_port_in,  int midi_port_out, display_port_in display_port_out");
+        printf("arguments have to be: int udp_port_in, int udp_port_out,  int midi_port_in,  int midi_port_out, display_port_in display_port_out\n");
         exit(0);
     }
 

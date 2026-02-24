@@ -9,8 +9,7 @@
 
 #include "PluginMultiplexer.hpp"
 #include "ArdourSenderReceiver.hpp"
-class MackieControl : public MackieSenderReceiver
-{
+class MackieControl : public MackieSenderReceiver{
 public:
 	using MackieSenderReceiver::MackieSenderReceiver;
 	using MackieSenderReceiver::receive_data;

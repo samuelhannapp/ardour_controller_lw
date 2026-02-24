@@ -107,7 +107,7 @@ MyFrame::MyFrame(std::string udp_port_in, std::string udp_port_out)
 	thread->Run();
 	Bind(wxEVT_THREAD, &MyFrame::OnThreadUpdate, this);
 	#ifdef __linux__
-	this->file_name_scaling = std::string("/home/samuel/Documents/display_scaling.txt");
+	file_name_scaling = std::string("/home/samuel/Documents/display_scaling.txt");
 	#endif
 	#ifdef _WIN64
 	file_name_scaling = std::string("C:\\Users\\Samuel\\Documents\\display_scaling.txt");

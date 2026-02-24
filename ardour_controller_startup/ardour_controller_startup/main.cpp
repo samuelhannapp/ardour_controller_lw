@@ -18,6 +18,7 @@
 #endif
 
 #define WIDGET_WIDTH 150
+#define WIDGET_HEIGHT 30
 enum
 {
     ID_START_ARDOUR_CONTROLLER = 2, ID_OTHER, ID_THIRD, ID_PLUGIN
@@ -66,7 +67,7 @@ MyFrame::MyFrame()
     button_sizer->Add(start_ardour_controller_button);
 
     for (int i = 0; i < 8; i++)
-        header_panels.push_back(new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(WIDGET_WIDTH, 20), wxBORDER_RAISED));
+        header_panels.push_back(new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(WIDGET_WIDTH, WIDGET_HEIGHT), wxBORDER_RAISED));
 
     header_lables.push_back(new wxStaticText(header_panels.at(0), wxID_ANY, "controller"));
     header_lables.push_back(new wxStaticText(header_panels.at(1), wxID_ANY, "Ardour IP"));
@@ -143,7 +144,7 @@ void MyFrame::OnAddController(wxCommandEvent& event)
 {
     wxChoice* choice = new wxChoice(this, wxID_ANY);
     choice->SetToolTip("chose mackie control or gui version");
-    choice->SetMinSize(wxSize(WIDGET_WIDTH, 20));
+    choice->SetMinSize(wxSize(WIDGET_WIDTH, WIDGET_HEIGHT));
     wxArrayString choices;
     for (std::string controller_name : this->midi_in_devices)
         choices.Add(controller_name);
@@ -152,32 +153,32 @@ void MyFrame::OnAddController(wxCommandEvent& event)
     choice->Set(choices);
     this->controllers.push_back(choice);
 
-    wxTextCtrl* ardour_ip_address = new wxTextCtrl(this, wxID_ANY, "127.0.0.1", wxDefaultPosition, wxSize(WIDGET_WIDTH, 20));
+    wxTextCtrl* ardour_ip_address = new wxTextCtrl(this, wxID_ANY, "127.0.0.1", wxDefaultPosition, wxSize(WIDGET_WIDTH, WIDGET_HEIGHT));
     this->ardour_network_address.push_back(ardour_ip_address);
     
     int port_nr = UDP_START_PORT + (this->controllers.size() * 3);
     wxSpinCtrl* spin_control_from_ardour = new wxSpinCtrl(this, wxID_ANY, std::to_string(port_nr));
-    spin_control_from_ardour->SetMinSize(wxSize(WIDGET_WIDTH, 20));
+    spin_control_from_ardour->SetMinSize(wxSize(WIDGET_WIDTH, WIDGET_HEIGHT));
     receive_port_from_ardour.push_back(spin_control_from_ardour);
 
     wxSpinCtrl* spin_control_to_ardour = new wxSpinCtrl(this, wxID_ANY, std::to_string(send_port_to_ardour_udp_nr));
-    spin_control_to_ardour->SetMinSize(wxSize(WIDGET_WIDTH, 20));
+    spin_control_to_ardour->SetMinSize(wxSize(WIDGET_WIDTH, WIDGET_HEIGHT));
     spin_control_to_ardour->SetRange(3819, 3819);
     send_port_to_ardour.push_back(spin_control_to_ardour);
 
-    wxCheckBox* check_box = new wxCheckBox(this, wxID_ANY, "Display", wxDefaultPosition, wxSize(WIDGET_WIDTH, 20));
+    wxCheckBox* check_box = new wxCheckBox(this, wxID_ANY, "Display", wxDefaultPosition, wxSize(WIDGET_WIDTH, WIDGET_HEIGHT));
     this->display_enable_check_box.push_back(check_box);
     check_box->SetValue(true);
 
-    wxTextCtrl* display_ip_address = new wxTextCtrl(this, wxID_ANY, "127.0.0.1", wxDefaultPosition, wxSize(WIDGET_WIDTH, 20));
+    wxTextCtrl* display_ip_address = new wxTextCtrl(this, wxID_ANY, "127.0.0.1", wxDefaultPosition, wxSize(WIDGET_WIDTH, WIDGET_HEIGHT));
     this->display_network_address.push_back(display_ip_address);
 
     wxSpinCtrl* spin_control_send_port_to_display = new wxSpinCtrl(this, wxID_ANY, std::to_string(port_nr + 1));
-    spin_control_send_port_to_display->SetMinSize(wxSize(WIDGET_WIDTH, 20));
+    spin_control_send_port_to_display->SetMinSize(wxSize(WIDGET_WIDTH, WIDGET_HEIGHT));
     send_port_to_display.push_back(spin_control_send_port_to_display);
 
     wxSpinCtrl* spin_control_receive_port_from_display = new wxSpinCtrl(this, wxID_ANY, std::to_string(port_nr + 2));
-    spin_control_receive_port_from_display->SetMinSize(wxSize(WIDGET_WIDTH, 20));
+    spin_control_receive_port_from_display->SetMinSize(wxSize(WIDGET_WIDTH, WIDGET_HEIGHT));
     receive_port_from_display.push_back(spin_control_receive_port_from_display);
 
     this->controller_layout.push_back(new wxBoxSizer(wxHORIZONTAL));
@@ -219,16 +220,24 @@ void MyFrame::start_plugin_routing_customizer()
         std::string plugin_routing_customizer_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\plugin_routing_customizer\\plugin_router\\x64\\Debug\\plugin_router.exe");
     #endif
     #ifdef __linux__
-        std::wstring plugin_routing_customizer_exe_path = (L"/home/samuel/ardour_controller_lw/plugin_routing_customizer/plugin_routing_customizer.out");
+        std::string plugin_routing_customizer_exe_path = ("/home/samuel/ardour_controller_lw/plugin_routing_customizer/plugin_routing_customizer.out");
     #endif
     start_process(plugin_routing_customizer_exe_path);
 }
 
 void MyFrame::start_base_controller_udp(int index)
 {
+    #ifdef _WIN64
     std::string base_controller_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\base_controller\\x64\\udp_version\\base_controller.exe");
     std::string gui_controller_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_controller\\x64\\Debug\\gui_controller.exe");
     std::string display_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\mackie_display\\x64\\Debug\\mackie_display.exe");
+    #endif
+
+    #ifdef __linux__ 
+    std::string base_controller_exe_path = ("/home/samuel/ardour_controller_lw/base_controller/visual_studio/osc_controller_udp.out");
+    std::string gui_controller_exe_path = ("/home/samuel/ardour_controller_lw/gui_controller/gui_controller/gui_controller.out");
+    std::string display_exe_path = ("/home/samuel/ardour_controller_lw/display/mackie_display/mackie_display/mackie_display.out");
+    #endif
 
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
 	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
@@ -271,8 +280,16 @@ void MyFrame::start_base_controller_udp(int index)
 
 void MyFrame::start_base_controller_midi(int index)
 {
+    #ifdef _WIN64
     std::string base_controller_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\base_controller\\x64\\midi_version\\base_controller.exe");
     std::string display_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\mackie_display\\x64\\Debug\\mackie_display.exe");
+    #endif
+
+    #ifdef __linux__
+
+    std::string base_controller_exe_path = ("/home/samuel/ardour_controller_lw/base_controller/visual_studio/osc_controller_midi.out");
+    std::string display_exe_path = ("/home/samuel/ardour_controller_lw/display/mackie_display/mackie_display/mackie_display.out");
+    #endif
 
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
 	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
@@ -323,7 +340,7 @@ void MyFrame::start_gp_controller(int index)
     std::string gp_controller_gui_version_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_gp_controller\\gui_gp_controller\\x64\\Debug\\gui_gp_controller.exe");
     #endif
     #ifdef __linux__
-    std::wstring gp_controller_gui_version_exe_path = (L"/home/samuel/ardour_controller_lw/gui_gp_controller/gui_gp_controller/gui_gp_controller/gui_gp_controller.out");
+    std::string gp_controller_gui_version_exe_path = ("/home/samuel/ardour_controller_lw/gui_gp_controller/gui_gp_controller/gui_gp_controller/gui_gp_controller.out");
     #endif
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
 	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
@@ -361,11 +378,6 @@ bool MyFrame::is_controller_gui_controller(std::string name)
 void MyFrame::OnStartController(wxCommandEvent& event)
 {
     int how_many_controllers = this->controllers.size();
-
-
-    std::wstring base_controller_gui_version_exe_path = (L"C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_controller\\x64\\Debug\\gui_controller.exe");
-    
-
 
     bool controller_exist = false;
 
@@ -429,6 +441,7 @@ void MyFrame::PrintMidiDevices()
 }
 #endif
 #ifdef __linux__
+/*
 void MyFrame::PrintMidiDevices() {
     snd_seq_t* seq_handle;
     int err;
@@ -449,70 +462,120 @@ void MyFrame::PrintMidiDevices() {
         count += 1;
         int id = snd_seq_client_info_get_client(info);
         char const* name = snd_seq_client_info_get_name(info);
+        snd_seq_client_type_t device_type = snd_seq_client_info_get_type(info);
         std::string str(name);
         //QString in(caps.szPname);
         this->midi_in_devices.push_back(str);
         this->midi_out_devices.push_back(str);
         int num_ports = snd_seq_client_info_get_num_ports(info);
-        printf("Client �%s� #%i, with %i ports\n", name, id, num_ports);
+        printf("Client �%s� #%i, with %i ports\n", name, device_type, num_ports);
         status = snd_seq_query_next_client(seq_handle, info);
     }
 }
+*/
+
+void MyFrame::PrintMidiDevices() {
+    int card = -1;
+
+    if (snd_card_next(&card) < 0 || card < 0) {
+        printf("No sound cards found\n");
+        return;
+    }
+
+    while (card >= 0) {
+        snd_ctl_t *ctl;
+        char name[32];
+
+        sprintf(name, "hw:%d", card);
+
+        if (snd_ctl_open(&ctl, name, 0) < 0) {
+            snd_card_next(&card);
+            continue;
+        }
+
+        int device = -1;
+
+        while (1) {
+            if (snd_ctl_rawmidi_next_device(ctl, &device) < 0)
+                break;
+
+            if (device < 0)
+                break;
+		snd_rawmidi_stream_t asdf;	
+            for (int stream = 0; stream < 2; stream++) {
+                snd_rawmidi_info_t *info;
+                snd_rawmidi_info_alloca(&info);
+
+                snd_rawmidi_info_set_device(info, device);
+                snd_rawmidi_info_set_stream(info, asdf);
+                snd_rawmidi_info_set_subdevice(info, 0);
+
+                if (snd_ctl_rawmidi_info(ctl, info) < 0)
+                    continue;
+
+                int subs = snd_rawmidi_info_get_subdevices_count(info);
+
+                for (int sub = 0; sub < subs; sub++) {
+                    snd_rawmidi_info_set_subdevice(info, sub);
+
+                    if (snd_ctl_rawmidi_info(ctl, info) == 0) {
+                        printf("Card %d, Device %d, Subdevice %d\n",
+                               card, device, sub);
+
+                        printf("  ID: %s\n",
+                               snd_rawmidi_info_get_id(info));
+                        printf("  Name: %s\n",
+                               snd_rawmidi_info_get_name(info));
+                        printf("  Subdevice name: %s\n",
+                               snd_rawmidi_info_get_subdevice_name(info));
+                    }
+                }
+            }
+        }
+
+        snd_ctl_close(ctl);
+        snd_card_next(&card);
+    }
+
+    return;
+}
+
+
 #endif
 
 #ifdef __linux__
-void MyFrame::start_process(std::wstring path)
+void MyFrame::start_process(std::string path)
 {
-   // first we fork the process
-    char executable_cstr[200];
     char *args[] = {NULL};
-    int size = path.size();
-    std::wcstombs(executable_cstr, path.c_str(), path.size());
-    executable_cstr[size] = '\0';
-    //"/home/samuel/ardour_controller_lw/plugin_routing_customizer/plugin_routing_customizer.out"
+    char executable_cstr[200];
+    std::copy(path.begin(), path.end(), executable_cstr); 
+
     int pid = fork();
     if(pid == 0)
         execvp(executable_cstr, args);
-        //execvp(executable_cstr, args);
 }
 
 //we maybe have to change the default to std::string and than convert it to wstring...
 //this whole wstring nonesense is so annoying...
 
-//we actually could just do arguments with no content, and that would fulfill the purpose easier 
+//we actually could justoscmessage do arguments with no content, and that would fulfill the purpose easier 
 //than having two seperate functions...
-void MyFrame::start_process(std::wstring path, std::wstring arguments)
+void MyFrame::start_process(std::string path, std::vector<std::string> arguments)
 {
-    char arguments_cstr[200];
-    std::wcstombs(arguments_cstr, arguments.c_str(), arguments.size());
-    arguments_cstr[arguments.size()] = '\0'; 
-    std::string arguments_std_string(arguments_cstr);
-    std::stringstream stream;
-    stream.str(arguments_std_string);
-    std::vector<std::string> argument_list;
-    std::string segment;
-    while(std::getline(stream, segment, ' '))
-        argument_list.push_back(segment);
-
-    int last_slash = path.find_last_of('/');
-    int path_size = last_slash;
-
-    std::wstring program_name = path.substr(path_size + 1, path.size());
 
     char executable_cstr[200];
-    std::wcstombs(executable_cstr, path.c_str(), path.size());
+    std::copy(path.begin(), path.end(), executable_cstr); 
     executable_cstr[path.size()] = '\0';
 
-    char program_name_cstr[200];
-    std::wcstombs(program_name_cstr, program_name.c_str(), program_name.size());
-    program_name_cstr[program_name.size()] = '\0';
-    char arg_1[] = "20";
-    char arg_2[] = "3819";
-    char *args[] = {program_name_cstr, arg_1, arg_2, NULL};
-    //char *args[] = {NULL};
-    //int arguments_size = arguments.size();
-    //std::wcstombs(args_cstr, arguments.c_str(), arguments.size());
-    //args_cstr[size] = '\0';
+    std::string program_name = path.substr(path.find_last_of('/') + 1, path.size());
+
+
+    char *args[10];
+    args[0] = program_name.data(); 
+    for(int i = 0; i < arguments.size(); i++)
+        args[i + 1] = arguments.at(i).data();
+
+    args[arguments.size() + 1] = NULL;
 
     int pid = fork();
     if(pid == 0)
