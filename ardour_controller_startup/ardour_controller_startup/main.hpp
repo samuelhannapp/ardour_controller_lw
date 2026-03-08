@@ -19,6 +19,7 @@ public:
     void OnStartController(wxCommandEvent& event);
     
     void OnExit(wxCommandEvent& event);
+    void OnClose(wxCloseEvent& event);
     void OnAbout(wxCommandEvent& event);
     void OnSize(wxSizeEvent& event);
     void OnAddController(wxCommandEvent& event);
@@ -43,9 +44,13 @@ public:
     const std::string gp_controller_string = "gp controller";
     const std::string sp_controller_string = "sp controller";
     const std::string mackie_controller_gui_version_string = "mackie controller gui";
+
+    std::vector<int> pids;
     
     std::vector<std::string>midi_in_devices;
     std::vector<std::string>midi_out_devices;
+    //card is only for linux
+    std::vector<int>card;
     std::vector<std::string>gui_controllers;
     int send_port_to_ardour_udp_nr = 3819;
 

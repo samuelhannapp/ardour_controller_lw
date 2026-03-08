@@ -2,6 +2,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <clocale>
+#include <stdio.h>
 
 #ifdef _WIN64
 #include <SDKDDKVer.h>
@@ -18,7 +19,7 @@
 #endif
 
 #define WIDGET_WIDTH 150
-#define WIDGET_HEIGHT 30
+#define WIDGET_HEIGHT 34
 enum
 {
     ID_START_ARDOUR_CONTROLLER = 2, ID_OTHER, ID_THIRD, ID_PLUGIN
@@ -34,6 +35,7 @@ bool MyApp::OnInit()
 MyFrame::MyFrame()
 	: wxFrame(nullptr, wxID_ANY, "Base Controller (Mackie Control) Display", wxDefaultPosition, wxSize(800, 400))
 {
+
     menuConnections = new wxMenu;
     menuConnections->Append(ID_START_ARDOUR_CONTROLLER, "&Start Ardour Controller", "setup ip address for controller");
     menuConnections->Append(ID_OTHER, "&other...\tCtrl+H", "adjust display size to controller");
@@ -55,6 +57,8 @@ MyFrame::MyFrame()
     Bind(wxEVT_MENU, &MyFrame::OnStartArdourController, this, ID_START_ARDOUR_CONTROLLER);
     Bind(wxEVT_MENU, &MyFrame::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
+    Bind(wxEVT_CLOSE_WINDOW, &MyFrame::OnClose, this);
+
 
     CreateStatusBar();
     button_sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -116,13 +120,24 @@ MyFrame::MyFrame()
     this->gui_controllers.push_back(mackie_controller_gui_version_string);
 
     PrintMidiDevices();
+
     this->SetSizerAndFit(main_sizer);
 }
 
 void MyFrame::OnExit(wxCommandEvent& event)
 {
+    for(int pid : this->pids)
+		kill(pid, SIGKILL);
     Close(true);
 }
+
+void MyFrame::OnClose(wxCloseEvent& event)
+{
+    for(int pid : this->pids)
+		kill(pid, SIGTERM);
+    event.Skip();
+}
+
 
 void MyFrame::OnAbout(wxCommandEvent& event)
 {
@@ -193,9 +208,10 @@ void MyFrame::OnAddController(wxCommandEvent& event)
 
     this->main_sizer->Add(this->controller_layout.back());
     this->SetSizerAndFit(this->main_sizer);
+
     event.Skip();
 }
-
+#ifdef _WIN64
 int MyFrame::get_midi_in(std::string controller_name)
 {
     for (int i = 0; i < this->midi_in_devices.size(); i++) {
@@ -213,6 +229,27 @@ int MyFrame::get_midi_out(std::string controller_name)
     }
     return -1;
 }
+#endif
+
+#ifdef __linux__ 
+int MyFrame::get_midi_in(std::string controller_name)
+{
+    for (int i = 0; i < this->midi_in_devices.size(); i++) {
+        if (!this->midi_in_devices.at(i).compare(controller_name))
+            return this->card[i]; 
+    }
+    return -1;
+}
+
+int MyFrame::get_midi_out(std::string controller_name)
+{
+    for (int i = 0; i < this->midi_out_devices.size(); i++) {
+        if (!this->midi_out_devices.at(i).compare(controller_name))
+            return this->card[i];
+    }
+    return -1;
+}
+#endif
 
 void MyFrame::start_plugin_routing_customizer()
 {
@@ -441,7 +478,6 @@ void MyFrame::PrintMidiDevices()
 }
 #endif
 #ifdef __linux__
-/*
 void MyFrame::PrintMidiDevices() {
     snd_seq_t* seq_handle;
     int err;
@@ -463,18 +499,21 @@ void MyFrame::PrintMidiDevices() {
         int id = snd_seq_client_info_get_client(info);
         char const* name = snd_seq_client_info_get_name(info);
         snd_seq_client_type_t device_type = snd_seq_client_info_get_type(info);
+        int card = snd_seq_client_info_get_card(info);
         std::string str(name);
         //QString in(caps.szPname);
-        this->midi_in_devices.push_back(str);
-        this->midi_out_devices.push_back(str);
+        if(card != -1){
+            this->midi_in_devices.push_back(str);
+            this->midi_out_devices.push_back(str);
+            this->card.push_back(card);
+        }
         int num_ports = snd_seq_client_info_get_num_ports(info);
-        printf("Client �%s� #%i, with %i ports\n", name, device_type, num_ports);
+        printf("Client midi_version: %i, name: �%s� #%i, with %i ports\n", card, name, device_type, num_ports);
         status = snd_seq_query_next_client(seq_handle, info);
     }
 }
-*/
-
-void MyFrame::PrintMidiDevices() {
+/*
+void MyApp::PrintMidiDevices() {
     int card = -1;
 
     if (snd_card_next(&card) < 0 || card < 0) {
@@ -485,8 +524,20 @@ void MyFrame::PrintMidiDevices() {
     while (card >= 0) {
         snd_ctl_t *ctl;
         char name[32];
+        name[0] = 'h';
+        name[1] = 'w';
+        name[2] = ':';
 
-        sprintf(name, "hw:%d", card);
+        std::string number = std::to_string(card);
+
+        for(int i = 0; i < number.size(); i++)
+            name[i + 3] = number[i];
+        
+        name[3 + number.size()] = 0;
+        name[3 + number.size() + 1] = 0;
+
+        //sprintf(name, "hw:%d", card);
+
 
         if (snd_ctl_open(&ctl, name, 0) < 0) {
             snd_card_next(&card);
@@ -501,7 +552,7 @@ void MyFrame::PrintMidiDevices() {
 
             if (device < 0)
                 break;
-		snd_rawmidi_stream_t asdf;	
+		    snd_rawmidi_stream_t asdf;	
             for (int stream = 0; stream < 2; stream++) {
                 snd_rawmidi_info_t *info;
                 snd_rawmidi_info_alloca(&info);
@@ -509,8 +560,8 @@ void MyFrame::PrintMidiDevices() {
                 snd_rawmidi_info_set_device(info, device);
                 snd_rawmidi_info_set_stream(info, asdf);
                 snd_rawmidi_info_set_subdevice(info, 0);
-
-                if (snd_ctl_rawmidi_info(ctl, info) < 0)
+                int problem = snd_ctl_rawmidi_info(ctl, info);
+                if (problem < 0)
                     continue;
 
                 int subs = snd_rawmidi_info_get_subdevices_count(info);
@@ -539,6 +590,7 @@ void MyFrame::PrintMidiDevices() {
 
     return;
 }
+    */
 
 
 #endif
@@ -560,6 +612,7 @@ void MyFrame::start_process(std::string path)
 
 //we actually could justoscmessage do arguments with no content, and that would fulfill the purpose easier 
 //than having two seperate functions...
+/*
 void MyFrame::start_process(std::string path, std::vector<std::string> arguments)
 {
 
@@ -580,6 +633,32 @@ void MyFrame::start_process(std::string path, std::vector<std::string> arguments
     int pid = fork();
     if(pid == 0)
         execvp(executable_cstr, args);
+}
+*/
+
+//attemt with sudo...
+void MyFrame::start_process(std::string path, std::vector<std::string> arguments)
+{
+    std::string sudo_command("sudo");
+    //std::string program_name = path.substr(path.find_last_of('/') + 1, path.size());
+    char sudo_command_cstr[200];
+    std::copy(sudo_command.begin(), sudo_command.end(), sudo_command_cstr); 
+    sudo_command_cstr[sudo_command.size()] = '\0';
+
+    char *args[10];
+    args[0] = sudo_command.data(); 
+    args[1] = path.data(); 
+    for(int i = 0; i < arguments.size(); i++)
+        args[i + 2] = arguments.at(i).data();
+
+    args[arguments.size() + 2] = NULL;
+
+    int pid = fork();
+    if(pid)
+        this->pids.push_back(pid);
+
+    if(pid == 0)
+        execvp(sudo_command_cstr, args);
 }
 #endif
 
