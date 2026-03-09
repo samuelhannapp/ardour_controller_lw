@@ -3,6 +3,7 @@
 #include <vector>
 #include <fstream>
 #include "Defines.hpp"
+#include <filesystem>
 
 
 bool MyApp::OnInit()
@@ -96,7 +97,6 @@ MyFrame::MyFrame(std::string udp_port_in, std::string udp_port_out)
 	
 	this->SetSizer(main_layout);
 	
-
 	if (!udp_port_in.size())
 		udp_port_in = std::string("100");
 	if (!udp_port_out.size())
@@ -351,11 +351,18 @@ WindowScalerFrame::WindowScalerFrame(MyFrame *parent, wxWindowID id, const wxStr
 
 void WindowScalerFrame::SaveScaling(wxCommandEvent& event)
 {
+	std::filesystem::remove(file_name_scaling);
 	std::ofstream file(file_name_scaling);
 	if (file.is_open()) {
-		file << slider_value_1->GetLabel().ToStdString() << '\n';
-		file << slider_value_2->GetLabel().ToStdString() << '\n';
-		file << slider_value_3->GetLabel().ToStdString();
+		std::string s_value_1(slider_value_1->GetLabel().ToStdString());
+		std::string s_value_2(slider_value_2->GetLabel().ToStdString());
+		std::string s_value_3(slider_value_3->GetLabel().ToStdString());
+		std::isdigit(s_value_1[0]) ? file << s_value_1 : file << 400;
+		file << '\n';
+		std::isdigit(s_value_2[0]) ? file << s_value_2 : file << 400;
+		file << '\n';
+		std::isdigit(s_value_3[0]) ? file << s_value_3 : file << 400;
+		file << '\n';
 		file.close();
 	}
 }
