@@ -41,6 +41,8 @@ public:
     MyFrame(std::string udp_port_in, std::string udp_port_out);
 
 private:
+	//this is only for the plugin_list...
+	int selected_channel = 0;
 	void adjust_window(wxSize size);
 	wxColor channel_not_selected_color;
 	wxColor channel_selected_color;
@@ -53,11 +55,13 @@ private:
 	wxStaticText* plugin_parameter_name[CHANNEL_COUNT];
 	wxStaticText* knob_name[CHANNEL_COUNT];
 	wxStaticText* send_name[CHANNEL_COUNT];
+	wxStaticText* plugin_names[CHANNEL_COUNT];
 	wxPanel* channel_name_panel[CHANNEL_COUNT];
 	wxPanel* plugin_parameter_name_panel[CHANNEL_COUNT];
 	wxPanel* knob_name_panel[CHANNEL_COUNT];
 	wxPanel* send_name_panel[CHANNEL_COUNT];
 	wxPanel* panel[CHANNEL_COUNT];
+	wxPanel* plugin_names_panel[CHANNEL_COUNT];
 
 	int space_size_side = SPACE_SIZE_SIDE;
 	int left_spacer_size = SPACE_SIZE;

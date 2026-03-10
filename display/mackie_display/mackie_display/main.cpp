@@ -71,6 +71,12 @@ MyFrame::MyFrame(std::string udp_port_in, std::string udp_port_out)
 		plugin_parameter_name[i] = new wxStaticText(plugin_parameter_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, CHANNEL_NAME_HEIGHT), wxALIGN_CENTER);
 		knob_name[i] = new wxStaticText(knob_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_CENTER);
 		send_name[i] = new wxStaticText(send_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_CENTER);
+		plugin_names_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10), wxSize(160, 50), wxBORDER_SUNKEN);
+		plugin_names_panel[i]->SetMinSize(wxSize(80, CHANNEL_NAME_HEIGHT));
+		plugin_names[i] = new wxStaticText(plugin_names_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_LEFT);
+		wxFont font_2 = channel_name[i]->GetFont();
+		font_2.SetPointSize(8);
+		plugin_names[i]->SetFont(font_2);
 		wxFont font = channel_name[i]->GetFont();
 		font.SetWeight(wxFONTWEIGHT_BOLD);
 		font.SetPointSize(10);
@@ -145,13 +151,16 @@ void MyFrame::adjust_window(wxSize size)
 	top_spacer->SetMinSize(wxSize(0, panel_offset));
 	
 	wxSize panel_height(panel_size.GetWidth() - SPACE_SIZE * 2, CHANNEL_NAME_HEIGHT);
+	wxSize plugin_names_height(panel_size.GetWidth() - SPACE_SIZE * 2, 120);
 	wxSize channel_name_panel_height(panel_size.GetWidth() - SPACE_SIZE * 2, CHANNEL_NAME_HEIGHT + 30);
 	for (int i = 0; i < CHANNEL_COUNT; i++) {
 		panel[i]->SetMinSize(panel_size);
+		plugin_names_panel[i]->SetSize(plugin_names_height);
 		channel_name_panel[i]->SetSize(channel_name_panel_height);
 		knob_name_panel[i]->SetSize(panel_height);
 		plugin_parameter_name_panel[i]->SetSize(panel_height);
 		send_name_panel[i]->SetSize(panel_height);
+		plugin_names_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 180 - 30));
 		channel_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 30));
 		plugin_parameter_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 20 - 30));
 		send_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 40 - 30));
@@ -204,7 +213,12 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		int index = message.get_int(0) - 1;
 		this->send_name[index]->SetLabel(message.get_string(1));
 	}
-
+	else if(!message.GetAddress().compare("/select/plugin/name")){
+		std::string plugin_name = message.get_string(0);
+		if(plugin_name.size() == 1)
+			return;
+		//knob_name[this->selected_channel]->SetLabel(plugin_name);
+	}
 	if(!message.GetAddress().compare("/select/plugin/parameter/name"))
 	{
 		int index = message.get_int(0) - 1;
@@ -215,8 +229,10 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 	{
 		int index = message.get_int(0);
 		int active = message.get_float(1);
-		if(active)
+		if(active){
 			this->panel[index - 1]->SetBackgroundColour(channel_selected_color);
+			this->selected_channel = index - 1;
+		}
 		else
 			this->panel[index - 1]->SetBackgroundColour(channel_not_selected_color);
 		this->panel[index - 1]->Refresh();
@@ -230,6 +246,22 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		wxSize temp_size(600, 600);
 		this->SetSize(temp_size);
 		this->SetSize(original_size);
+	}
+	if(!message.GetAddress().compare("/strip/plugin/list"))
+	{
+		//local_strip_data.selected_strip.plugin_list.clear();
+		//write_to_itm(std::to_string(message.GetTypeList().size()));
+		int plugin_quantity = (message.GetTypeList().size() - 1) / 3;
+		std::string type_list = message.GetTypeList();
+		std::string plugin_list;
+		for(int i = 0; i < plugin_quantity; i++){
+			plugin_list.append(message.get_string(i + 2 + i * 2));
+			plugin_list.push_back('\n');
+		}
+		plugin_names[this->selected_channel]->SetLabel(plugin_list);
+		for(int i = 0; i < CHANNEL_COUNT; i++)
+			if(i != this->selected_channel)
+				plugin_names[i]->SetLabel(" ");
 	}
 	if(!message.GetAddress().compare("/base_controller/mode_switch")){
 		

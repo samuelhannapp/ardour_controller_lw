@@ -353,6 +353,7 @@ void OscController::ardour_receive_thread()
 			std::string plugin_name = message.get_string(0);
 			if(plugin_name.size() == 1)
 				continue;
+			display_object.send_data(message);
 			plugin_multiplexer.setup(plugin_name);
 			if(local_strip_data.selected_strip.selected_plugin_name == plugin_name) //everything is already setup...
 				continue;
@@ -409,6 +410,7 @@ void OscController::ardour_receive_thread()
 			for(int i = 0; i < plugin_quantity; i++)
 				local_strip_data.selected_strip.plugin_list.push_back(message.get_string(i + 2 + i * 2));
 			ardour_sender_receiver.request_plugin_descriptor(local_strip_data.selected_strip.number, local_strip_data.selected_strip.get_selected_plugin_index());
+			display_object.send_data(message);
 			continue;
 		}
 		else if(!message.GetAddress().compare("/strip/plugin/descriptor")){
