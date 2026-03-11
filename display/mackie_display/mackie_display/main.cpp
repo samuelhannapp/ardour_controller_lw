@@ -71,12 +71,19 @@ MyFrame::MyFrame(std::string udp_port_in, std::string udp_port_out)
 		plugin_parameter_name[i] = new wxStaticText(plugin_parameter_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, CHANNEL_NAME_HEIGHT), wxALIGN_CENTER);
 		knob_name[i] = new wxStaticText(knob_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_CENTER);
 		send_name[i] = new wxStaticText(send_name_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_CENTER);
-		plugin_names_panel[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10), wxSize(160, 50), wxBORDER_SUNKEN);
-		plugin_names_panel[i]->SetMinSize(wxSize(80, CHANNEL_NAME_HEIGHT));
-		plugin_names[i] = new wxStaticText(plugin_names_panel[i], wxID_ANY, " ", wxDefaultPosition, wxSize(80, 50), wxALIGN_LEFT);
+		plugin_names_panel_main[i] = new wxPanel(panel[i], wxID_ANY, wxPoint(10, 10), wxSize(160, 50), wxBORDER_SUNKEN);
+		plugin_names_panel_main[i]->SetMinSize(wxSize(80, CHANNEL_NAME_HEIGHT));
+		plugin_names_sizer[i] = new wxBoxSizer(wxVERTICAL);
+		plugin_names_panel_main[i]->SetSizer(plugin_names_sizer[i]);
+
 		wxFont font_2 = channel_name[i]->GetFont();
 		font_2.SetPointSize(8);
-		plugin_names[i]->SetFont(font_2);
+		for(int col = 0; col < PLUGIN_COUNT; col++){
+			plugin_names[i][col] = new wxStaticText(plugin_names_panel_main[i], wxID_ANY, " ", wxDefaultPosition, wxSize(200, 30), wxALIGN_LEFT);
+			plugin_names[i][col]->SetFont(font_2);
+			plugin_names_sizer[i]->Add(plugin_names[i][col]);
+		}
+		
 		wxFont font = channel_name[i]->GetFont();
 		font.SetWeight(wxFONTWEIGHT_BOLD);
 		font.SetPointSize(10);
@@ -155,12 +162,12 @@ void MyFrame::adjust_window(wxSize size)
 	wxSize channel_name_panel_height(panel_size.GetWidth() - SPACE_SIZE * 2, CHANNEL_NAME_HEIGHT + 30);
 	for (int i = 0; i < CHANNEL_COUNT; i++) {
 		panel[i]->SetMinSize(panel_size);
-		plugin_names_panel[i]->SetSize(plugin_names_height);
+		plugin_names_panel_main[i]->SetSize(plugin_names_height);
 		channel_name_panel[i]->SetSize(channel_name_panel_height);
 		knob_name_panel[i]->SetSize(panel_height);
 		plugin_parameter_name_panel[i]->SetSize(panel_height);
 		send_name_panel[i]->SetSize(panel_height);
-		plugin_names_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 180 - 30));
+		plugin_names_panel_main[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 180 - 30));
 		channel_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 30));
 		plugin_parameter_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 20 - 30));
 		send_name_panel[i]->SetPosition(wxPoint(SPACE_SIZE, size.GetHeight() - CHANNEL_NAME_HEIGHT - MENU_SIZE - SPACE_SIZE * 2 - panel_offset - 40 - 30));
@@ -217,7 +224,8 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		std::string plugin_name = message.get_string(0);
 		if(plugin_name.size() == 1)
 			return;
-		//knob_name[this->selected_channel]->SetLabel(plugin_name);
+		this->selected_plugin_name = plugin_name;	
+		
 	}
 	if(!message.GetAddress().compare("/select/plugin/parameter/name"))
 	{
@@ -254,14 +262,34 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		int plugin_quantity = (message.GetTypeList().size() - 1) / 3;
 		std::string type_list = message.GetTypeList();
 		std::string plugin_list;
+		
 		for(int i = 0; i < plugin_quantity; i++){
-			plugin_list.append(message.get_string(i + 2 + i * 2));
-			plugin_list.push_back('\n');
+			plugin_names[this->selected_channel][i]->SetLabel(message.get_string(i + 2 + i * 2));
+			
 		}
-		plugin_names[this->selected_channel]->SetLabel(plugin_list);
+
+		wxFont font = channel_name[0]->GetFont();
+		font.SetPointSize(8);	
+		int selected_plugin_nr;
+		for(int i = 0; i < PLUGIN_COUNT; i++){
+			std::string label = plugin_names[this->selected_channel][i]->GetLabel().ToStdString();
+			if(!label.compare(this->selected_plugin_name))
+				selected_plugin_nr = i;
+		}
+
+		font.SetWeight(wxFONTWEIGHT_BOLD);
+		plugin_names[this->selected_channel][selected_plugin_nr]->SetFont(font);
+
+
+		font.SetWeight(wxFONTWEIGHT_NORMAL);
+		for(int i = 0; i < PLUGIN_COUNT; i++)
+			if(i != selected_plugin_nr)
+				plugin_names[this->selected_channel][i]->SetFont(font);
+
 		for(int i = 0; i < CHANNEL_COUNT; i++)
 			if(i != this->selected_channel)
-				plugin_names[i]->SetLabel(" ");
+				for(int col = 0; col < PLUGIN_COUNT; col++)
+					plugin_names[i][col]->SetLabel(" ");
 	}
 	if(!message.GetAddress().compare("/base_controller/mode_switch")){
 		

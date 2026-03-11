@@ -19,6 +19,7 @@ public:
 wxIMPLEMENT_APP(MyApp);
 
 #define CHANNEL_COUNT 8
+#define PLUGIN_COUNT 8
 /*
 class OscThread : public wxThread {
 public:
@@ -51,17 +52,21 @@ private:
 	wxSizerItem* top_spacer;
 	wxBoxSizer* main_layout;
 
+	std::string selected_plugin_name;
+
 	wxStaticText* channel_name[CHANNEL_COUNT];
 	wxStaticText* plugin_parameter_name[CHANNEL_COUNT];
 	wxStaticText* knob_name[CHANNEL_COUNT];
 	wxStaticText* send_name[CHANNEL_COUNT];
-	wxStaticText* plugin_names[CHANNEL_COUNT];
+	wxStaticText* plugin_names[CHANNEL_COUNT][PLUGIN_COUNT];
 	wxPanel* channel_name_panel[CHANNEL_COUNT];
 	wxPanel* plugin_parameter_name_panel[CHANNEL_COUNT];
 	wxPanel* knob_name_panel[CHANNEL_COUNT];
 	wxPanel* send_name_panel[CHANNEL_COUNT];
 	wxPanel* panel[CHANNEL_COUNT];
-	wxPanel* plugin_names_panel[CHANNEL_COUNT];
+	wxPanel* plugin_names_panel_main[CHANNEL_COUNT];
+	wxPanel* plugin_names_panel_individual[CHANNEL_COUNT];
+	wxBoxSizer* plugin_names_sizer[CHANNEL_COUNT];
 
 	int space_size_side = SPACE_SIZE_SIDE;
 	int left_spacer_size = SPACE_SIZE;
