@@ -392,7 +392,12 @@ void MyFrame::start_gp_controller(int index)
 
 void MyFrame::start_sp_controller(int index)
 {
+    #ifdef _WIN64
     std::string sp_controller_gui_version_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_sp_controller\\gui_sp_controller\\x64\\Debug\\gui_sp_controller.exe");
+    #endif
+    #ifdef __linux__
+    std::string sp_controller_gui_version_exe_path = ("/home/samuel/ardour_controller_lw/gui_sp_controller/gui_sp_controller/gui_sp_controller/gui_sp_controller.out");
+    #endif
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
 	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
 
