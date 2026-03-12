@@ -1,5 +1,8 @@
-libosc_controller.a: ArdourSenderReceiver.o MackieSenderReceiverMidi.o MidiSenderReceiver.o PluginMultiplexer.o 
-	ar rcs libosc_controller.a ArdourSenderReceiver.o MackieSenderReceiverMidi.o MidiSenderReceiver.o PluginMultiplexer.o
+libosc_controller_midi: ArdourSenderReceiver.o MackieSenderReceiverMidi.o MidiSenderReceiver.o PluginMultiplexer.o 
+	ar rcs libosc_controller_midi.a ArdourSenderReceiver.o MackieSenderReceiverMidi.o MidiSenderReceiver.o PluginMultiplexer.o
+
+libosc_controller_udp: ArdourSenderReceiver.o MackieSenderReceiverMidi.o MidiSenderReceiver.o PluginMultiplexer.o 
+	ar rcs libosc_controller_udp.a ArdourSenderReceiver.o MackieSenderReceiverUdp.o MidiSenderReceiver.o PluginMultiplexer.o
 
 ArdourSenderReceiver.o: ArdourSenderReceiver.cpp
 	g++ -g -c ArdourSenderReceiver.cpp -I/home/samuel/Osc-Sender-Receiver

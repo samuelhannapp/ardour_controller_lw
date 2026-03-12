@@ -15,9 +15,6 @@ public:
 
 wxIMPLEMENT_APP(MyApp);
 
-
-
-
 class Channel : public wxBoxSizer
 {
 public:
