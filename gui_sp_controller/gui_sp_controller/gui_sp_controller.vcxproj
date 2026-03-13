@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{0fd9b191-e15f-48bb-93ea-db5bf4f595b9}</ProjectGuid>
-    <RootNamespace>mackiedisplay</RootNamespace>
+    <ProjectGuid>{0524e4a6-fa1f-47dd-b084-43026c9f76b4}</ProjectGuid>
+    <RootNamespace>guispcontroller</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -102,7 +102,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Samuel\Software\arduor_controller_lw;$(WXWIN)\include\msvc;$(WXWIN)\include;C:\Users\Samuel\Software\OscSenderReceiver</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WXWIN)\include;$(WXWIN)\include\msvc;C:\Users\Samuel\Software\OscSenderReceiver;C:\Users\Samuel\Software\arduor_controller_lw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -126,13 +126,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\OscSenderReceiver\OscMessage.cpp" />
-    <ClCompile Include="..\..\..\..\OscSenderReceiver\OscSenderReceiver.cpp" />
-    <ClCompile Include="..\..\..\..\OscSenderReceiver\UdpSenderReceiver.cpp" />
-    <ClCompile Include="..\..\..\..\OscSenderReceiver\wxOscReceiveThread.cpp" />
+    <ClCompile Include="..\..\..\OscSenderReceiver\OscMessage.cpp" />
+    <ClCompile Include="..\..\..\OscSenderReceiver\OscSenderReceiver.cpp" />
+    <ClCompile Include="..\..\..\OscSenderReceiver\UdpSenderReceiver.cpp" />
+    <ClCompile Include="..\..\..\OscSenderReceiver\wxOscReceiveThread.cpp" />
+    <ClCompile Include="..\..\PluginMultiplexer.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\PluginMultiplexer.hpp" />
     <ClInclude Include="main.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

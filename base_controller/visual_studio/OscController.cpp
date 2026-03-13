@@ -355,10 +355,10 @@ void OscController::ardour_receive_thread()
 				continue;
 			display_object.send_data(message);
 			plugin_multiplexer.setup(plugin_name);
+			ardour_sender_receiver.get_plugin_list(local_strip_data.selected_strip.number);
 			if(local_strip_data.selected_strip.selected_plugin_name == plugin_name) //everything is already setup...
 				continue;
 			local_strip_data.selected_strip.selected_plugin_name = plugin_name;
-			ardour_sender_receiver.get_plugin_list(local_strip_data.selected_strip.number);
 			continue;
 		}
 		else if(!message.GetAddress().compare("/select/plugin/parameter/name")){

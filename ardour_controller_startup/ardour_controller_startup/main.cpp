@@ -126,15 +126,21 @@ MyFrame::MyFrame()
 
 void MyFrame::OnExit(wxCommandEvent& event)
 {
+    #ifdef __linux__
     for(int pid : this->pids)
 		kill(pid, SIGKILL);
+    #endif
+    #ifdef _WIN64
+    #endif
     Close(true);
 }
 
 void MyFrame::OnClose(wxCloseEvent& event)
 {
+    #ifdef __linux__
     for(int pid : this->pids)
 		kill(pid, SIGTERM);
+    #endif
     event.Skip();
 }
 
@@ -319,7 +325,7 @@ void MyFrame::start_base_controller_midi(int index)
 {
     #ifdef _WIN64
     std::string base_controller_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\base_controller\\x64\\midi_version\\base_controller.exe");
-    std::string display_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\mackie_display\\x64\\Debug\\mackie_display.exe");
+    std::string display_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\x64\\Debug\\mackie_display.exe");
     #endif
 
     #ifdef __linux__

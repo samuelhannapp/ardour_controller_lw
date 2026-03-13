@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{0524e4a6-fa1f-47dd-b084-43026c9f76b4}</ProjectGuid>
-    <RootNamespace>guispcontroller</RootNamespace>
+    <ProjectGuid>{77705f96-be93-4cc5-bbd1-002b5adc4c61}</ProjectGuid>
+    <RootNamespace>pluginrouter</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -102,7 +102,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(WXWIN)\include;$(WXWIN)\include\msvc;C:\Users\Samuel\Software\OscSenderReceiver;C:\Users\Samuel\Software\arduor_controller_lw;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Samuel\Software\OscSenderReceiver;C:\Users\Samuel\software\ardour_controller_lw\plugin_routing_customizer;C:\Users\Samuel\software\ardour_controller_lw;$(WXWIN)\include\msvc;$(WXWIN)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -119,23 +119,24 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\Samuel\Software\arduor_contoller_lw\plugin_routing_customizer\plugin_router;C:\Users\Samuel\Software\arduor_contoller_lw;$(WXWIN)\include\msvc;$(WXWIN)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(WXWIN)\lib\vc_x64_lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\OscSenderReceiver\OscMessage.cpp" />
-    <ClCompile Include="..\..\..\..\OscSenderReceiver\OscSenderReceiver.cpp" />
-    <ClCompile Include="..\..\..\..\OscSenderReceiver\UdpSenderReceiver.cpp" />
-    <ClCompile Include="..\..\..\..\OscSenderReceiver\wxOscReceiveThread.cpp" />
-    <ClCompile Include="..\..\..\PluginMultiplexer.cpp" />
+    <ClCompile Include="..\..\..\OscSenderReceiver\OscMessage.cpp" />
+    <ClCompile Include="..\..\..\OscSenderReceiver\OscSenderReceiver.cpp" />
+    <ClCompile Include="..\..\..\OscSenderReceiver\UdpSenderReceiver.cpp" />
+    <ClCompile Include="..\..\..\OscSenderReceiver\wxOscReceiveThread.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\PluginMultiplexer.hpp" />
-    <ClInclude Include="main.hpp" />
+    <ClInclude Include="main.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
