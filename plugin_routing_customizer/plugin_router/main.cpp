@@ -211,7 +211,7 @@ void App::init_plugin_routing()
 	std::string path("/home/samuel/Documents/plugin_data"); 
 	#endif
 	#ifdef _WIN64
-	std::string path("C:\\Users\\Samuel\\Documents\\plugin_data"); 
+	std::string path("plugin_data"); 
 	#endif
 	std::vector<std::string> file_names;
 	for (std::filesystem::directory_entry entry : std::filesystem::directory_iterator(path))

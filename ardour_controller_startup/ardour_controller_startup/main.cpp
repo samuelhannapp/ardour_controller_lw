@@ -260,7 +260,7 @@ int MyFrame::get_midi_out(std::string controller_name)
 void MyFrame::start_plugin_routing_customizer()
 {
     #ifdef _WIN64
-        std::string plugin_routing_customizer_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\plugin_routing_customizer\\plugin_router\\x64\\Debug\\plugin_router.exe");
+        std::string plugin_routing_customizer_exe_path = ("plugin_router.exe");
     #endif
     #ifdef __linux__
         std::string plugin_routing_customizer_exe_path = ("/home/samuel/ardour_controller_lw/plugin_routing_customizer/plugin_routing_customizer.out");
@@ -271,9 +271,9 @@ void MyFrame::start_plugin_routing_customizer()
 void MyFrame::start_base_controller_udp(int index)
 {
     #ifdef _WIN64
-    std::string base_controller_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\base_controller\\x64\\udp_version\\base_controller.exe");
-    std::string gui_controller_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_controller\\x64\\Debug\\gui_controller.exe");
-    std::string display_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\mackie_display\\x64\\Debug\\mackie_display.exe");
+    std::string base_controller_exe_path = ("base_controller.exe");
+    std::string gui_controller_exe_path = ("gui_controller.exe");
+    std::string display_exe_path = ("mackie_display.exe");
     #endif
 
     #ifdef __linux__ 
@@ -324,8 +324,8 @@ void MyFrame::start_base_controller_udp(int index)
 void MyFrame::start_base_controller_midi(int index)
 {
     #ifdef _WIN64
-    std::string base_controller_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\base_controller\\x64\\midi_version\\base_controller.exe");
-    std::string display_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\display\\x64\\Debug\\mackie_display.exe");
+    std::string base_controller_exe_path = ("base_controller.exe");
+    std::string display_exe_path = ("mackie_display.exe");
     #endif
 
     #ifdef __linux__
@@ -380,7 +380,7 @@ void MyFrame::start_gui_controller(int index)
 void MyFrame::start_gp_controller(int index)
 {
     #ifdef _WIN64
-    std::string gp_controller_gui_version_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_gp_controller\\gui_gp_controller\\x64\\Debug\\gui_gp_controller.exe");
+    std::string gp_controller_gui_version_exe_path = ("gui_gp_controller.exe");
     #endif
     #ifdef __linux__
     std::string gp_controller_gui_version_exe_path = ("/home/samuel/ardour_controller_lw/gui_gp_controller/gui_gp_controller/gui_gp_controller/gui_gp_controller.out");
@@ -399,7 +399,7 @@ void MyFrame::start_gp_controller(int index)
 void MyFrame::start_sp_controller(int index)
 {
     #ifdef _WIN64
-    std::string sp_controller_gui_version_exe_path = ("C:\\Users\\Samuel\\Software\\arduor_controller_lw\\gui_sp_controller\\gui_sp_controller\\x64\\Debug\\gui_sp_controller.exe");
+    std::string sp_controller_gui_version_exe_path = ("gui_sp_controller.exe");
     #endif
     #ifdef __linux__
     std::string sp_controller_gui_version_exe_path = ("/home/samuel/ardour_controller_lw/gui_sp_controller/gui_sp_controller/gui_sp_controller/gui_sp_controller.out");
