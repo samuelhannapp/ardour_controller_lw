@@ -263,7 +263,7 @@ void MyFrame::start_plugin_routing_customizer()
         std::string plugin_routing_customizer_exe_path = ("plugin_router.exe");
     #endif
     #ifdef __linux__
-        std::string plugin_routing_customizer_exe_path = ("/home/samuel/ardour_controller_lw/plugin_routing_customizer/plugin_routing_customizer.out");
+        std::string plugin_routing_customizer_exe_path = ("./plugin_routing_customizer");
     #endif
     start_process(plugin_routing_customizer_exe_path);
 }
@@ -277,9 +277,9 @@ void MyFrame::start_base_controller_udp(int index)
     #endif
 
     #ifdef __linux__ 
-    std::string base_controller_exe_path = ("/home/samuel/ardour_controller_lw/base_controller/visual_studio/osc_controller_udp.out");
-    std::string gui_controller_exe_path = ("/home/samuel/ardour_controller_lw/gui_controller/gui_controller/gui_controller.out");
-    std::string display_exe_path = ("/home/samuel/ardour_controller_lw/display/mackie_display/mackie_display/mackie_display.out");
+    std::string base_controller_exe_path = ("./osc_controller_UDP");
+    std::string gui_controller_exe_path = ("./base_controller_gui_version");
+    std::string display_exe_path = ("./base_controller_display");
     #endif
 
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
@@ -330,8 +330,8 @@ void MyFrame::start_base_controller_midi(int index)
 
     #ifdef __linux__
 
-    std::string base_controller_exe_path = ("/home/samuel/ardour_controller_lw/base_controller/visual_studio/osc_controller_midi.out");
-    std::string display_exe_path = ("/home/samuel/ardour_controller_lw/display/mackie_display/mackie_display/mackie_display.out");
+    std::string base_controller_exe_path = ("./osc_controller_MIDI");
+    std::string display_exe_path = ("./base_controller_display");
     #endif
 
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
@@ -383,7 +383,7 @@ void MyFrame::start_gp_controller(int index)
     std::string gp_controller_gui_version_exe_path = ("gui_gp_controller.exe");
     #endif
     #ifdef __linux__
-    std::string gp_controller_gui_version_exe_path = ("/home/samuel/ardour_controller_lw/gui_gp_controller/gui_gp_controller/gui_gp_controller/gui_gp_controller.out");
+    std::string gp_controller_gui_version_exe_path = ("./gp_controller_gui_version");
     #endif
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
 	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
@@ -402,7 +402,7 @@ void MyFrame::start_sp_controller(int index)
     std::string sp_controller_gui_version_exe_path = ("gui_sp_controller.exe");
     #endif
     #ifdef __linux__
-    std::string sp_controller_gui_version_exe_path = ("/home/samuel/ardour_controller_lw/gui_sp_controller/gui_sp_controller/gui_sp_controller/gui_sp_controller.out");
+    std::string sp_controller_gui_version_exe_path = ("./sp_controller_gui_version");
     #endif
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
 	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
@@ -612,6 +612,7 @@ void MyFrame::start_process(std::string path)
     char *args[] = {NULL};
     char executable_cstr[200];
     std::copy(path.begin(), path.end(), executable_cstr); 
+    executable_cstr[path.size()] = '\0';
 
     int pid = fork();
     if(pid == 0)
