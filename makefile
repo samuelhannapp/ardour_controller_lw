@@ -1,7 +1,7 @@
 build_dir = /home/samuel/ArdourOscController
 object_files = $(build_dir)/ArdourSenderReceiver.o  $(build_dir)/MackieSenderReceiverMidi.o $(build_dir)/MackieSenderReceiverUdp.o $(build_dir)/MidiSenderReceiver.o $(build_dir)/PluginMultiplexer.o
 
-all: ArdourSenderReceiver MackieSenderReceiverMidi MackieSenderReceiverUdp MidiSenderReceiver PluginMultiplexer Startup OscControllerMIDI OscControllerUDP BaseControllerDisplay BaseControllerGuiVersion GpControllerGuiVersion SpControllerGuiVersion PluginRoutingCustomizer
+all: ArdourSenderReceiver MackieSenderReceiverMidi MackieSenderReceiverUdp MidiSenderReceiver PluginMultiplexer Startup OscControllerMIDI OscControllerUDP BaseControllerDisplay BaseControllerGuiVersion GpControllerGuiVersion SpControllerGuiVersion PluginRoutingCustomizer CopyPluginData
 
 ArdourSenderReceiver: ArdourSenderReceiver.cpp
 	g++ -g -c -o $(build_dir)/ArdourSenderReceiver.o ArdourSenderReceiver.cpp -I/home/samuel/Osc-Sender-Receiver

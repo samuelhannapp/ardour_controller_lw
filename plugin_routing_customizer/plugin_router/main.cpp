@@ -173,7 +173,7 @@ void App::save_plugin_function(wxCommandEvent& event)
 {
 	std::fstream file;
 	#ifdef __linux__
-	std::string file_location("/home/samuel/Documents/plugin_data"); 
+	std::string file_location("plugin_data"); 
 	file_location.append("/");
 	#endif
 	#ifdef _WIN64
