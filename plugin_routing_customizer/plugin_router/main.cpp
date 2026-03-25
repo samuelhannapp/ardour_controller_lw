@@ -177,7 +177,7 @@ void App::save_plugin_function(wxCommandEvent& event)
 	file_location.append("/");
 	#endif
 	#ifdef _WIN64
-	std::string file_location("C:\\Users\\Samuel\\Documents\\plugin_data"); 
+	std::string file_location("plugin_data"); 
 	file_location.append("\\");
 	#endif
 	file_location.append(plugin_name->GetLabelText());

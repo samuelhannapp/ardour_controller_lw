@@ -79,7 +79,7 @@ int plugin_multiplexer_struct::get_controller_to_plugin(int controller_index)
 void plugin_multiplexer_struct::initialize_plugin_multiplexer()
 {
 #ifdef __linux__
-	std::string path = "/home/samuel/Documents/plugin_data";
+	std::string path = "plugin_data";
 #endif
 
 #ifdef _WIN64
