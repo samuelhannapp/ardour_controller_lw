@@ -324,7 +324,7 @@ void MyFrame::start_base_controller_udp(int index)
 void MyFrame::start_base_controller_midi(int index)
 {
     #ifdef _WIN64
-    std::string base_controller_exe_path = ("base_controller.exe");
+    std::string base_controller_exe_path = ("base_controller_midi_version.exe");
     std::string display_exe_path = ("mackie_display.exe");
     #endif
 

@@ -105,7 +105,7 @@ MidiSenderReceiver::MidiSenderReceiver(int port_in, int port_out)
 	
 
 if (result != MMSYSERR_NOERROR) {
-		printf("midiInOpen() failed...rv=%d");
+		printf("midiInOpen() failed...rv=%d", result);
 	}
 	else {
 		midiInStart(MidiDeviceIn);

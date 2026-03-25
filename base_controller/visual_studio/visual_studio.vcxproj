@@ -71,6 +71,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='midi_version|x64'">
     <OutDir>C:\Users\Samuel\Software\ArdourOscController_Build\windows_build</OutDir>
+    <TargetName>$(ProjectName)_$(Configuration)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='midi_version|Win32'">
     <ClCompile>

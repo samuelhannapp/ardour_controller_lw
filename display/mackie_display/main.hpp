@@ -43,7 +43,7 @@ public:
 
 private:
 	//this is only for the plugin_list...
-	int selected_channel = 0;
+	int selected_channel;
 	void adjust_window(wxSize size);
 	wxColor channel_not_selected_color;
 	wxColor channel_selected_color;

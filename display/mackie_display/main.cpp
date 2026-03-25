@@ -270,7 +270,7 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 
 		wxFont font = channel_name[0]->GetFont();
 		font.SetPointSize(8);	
-		int selected_plugin_nr;
+		int selected_plugin_nr = 0;
 		for(int i = 0; i < PLUGIN_COUNT; i++){
 			std::string label = plugin_names[this->selected_channel][i]->GetLabel().ToStdString();
 			if(!label.compare(this->selected_plugin_name))
