@@ -1,0 +1,3 @@
+[submodule "Osc-Sender-Receiver"]
+	path = Osc-Sender-Receiver
+	url = https://github.com/samuelhannapp/Osc-Sender-Receiver.git
