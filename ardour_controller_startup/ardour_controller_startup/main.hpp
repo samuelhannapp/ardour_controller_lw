@@ -45,7 +45,10 @@ public:
     const std::string sp_controller_string = "sp controller";
     const std::string mackie_controller_gui_version_string = "mackie controller gui";
 
+    //this is for linux
     std::vector<int> pids;
+    //this is for windows
+    std::vector<PROCESS_INFORMATION> process_information;
     
     std::vector<std::string>midi_in_devices;
     std::vector<std::string>midi_out_devices;

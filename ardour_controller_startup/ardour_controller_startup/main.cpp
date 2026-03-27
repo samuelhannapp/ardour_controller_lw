@@ -131,6 +131,8 @@ void MyFrame::OnExit(wxCommandEvent& event)
 		kill(pid, SIGKILL);
     #endif
     #ifdef _WIN64
+    for (PROCESS_INFORMATION process : process_information)
+        TerminateProcess(process.hProcess, 0);
     #endif
     Close(true);
 }
@@ -140,6 +142,10 @@ void MyFrame::OnClose(wxCloseEvent& event)
     #ifdef __linux__
     for(int pid : this->pids)
 		kill(pid, SIGTERM);
+    #endif
+    #ifdef _WIN64
+    for (PROCESS_INFORMATION process : process_information)
+        TerminateProcess(process.hProcess, 0);
     #endif
     event.Skip();
 }
@@ -271,7 +277,7 @@ void MyFrame::start_plugin_routing_customizer()
 void MyFrame::start_base_controller_udp(int index)
 {
     #ifdef _WIN64
-    std::string base_controller_exe_path = ("base_controller.exe");
+    std::string base_controller_exe_path = ("base_controller_udp_version.exe");
     std::string gui_controller_exe_path = ("gui_controller.exe");
     std::string display_exe_path = ("mackie_display.exe");
     #endif
@@ -523,87 +529,6 @@ void MyFrame::PrintMidiDevices() {
         status = snd_seq_query_next_client(seq_handle, info);
     }
 }
-/*
-void MyApp::PrintMidiDevices() {
-    int card = -1;
-
-    if (snd_card_next(&card) < 0 || card < 0) {
-        printf("No sound cards found\n");
-        return;
-    }
-
-    while (card >= 0) {
-        snd_ctl_t *ctl;
-        char name[32];
-        name[0] = 'h';
-        name[1] = 'w';
-        name[2] = ':';
-
-        std::string number = std::to_string(card);
-
-        for(int i = 0; i < number.size(); i++)
-            name[i + 3] = number[i];
-        
-        name[3 + number.size()] = 0;
-        name[3 + number.size() + 1] = 0;
-
-        //sprintf(name, "hw:%d", card);
-
-
-        if (snd_ctl_open(&ctl, name, 0) < 0) {
-            snd_card_next(&card);
-            continue;
-        }
-
-        int device = -1;
-
-        while (1) {
-            if (snd_ctl_rawmidi_next_device(ctl, &device) < 0)
-                break;
-
-            if (device < 0)
-                break;
-		    snd_rawmidi_stream_t asdf;	
-            for (int stream = 0; stream < 2; stream++) {
-                snd_rawmidi_info_t *info;
-                snd_rawmidi_info_alloca(&info);
-
-                snd_rawmidi_info_set_device(info, device);
-                snd_rawmidi_info_set_stream(info, asdf);
-                snd_rawmidi_info_set_subdevice(info, 0);
-                int problem = snd_ctl_rawmidi_info(ctl, info);
-                if (problem < 0)
-                    continue;
-
-                int subs = snd_rawmidi_info_get_subdevices_count(info);
-
-                for (int sub = 0; sub < subs; sub++) {
-                    snd_rawmidi_info_set_subdevice(info, sub);
-
-                    if (snd_ctl_rawmidi_info(ctl, info) == 0) {
-                        printf("Card %d, Device %d, Subdevice %d\n",
-                               card, device, sub);
-
-                        printf("  ID: %s\n",
-                               snd_rawmidi_info_get_id(info));
-                        printf("  Name: %s\n",
-                               snd_rawmidi_info_get_name(info));
-                        printf("  Subdevice name: %s\n",
-                               snd_rawmidi_info_get_subdevice_name(info));
-                    }
-                }
-            }
-        }
-
-        snd_ctl_close(ctl);
-        snd_card_next(&card);
-    }
-
-    return;
-}
-    */
-
-
 #endif
 
 #ifdef __linux__
@@ -618,35 +543,6 @@ void MyFrame::start_process(std::string path)
     if(pid == 0)
         execvp(executable_cstr, args);
 }
-
-//we maybe have to change the default to std::string and than convert it to wstring...
-//this whole wstring nonesense is so annoying...
-
-//we actually could justoscmessage do arguments with no content, and that would fulfill the purpose easier 
-//than having two seperate functions...
-/*
-void MyFrame::start_process(std::string path, std::vector<std::string> arguments)
-{
-
-    char executable_cstr[200];
-    std::copy(path.begin(), path.end(), executable_cstr); 
-    executable_cstr[path.size()] = '\0';
-
-    std::string program_name = path.substr(path.find_last_of('/') + 1, path.size());
-
-
-    char *args[10];
-    args[0] = program_name.data(); 
-    for(int i = 0; i < arguments.size(); i++)
-        args[i + 1] = arguments.at(i).data();
-
-    args[arguments.size() + 1] = NULL;
-
-    int pid = fork();
-    if(pid == 0)
-        execvp(executable_cstr, args);
-}
-*/
 
 //attemt with sudo...
 void MyFrame::start_process(std::string path, std::vector<std::string> arguments)
@@ -713,6 +609,7 @@ void MyFrame::start_process(std::string path)
         printf("CreateProcess failed (%d).\n", GetLastError());
         return;
     }
+    process_information.push_back(pi);
 
     // Wait until child process exits.
     //WaitForSingleObject(pi.hProcess, INFINITE);
@@ -774,6 +671,7 @@ void MyFrame::start_process(std::string path, std::vector<std::string> arguments
         printf("CreateProcess failed (%d).\n", GetLastError());
         return;
     }
+    process_information.push_back(pi);
 
     // Wait until child process exits.
     //WaitForSingleObject(pi.hProcess, INFINITE);
