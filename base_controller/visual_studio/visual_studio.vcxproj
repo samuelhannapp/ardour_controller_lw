@@ -122,7 +122,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;MACKIE_CONTROL_UDP_VERSION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\Samuel\Software\arduor_controller_lw;C:\Users\Samuel\Software\OscSenderReceiver;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Samuel\Software\arduor_controller_lw;C:\Users\Samuel\Software\arduor_controller_lw\Osc-Sender-Receiver;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,12 +142,12 @@
     <ClInclude Include="OscController.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\OscSenderReceiver\OscMessage.cpp" />
-    <ClCompile Include="..\..\..\OscSenderReceiver\OscSenderReceiver.cpp" />
-    <ClCompile Include="..\..\..\OscSenderReceiver\UdpSenderReceiver.cpp" />
     <ClCompile Include="..\..\ArdourSenderReceiver.cpp" />
     <ClCompile Include="..\..\MackieSenderReceiver.cpp" />
     <ClCompile Include="..\..\MidiSenderReceiver.cpp" />
+    <ClCompile Include="..\..\Osc-Sender-Receiver\OscMessage.cpp" />
+    <ClCompile Include="..\..\Osc-Sender-Receiver\OscSenderReceiver.cpp" />
+    <ClCompile Include="..\..\Osc-Sender-Receiver\UdpSenderReceiver.cpp" />
     <ClCompile Include="..\..\PluginMultiplexer.cpp" />
     <ClCompile Include="display.cpp" />
     <ClCompile Include="MackieControl.cpp" />

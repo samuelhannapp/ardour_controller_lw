@@ -26,19 +26,19 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\OscSenderReceiver\OscMessage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\OscSenderReceiver\OscSenderReceiver.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\PluginMultiplexer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\OscSenderReceiver\UdpSenderReceiver.cpp">
+    <ClCompile Include="..\..\Osc-Sender-Receiver\OscMessage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\OscSenderReceiver\wxOscReceiveThread.cpp">
+    <ClCompile Include="..\..\Osc-Sender-Receiver\OscSenderReceiver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Osc-Sender-Receiver\UdpSenderReceiver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Osc-Sender-Receiver\wxOscReceiveThread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
