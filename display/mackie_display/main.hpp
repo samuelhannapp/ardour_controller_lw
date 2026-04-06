@@ -65,7 +65,7 @@ private:
 	wxPanel* send_name_panel[CHANNEL_COUNT];
 	wxPanel* panel[CHANNEL_COUNT];
 	wxPanel* plugin_names_panel_main[CHANNEL_COUNT];
-	wxPanel* plugin_names_panel_individual[CHANNEL_COUNT];
+	wxPanel* plugin_names_panel_individual[CHANNEL_COUNT][PLUGIN_COUNT];
 	wxBoxSizer* plugin_names_sizer[CHANNEL_COUNT];
 
 	int space_size_side = SPACE_SIZE_SIDE;

@@ -79,9 +79,13 @@ MyFrame::MyFrame(std::string udp_port_in, std::string udp_port_out)
 		wxFont font_2 = channel_name[i]->GetFont();
 		font_2.SetPointSize(8);
 		for(int col = 0; col < PLUGIN_COUNT; col++){
-			plugin_names[i][col] = new wxStaticText(plugin_names_panel_main[i], wxID_ANY, " ", wxDefaultPosition, wxSize(200, 30), wxALIGN_LEFT);
+			
+			//plugin_names_sizer[i]->Add(plugin_names[i][col]);
+			plugin_names_panel_individual[i][col] = new wxPanel(plugin_names_panel_main[i], wxID_ANY, wxDefaultPosition, wxSize(200, 15), wxBORDER_SUNKEN);
+			plugin_names_sizer[i]->Add(plugin_names_panel_individual[i][col]);
+
+			plugin_names[i][col] = new wxStaticText(plugin_names_panel_individual[i][col], wxID_ANY, " ", wxDefaultPosition, wxSize(200, 15), wxALIGN_LEFT);
 			plugin_names[i][col]->SetFont(font_2);
-			plugin_names_sizer[i]->Add(plugin_names[i][col]);
 		}
 		
 		wxFont font = channel_name[i]->GetFont();

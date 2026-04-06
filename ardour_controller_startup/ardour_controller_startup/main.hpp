@@ -46,9 +46,13 @@ public:
     const std::string mackie_controller_gui_version_string = "mackie controller gui";
 
     //this is for linux
+    #ifdef __linux__
     std::vector<int> pids;
+    #endif
     //this is for windows
+    #ifdef _WIN64
     std::vector<PROCESS_INFORMATION> process_information;
+    #endif
     
     std::vector<std::string>midi_in_devices;
     std::vector<std::string>midi_out_devices;
