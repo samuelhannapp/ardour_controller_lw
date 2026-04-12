@@ -18,7 +18,6 @@ OscController::OscController(std::string destination_ip_address, unsigned int ud
 	this->local_strip_data.selected_strip.initialize_selected_strip_plugin_list();
 	this->local_strip_data.selected_strip.initialize_selected_strip();
 	this->plugin_multiplexer.initialize_plugin_multiplexer_from_controller_and_from_plugin();
-
     this->ardour_sender_receiver = ArdourSenderReceiver(destination_ip_address, udp_port_in, udp_port_out);
 #ifdef MACKIE_CONTROL_MIDI_VERSION
 	this->mackie_sender_receiver = new MackieControl(midi_port_in, midi_port_out);
@@ -91,11 +90,13 @@ void OscController::process_midi(MidiMessage message)
 						this->switch_channel_mode_without_updating_mackie(PanMode);
 						msg = OscMessage("/set_surface/strip_types");
 						msg.PushInt(1 << AudioBusses);
+						display_object.send_data(msg);
 						break;
 					case 2:
 						this->switch_channel_mode_without_updating_mackie(PanMode);
 						msg = OscMessage("/set_surface/strip_types");
 						msg.PushInt(1 << VCAs);
+						display_object.send_data(msg);
 						break;
 					case 3: //bank down
 						if(this->mode == PanMode)

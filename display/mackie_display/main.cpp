@@ -346,6 +346,14 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 			break;
 		}
 	}
+	if(!message.GetAddress().compare("/set_surface/strip_types"))
+	{
+		//that means we have to delete all plugin names...
+		for(int row = 0; row < CHANNEL_COUNT; row++)
+			for(int col = 0; col < PLUGIN_COUNT; col++)
+				plugin_names[row][col]->SetLabel(" ");
+	}
+	
 	
 }
 
