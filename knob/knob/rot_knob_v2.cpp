@@ -28,8 +28,7 @@ void rotary_knob::OnPaint(wxPaintEvent& event)
 {
     this->SetBackgroundColour(this->background_colour);
     wxPaintDC dc(this);
-    wxColour colour;
-    colour.Blue();
+    wxColour colour(0, 0, 0);
     wxPen pen(colour, 3);
     pen.SetWidth(2);
     dc.SetPen(pen);
