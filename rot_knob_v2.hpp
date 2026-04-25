@@ -27,7 +27,7 @@ private:
 	void OnPaint(wxPaintEvent& event);
 	void OnMouseEvent(wxMouseEvent& event);
 
-	
+	bool mouse_down;
 
 	wxEvtHandler* event_handler;
 

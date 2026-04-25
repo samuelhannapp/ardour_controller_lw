@@ -83,7 +83,7 @@ void plugin_multiplexer_struct::initialize_plugin_multiplexer()
 #endif
 
 #ifdef _WIN64
-	std::string path = "plugin_data";
+	std::string path = "C:\\Users\\Samuel\\Software\\ArdourOscController_Build\\windows_build\\plugin_data";
 #endif
 
 	std::vector<std::string> file_locations;

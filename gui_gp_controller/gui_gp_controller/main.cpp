@@ -2,6 +2,10 @@
 #include "OscMessage.hpp"
 #include "Defines.hpp"
 
+wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
+EVT_COMMAND(wxID_ANY, ROTARY_KNOB_UPDATED, MyFrame::OnRotary_Knob_Event)
+wxEND_EVENT_TABLE()
+
 bool MyApp::OnInit()
 {
 
@@ -24,11 +28,11 @@ MyFrame::MyFrame(std::string udp_input_port, std::string udp_output_port)
 	: wxFrame(nullptr, wxID_ANY, "General Purpose Controller (gp_controller)", wxDefaultPosition, wxSize(800, 400))
 {
 	main_layout = new wxBoxSizer(wxVERTICAL);
-	button_layout = new wxBoxSizer(wxHORIZONTAL);
-	label_layout = new wxBoxSizer(wxHORIZONTAL);
-	fader_layout = new wxBoxSizer(wxHORIZONTAL);
+	button_layout = new wxBoxSizer(wxVERTICAL);
+	//label_layout = new wxBoxSizer(wxHORIZONTAL);
+	fader_layout = new wxBoxSizer(wxVERTICAL);
 
-	plugin_name = new wxStaticText(this, wxID_ANY, "plugin_name", wxDefaultPosition, wxSize(200, 30));
+	plugin_name = new wxStaticText(this, wxID_ANY, "plugin_name", wxDefaultPosition, wxSize(120, 30));
 
 	bank_down = new wxButton(this, wxID_ANY, "bank down");
 	bank_up = new wxButton(this, wxID_ANY, "bank up");
@@ -44,17 +48,17 @@ MyFrame::MyFrame(std::string udp_input_port, std::string udp_output_port)
 	button_layout->Add(plugin_up);
 	
 	for (int i = 0; i < 16; i++) {
-		controller[i].name = new wxStaticText(this, wxID_ANY, "test", wxDefaultPosition, wxSize(100, 30));
-		controller[i].fader = new wxSlider(this, wxID_ANY, 20, 0, 1000, wxDefaultPosition, wxSize(100, 30));
+		//controller[i].name = new wxStaticText(this, wxID_ANY, "test", wxDefaultPosition, wxSize(100, 30));
+		controller[i].rotary_knob = new rotary_knob_modul(i, this, wxID_ANY, wxDefaultPosition, wxSize(100, 50), wxBORDER_RAISED);
 		controller[i].index = i + 1;
 		controller[i].handler = (wxEvtHandler*)this;
-		label_layout->Add(controller[i].name);
-		fader_layout->Add(controller[i].fader);
-		controller[i].fader->Bind(wxEVT_SLIDER, &instance::OnSlider, &controller[i]);
+		//label_layout->Add(controller[i].name);
+		fader_layout->Add(controller[i].rotary_knob);
+		//controller[i].fader->Bind(wxEVT_SLIDER, &instance::OnSlider, &controller[i]);
 	}
 	main_layout->Add(plugin_name);
 	main_layout->Add(button_layout);
-	main_layout->Add(label_layout);
+	//main_layout->Add(label_layout);
 	main_layout->Add(fader_layout);
 	this->SetSizerAndFit(main_layout);
 	this->osc_sender_receiver = new OscSenderReceiver("127.0.0.1", std::stoi(udp_input_port), std::stoi(udp_output_port));
@@ -108,8 +112,8 @@ void MyFrame::plugin_down_function(wxCommandEvent& event)
 void MyFrame::update_controller()
 {
 	for (int i = 0; i < CONTROLLER_SIZE; i++) {
-		controller[i].name->SetLabel(this->selected_plugin[i + (CONTROLLER_SIZE * bank) + 1].name);
-		controller[i].fader->SetValue(int(this->selected_plugin[i + (CONTROLLER_SIZE * bank) + 1].value * float(1000.0)));
+		controller[i].rotary_knob->set_text(this->selected_plugin[i + (CONTROLLER_SIZE * bank) + 1].name);
+		controller[i].rotary_knob->set_value(this->selected_plugin[i + (CONTROLLER_SIZE * bank) + 1].value);
 	}
 }
 
@@ -152,8 +156,10 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		if (plugin_parameter_id_routed <= 0)
 			return;	
 
-		if ((plugin_parameter_id_routed / CONTROLLER_SIZE) == bank)
-			this->controller[(plugin_parameter_id_routed - 1) % CONTROLLER_SIZE].name->SetLabel(plugin_parameter_name);
+		if ((plugin_parameter_id_routed / CONTROLLER_SIZE) == bank) {
+			//this->controller[(plugin_parameter_id_routed - 1) % CONTROLLER_SIZE].name->SetLabel(plugin_parameter_name);
+			this->controller[(plugin_parameter_id_routed - 1) % CONTROLLER_SIZE].rotary_knob->set_text(plugin_parameter_name);
+		}
 	}
 	else if (!osc_message.GetAddress().compare("/select/plugin/parameter")) {
 		int plugin_parameter_id = osc_message.get_int(0);
@@ -169,7 +175,7 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 			return;
 
 		if ((plugin_parameter_id_routed / CONTROLLER_SIZE) == bank )
-			this->controller[(plugin_parameter_id_routed - 1) % CONTROLLER_SIZE].fader->SetValue(plugin_parameter_value * 1000);
+			this->controller[(plugin_parameter_id_routed - 1) % CONTROLLER_SIZE].rotary_knob->set_value(plugin_parameter_value);
 	}
 	else if (!osc_message.GetAddress().compare("/wxSlider")) {
 		int index = osc_message.get_int(0);
@@ -197,4 +203,25 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		
 	}
 	return;
+}
+
+void MyFrame::OnRotary_Knob_Event(wxCommandEvent& event)
+{
+	int data = event.GetInt();
+	int id = event.GetId() + (bank * CONTROLLER_SIZE);
+	int plugin_parameter_id_routed = this->plugin_multiplexer->plugin_multiplexer_from_controller[id + 1];
+	OscMessage osc_message("/select/plugin/parameter");
+	
+	osc_message.PushInt(plugin_parameter_id_routed);
+	int value = data;
+	float value_float = (float(value) + 225.0) / 270.0;
+	osc_message.PushFloat(value_float);
+
+	//this should be automatically done every time something is pushed...
+	osc_message.FormatOscMessage(); 
+	this->osc_sender_receiver->send_data(osc_message);
+	//wxThreadEvent event_1 = wxThreadEvent(wxEVT_THREAD); // No specific id
+	//event_1.SetPayload(osc_message);
+	//wxQueueEvent(handler, event_1.Clone());
+
 }

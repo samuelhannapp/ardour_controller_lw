@@ -51,3 +51,5 @@ void MyFrame::OnRotary_Knob_Event(wxCommandEvent &event)
 
 	this->text_test->SetLabel(text);
 }
+
+

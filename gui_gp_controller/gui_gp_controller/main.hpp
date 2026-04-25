@@ -6,6 +6,7 @@
 #include "OscSenderReceiver.hpp"
 #include "PluginMultiplexer.hpp"
 #include <vector>
+#include "rotary_knob_modul.hpp"
 
 #define CHANNEL_COUNT 8
 #define MAX_PLUGIN_PARAMETERS 200
@@ -22,8 +23,9 @@ wxIMPLEMENT_APP(MyApp);
 int bank = 0;
 
 struct instance {
-	wxStaticText* name;
-	wxSlider* fader;
+	//wxStaticText* name;
+	//wxSlider* fader;
+	rotary_knob_modul *rotary_knob;
 	int index;
 	wxEvtHandler* handler;
 	void OnSlider(wxCommandEvent& event);
@@ -58,4 +60,6 @@ public:
 	plugin_multiplexer_struct* plugin_multiplexer;
 	std::string selected_plugin_name;
 	std::vector<std::string> plugin_list;
+	void OnRotary_Knob_Event(wxCommandEvent& event);
+	wxDECLARE_EVENT_TABLE();
 };

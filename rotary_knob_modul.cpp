@@ -14,9 +14,8 @@ rotary_knob_modul::rotary_knob_modul(int index, wxWindow* parent,
     panel_size.y = 20;
     this->panel = new wxPanel(parent, wxID_ANY, wxDefaultPosition, panel_size, wxBORDER_SUNKEN);
     this->text = new wxStaticText(this->panel, wxID_ANY, "test", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
-    this->Add(knob);
     this->Add(panel);
-
+    this->Add(knob);
 }
 
 void rotary_knob_modul::set_value(float value)

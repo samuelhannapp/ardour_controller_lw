@@ -22,6 +22,7 @@ rotary_knob::rotary_knob(int index, wxWindow* parent,
     this->event_handler = parent;
     this->background_colour = wxColor(255, 255, 255);
     this->knob_colour = wxColor(255, 255, 255);
+    this->mouse_down = false;
 }
 
 void rotary_knob::OnPaint(wxPaintEvent& event)
@@ -57,7 +58,7 @@ void rotary_knob::OnPaint(wxPaintEvent& event)
 
     dc.DrawCircle(center, radius);
     dc.DrawLine(center, point_2);
-
+    
 
     wxCommandEvent command_event(ROTARY_KNOB_UPDATED);
     command_event.SetInt(angle);
@@ -71,16 +72,18 @@ void rotary_knob::OnMouseEvent(wxMouseEvent& event)
 	wxPoint ptM(event.GetPosition());
     if (event.LeftDown()) {
             CaptureMouse();
+            this->mouse_down = true;
     }
     if (event.LeftUp()) {
             ReleaseMouse();
+            this->mouse_down = false;
     }
 
     if (event.LeftIsDown())
     {
         previous_point = new_point;
         new_point = ptM;
-        
+            
         this->Refresh();
     }
     else {
@@ -95,6 +98,8 @@ void rotary_knob::OnMouseEvent(wxMouseEvent& event)
 
 void rotary_knob::set_value(float value)
 {
+    if (this->mouse_down == true)
+        return;
     float temp_angle = range_rotation - (value * this->range_rotation);
     temp_angle = this->max_angle - temp_angle;
     this->angle = temp_angle;
