@@ -41,7 +41,7 @@ private:
 	void OnThreadUpdate(wxThreadEvent& event);
 	instance controller[CONTROLLER_SIZE];
 	void update_controller();
-	plugin_multiplexer_struct* plugin_multiplexer;
+	plugin_multiplexer_c* plugin_multiplexer;
 	std::string m_sp_controller_plugin_name;
 	std::string previous_selected_plugin_name;
 	std::string plugin_name_before_increment;

@@ -66,7 +66,7 @@ MyFrame::MyFrame(std::string udp_input_port, std::string udp_output_port)
 	receive_thread->Run();
 	Bind(wxEVT_THREAD, &MyFrame::OnThreadUpdate, this);
 
-	this->plugin_multiplexer = new plugin_multiplexer_struct;
+	this->plugin_multiplexer = new plugin_multiplexer_c;
 	this->plugin_multiplexer->initialize_plugin_multiplexer();
 	this->plugin_multiplexer->initialize_plugin_multiplexer_from_controller_and_from_plugin();
 

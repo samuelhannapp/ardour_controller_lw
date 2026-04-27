@@ -5,7 +5,13 @@
 #include <filesystem>
 
 
-void plugin_multiplexer_struct::setup(std::string plugin_name)
+plugin_multiplexer_c::plugin_multiplexer_c()
+{
+	this->initialize_plugin_multiplexer();
+	this->initialize_plugin_multiplexer_from_controller_and_from_plugin();
+}
+
+void plugin_multiplexer_c::setup(std::string plugin_name)
 {
 	unsigned int plugin_index = 0;
 	for(struct plugin_routing index : plugin_multiplexer){
@@ -50,14 +56,6 @@ void plugin_multiplexer_struct::setup(std::string plugin_name)
 	for(int i = 0; i < plugin_multiplexer.at(plugin_index).from_controller.size(); i++){
 		plugin_multiplexer_from_controller[i] = plugin_multiplexer.at(plugin_index).from_controller[i];
 	}
-	std::vector <std::pair<int, int >> list;
-	list.reserve(from_controller_size);
-	for (int i = 0; i < from_controller_size; i++) {
-		list.at(i).first = plugin_multiplexer_from_controller[i];
-		list.at(i).second = i;
-	}
-
-
 
 	for (int i = 0; i < from_controller_size; i++) {
 		plugin_multiplexer_from_plugin[plugin_multiplexer_from_controller[i]] = i;
@@ -65,7 +63,7 @@ void plugin_multiplexer_struct::setup(std::string plugin_name)
 	return;
 }
 
-int plugin_multiplexer_struct::get_plugin_to_controller(int plugin_index)
+int plugin_multiplexer_c::get_plugin_to_controller(int plugin_index)
 {
 	if (plugin_index < this->plugin_multiplexer_from_plugin.size())
 		return this->plugin_multiplexer_from_plugin[plugin_index];
@@ -73,7 +71,7 @@ int plugin_multiplexer_struct::get_plugin_to_controller(int plugin_index)
 		return 0;
 }
 
-int plugin_multiplexer_struct::get_controller_to_plugin(int controller_index)
+int plugin_multiplexer_c::get_controller_to_plugin(int controller_index)
 {
 	if (controller_index < this->plugin_multiplexer_from_controller.size())
 		return this->plugin_multiplexer_from_controller[controller_index];
@@ -81,7 +79,16 @@ int plugin_multiplexer_struct::get_controller_to_plugin(int controller_index)
 		return 0;
 }
 
-void plugin_multiplexer_struct::initialize_plugin_multiplexer()
+int plugin_multiplexer_c::get_controller_size()
+{
+	return this->plugin_multiplexer_from_controller.size();
+}
+int plugin_multiplexer_c::get_plugin_size()
+{
+	return this->plugin_multiplexer_from_plugin.size();
+}
+
+void plugin_multiplexer_c::initialize_plugin_multiplexer()
 {
 #ifdef __linux__
 	std::string path = "plugin_data";
@@ -128,7 +135,7 @@ void plugin_multiplexer_struct::initialize_plugin_multiplexer()
 	}
 }
 
-void plugin_multiplexer_struct::initialize_plugin_multiplexer_from_controller_and_from_plugin()
+void plugin_multiplexer_c::initialize_plugin_multiplexer_from_controller_and_from_plugin()
 {
 	for(int i = 0; i < MAX_PLUGIN_PARAMETERS; i++){
 		plugin_multiplexer_from_plugin.push_back(i);

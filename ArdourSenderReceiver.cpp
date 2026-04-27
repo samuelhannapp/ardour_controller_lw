@@ -2,7 +2,7 @@
 #include "PluginMultiplexer.hpp"
 
 //this one need's the plugin multiplexer...
-std::vector<std::string> selected_strip_struct::get_selected_plugin_parameter_names(plugin_multiplexer_struct *plugin_multiplexer)
+std::vector<std::string> selected_strip_struct::get_selected_plugin_parameter_names(plugin_multiplexer_c *plugin_multiplexer)
 {
 	std::vector<std::string> output;
 	for (int i = 1; i <= STRIPS_PER_CONTROLLER; i++) {

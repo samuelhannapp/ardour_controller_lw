@@ -43,7 +43,7 @@ public:
 	void reset_table_function();
 	void save_plugin_function(wxCommandEvent& event);
 
-	struct plugin_multiplexer_struct *plugin_multiplexer_obj;
+	struct plugin_multiplexer_c *plugin_multiplexer_obj;
 
 	//std::vector<plugin_routing> plugin_routing_list;
 	//void init_plugin_routing();

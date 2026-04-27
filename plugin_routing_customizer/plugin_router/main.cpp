@@ -11,9 +11,7 @@
 #define TABLE_COLS 8
 
 bool App::OnInit() {
-	plugin_multiplexer_obj = new plugin_multiplexer_struct;
-	plugin_multiplexer_obj->initialize_plugin_multiplexer();
-	plugin_multiplexer_obj->initialize_plugin_multiplexer_from_controller_and_from_plugin();
+	plugin_multiplexer_obj = new plugin_multiplexer_c;
 	//init_plugin_routing();
 	window = new wxFrame(NULL, wxID_ANY, "Plugin Router", wxDefaultPosition, wxSize(800, 400));
 	button_layout = new wxBoxSizer(wxHORIZONTAL);
@@ -95,24 +93,17 @@ void App::OnThreadUpdate(wxThreadEvent& event)
 			plugin_parameter_list->Delete(position + 1);
 		}
 	}
-	int ctr = 0;
 	if (!message.GetAddress().compare("/select/plugin/name")) {
 		reset_plugin_parameter_list();
 		reset_table_function();
-		std::string string(message.get_string(0));
-		plugin_name->SetLabel(string);
-			
-		for (plugin_routing plugin : plugin_multiplexer_obj->plugin_multiplexer)
-			if (!string.compare(plugin.plugin_name)) {
-				break;
-			}
-			else
-				ctr++;
+		std::string plugin_name_string(message.get_string(0));
+		plugin_name->SetLabel(plugin_name_string);
 
-		if (ctr != plugin_multiplexer_obj->plugin_multiplexer.size())
-			for (int r = 0; r < TABLE_ROWS; r++)
-				for (int c = 0; c < TABLE_COLS; c++)
-					table->SetCellValue(wxGridCellCoords(r, c), std::to_string(plugin_multiplexer_obj->plugin_multiplexer.at(ctr).from_controller[(r * TABLE_COLS) + c]));
+		plugin_multiplexer_obj->setup(plugin_name_string);
+
+		for (int r = 0; r < TABLE_ROWS; r++)
+			for (int c = 0; c < TABLE_COLS; c++)
+				table->SetCellValue(wxGridCellCoords(r, c), std::to_string(plugin_multiplexer_obj->get_controller_to_plugin((r * TABLE_COLS) + c)));
 	}
 }
 
@@ -199,8 +190,7 @@ void App::save_plugin_function(wxCommandEvent& event)
 	file << plugin_data;
 
 	file.close();
-	plugin_multiplexer_obj->initialize_plugin_multiplexer();
-	plugin_multiplexer_obj->initialize_plugin_multiplexer_from_controller_and_from_plugin();
+	//here has to be a reinitialisation of the object...
 }
 
 //we need a version of this function wich initializes a specific plugin, after it was saved...

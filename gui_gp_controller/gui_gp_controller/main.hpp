@@ -57,7 +57,7 @@ public:
 	plugin_parameter selected_plugin[MAX_PLUGIN_PARAMETERS];
 	instance controller[CONTROLLER_SIZE];
 	void update_controller();
-	plugin_multiplexer_struct* plugin_multiplexer;
+	plugin_multiplexer_c* plugin_multiplexer;
 	std::string selected_plugin_name;
 	std::vector<std::string> plugin_list;
 	void OnRotary_Knob_Event(wxCommandEvent& event);
