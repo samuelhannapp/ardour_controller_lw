@@ -66,9 +66,7 @@ MyFrame::MyFrame(std::string udp_input_port, std::string udp_output_port)
 	receive_thread->Run();
 	Bind(wxEVT_THREAD, &MyFrame::OnThreadUpdate, this);
 
-	this->plugin_multiplexer = new plugin_multiplexer_c;
-	this->plugin_multiplexer->initialize_plugin_multiplexer();
-	this->plugin_multiplexer->initialize_plugin_multiplexer_from_controller_and_from_plugin();
+	this->plugin_multiplexer = new plugin_multiplexer_c();
 
 	OscMessage setup_msg("/set_surface");
 	setup_msg.PushInt(1);
@@ -144,10 +142,10 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		int plugin_parameter_id = osc_message.get_int(0);
 		std::string plugin_parameter_name = osc_message.get_string(1);
 
-		if (plugin_parameter_id >= this->plugin_multiplexer->plugin_multiplexer_from_plugin.size())
+		if (plugin_parameter_id >= this->plugin_multiplexer->get_plugin_size())
 			return;	
 
-		int plugin_parameter_id_routed = this->plugin_multiplexer->plugin_multiplexer_from_plugin[plugin_parameter_id];
+		int plugin_parameter_id_routed = this->plugin_multiplexer->get_plugin_to_controller(plugin_parameter_id);
 		this->selected_plugin[plugin_parameter_id_routed].name = plugin_parameter_name;
 
 		if (plugin_parameter_id_routed >= MAX_PLUGIN_PARAMETERS)
@@ -165,10 +163,10 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		int plugin_parameter_id = osc_message.get_int(0);
 		float plugin_parameter_value = osc_message.initialize_type_list().at(1) == 'f' ? osc_message.get_float(1) : osc_message.get_double(1);
 			
-		if (plugin_parameter_id >= this->plugin_multiplexer->plugin_multiplexer_from_plugin.size())
+		if (plugin_parameter_id >= this->plugin_multiplexer->get_plugin_size())
 			return;	
 
-		int plugin_parameter_id_routed = this->plugin_multiplexer->plugin_multiplexer_from_plugin[plugin_parameter_id];
+		int plugin_parameter_id_routed = this->plugin_multiplexer->get_plugin_to_controller(plugin_parameter_id);
 		this->selected_plugin[plugin_parameter_id_routed].value = plugin_parameter_value;
 
 		if (plugin_parameter_id_routed <= 0)
@@ -180,7 +178,7 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 	else if (!osc_message.GetAddress().compare("/wxSlider")) {
 		int index = osc_message.get_int(0);
 		float value = (float)osc_message.get_float(1);
-		int plugin_parameter_id_routed = this->plugin_multiplexer->plugin_multiplexer_from_controller[index];
+		int plugin_parameter_id_routed = this->plugin_multiplexer->get_controller_to_plugin(index);
 
 		OscMessage osc_message_to_ardour("/select/plugin/parameter");
 		osc_message_to_ardour.PushInt(plugin_parameter_id_routed);
@@ -209,7 +207,7 @@ void MyFrame::OnRotary_Knob_Event(wxCommandEvent& event)
 {
 	int data = event.GetInt();
 	int id = event.GetId() + (bank * CONTROLLER_SIZE);
-	int plugin_parameter_id_routed = this->plugin_multiplexer->plugin_multiplexer_from_controller[id + 1];
+	int plugin_parameter_id_routed = this->plugin_multiplexer->get_controller_to_plugin(id);
 	OscMessage osc_message("/select/plugin/parameter");
 	
 	osc_message.PushInt(plugin_parameter_id_routed);

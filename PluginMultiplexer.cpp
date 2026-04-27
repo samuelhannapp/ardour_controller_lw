@@ -58,7 +58,7 @@ void plugin_multiplexer_c::setup(std::string plugin_name)
 	}
 
 	for (int i = 0; i < from_controller_size; i++) {
-		plugin_multiplexer_from_plugin[plugin_multiplexer_from_controller[i]] = i;
+		plugin_multiplexer_from_plugin[plugin_multiplexer_from_controller[i]] = i + 1;
 	}
 	return;
 }
