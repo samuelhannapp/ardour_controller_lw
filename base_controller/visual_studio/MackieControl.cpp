@@ -32,10 +32,10 @@ void MackieControl::update_display(const struct send *sends)
 	send_data(MidiMessage(mackie_display.MIDI_TX_SYSX_Buffer, 120));
 }
 
-void MackieControl::update_display(const plugin_parameter *selected_plugin, const plugin_multiplexer_c *plugin_multiplexer, int plugin_bank)
+void MackieControl::update_display(const plugin_parameter *selected_plugin, plugin_multiplexer_c *plugin_multiplexer, int plugin_bank)
 {
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		int plugin_parameter_id = plugin_multiplexer->plugin_multiplexer_from_controller[i + plugin_bank * STRIPS_PER_CONTROLLER + 1];
+		int plugin_parameter_id = plugin_multiplexer->get_controller_to_plugin(i + plugin_bank * STRIPS_PER_CONTROLLER + 1);
 		this->mackie_display.mackie_display_formated.at(i) = selected_plugin[plugin_parameter_id].name;
 	}
 	size_t position = 0;
@@ -48,10 +48,10 @@ void MackieControl::update_display(const plugin_parameter *selected_plugin, cons
 	send_data(MidiMessage(mackie_display.MIDI_TX_SYSX_Buffer, 120));
 }
 
-void MackieControl::update_faders(const plugin_parameter *selected_plugin, const plugin_multiplexer_c *plugin_multiplexer, int plugin_bank)
+void MackieControl::update_faders(const plugin_parameter *selected_plugin, plugin_multiplexer_c *plugin_multiplexer, int plugin_bank)
 {
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		int plugin_parameter_number = plugin_multiplexer->plugin_multiplexer_from_controller[i + ONE_BASED + STRIPS_PER_CONTROLLER * plugin_bank];
+		int plugin_parameter_number = plugin_multiplexer->get_controller_to_plugin(i + ONE_BASED + STRIPS_PER_CONTROLLER * plugin_bank);
 		float value = selected_plugin[plugin_parameter_number].value;
 		this->send_data(controller::PLUGIN_PARAMETER_VALUE, i + ONE_BASED, value);
 	}
@@ -86,10 +86,10 @@ void MackieControl::prepare_strip_names(const strip_feedback *strips)
 	}	
 }
 
-void MackieControl::prepare_selected_plugin_parameter_names(const selected_strip_struct *selected_strip, const plugin_multiplexer_c *plugin_multiplexer)
+void MackieControl::prepare_selected_plugin_parameter_names(const selected_strip_struct *selected_strip, plugin_multiplexer_c *plugin_multiplexer)
 {
 	for(int i = 0; i < STRIPS_PER_CONTROLLER; i++){
-		int plugin_parameter_id = plugin_multiplexer->plugin_multiplexer_from_controller[i + selected_strip->plugin_bank * STRIPS_PER_CONTROLLER + 1];
+		int plugin_parameter_id = plugin_multiplexer->get_controller_to_plugin(i + selected_strip->plugin_bank * STRIPS_PER_CONTROLLER + 1);
 		this->mackie_display.mackie_display_formated.at(i) = selected_strip->selected_plugin[plugin_parameter_id].name;
 	}
 	size_t position = 0;

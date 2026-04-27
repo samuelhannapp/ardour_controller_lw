@@ -71,7 +71,7 @@ public:
 	MackieControl *mackie_sender_receiver;
 	ArdourSenderReceiver ardour_sender_receiver;
 	display display_object;
-	struct plugin_multiplexer_c plugin_multiplexer;	
+	plugin_multiplexer_c *plugin_multiplexer;	
 	volatile enum channel_mode mode = PanMode;
 	void switch_channel_mode();
 	void switch_channel_mode_without_updating_mackie(channel_mode input);

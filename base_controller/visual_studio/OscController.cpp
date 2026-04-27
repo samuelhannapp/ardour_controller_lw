@@ -12,12 +12,11 @@
 
 OscController::OscController(std::string destination_ip_address, unsigned int udp_port_in, unsigned int udp_port_out, unsigned int midi_port_in, unsigned int midi_port_out, unsigned int display_port_in, unsigned int display_port_out)
 {
-	this->plugin_multiplexer.initialize_plugin_multiplexer();
+	this->plugin_multiplexer = new plugin_multiplexer_c;
 	this->local_strip_data.selected_strip.initialize_selected_plugin_descriptor();
 	this->local_strip_data.selected_strip.initialize_selected_strip_sends();
 	this->local_strip_data.selected_strip.initialize_selected_strip_plugin_list();
 	this->local_strip_data.selected_strip.initialize_selected_strip();
-	this->plugin_multiplexer.initialize_plugin_multiplexer_from_controller_and_from_plugin();
     this->ardour_sender_receiver = ArdourSenderReceiver(destination_ip_address, udp_port_in, udp_port_out);
 #ifdef MACKIE_CONTROL_MIDI_VERSION
 	this->mackie_sender_receiver = new MackieControl(midi_port_in, midi_port_out);
