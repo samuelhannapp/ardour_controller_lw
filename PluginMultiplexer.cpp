@@ -37,26 +37,30 @@ void plugin_multiplexer_struct::setup(std::string plugin_name)
 
 	////////////////////////////////////////////////////////////////////////////////////
 	int from_plugin_size = 0;
-	for(std::array<int, 2> temp : plugin_multiplexer.at(plugin_index).from_controller)
-		if(temp[1] > from_plugin_size)
-			from_plugin_size = temp[1];
+	for(int temp : plugin_multiplexer.at(plugin_index).from_controller)
+		if(temp > from_plugin_size)
+			from_plugin_size = temp;
 
 	plugin_multiplexer_from_plugin.resize(from_plugin_size + ONE_BASED, 0);
 
-	int from_controller_size = 0;
-	for(std::array<int, 2> temp : plugin_multiplexer.at(plugin_index).from_controller)
-		if(temp[0] > from_controller_size)
-			from_controller_size = temp[0];
-
+	int from_controller_size = plugin_multiplexer.at(plugin_index).from_controller.size();
 	plugin_multiplexer_from_controller.resize(from_controller_size + 1, 0);
 
 	////////////////////////////////////////////////////////////////////////////////////////////
-	for(std::array<int, 2> routing : plugin_multiplexer.at(plugin_index).from_controller){
-		plugin_multiplexer_from_controller[routing[0]] = routing[1];
+	for(int i = 0; i < plugin_multiplexer.at(plugin_index).from_controller.size(); i++){
+		plugin_multiplexer_from_controller[i] = plugin_multiplexer.at(plugin_index).from_controller[i];
+	}
+	std::vector <std::pair<int, int >> list;
+	list.reserve(from_controller_size);
+	for (int i = 0; i < from_controller_size; i++) {
+		list.at(i).first = plugin_multiplexer_from_controller[i];
+		list.at(i).second = i;
 	}
 
-	for(std::array<int, 2> routing : plugin_multiplexer.at(plugin_index).from_controller){
-		plugin_multiplexer_from_plugin[routing[1]] = routing[0];
+
+
+	for (int i = 0; i < from_controller_size; i++) {
+		plugin_multiplexer_from_plugin[plugin_multiplexer_from_controller[i]] = i;
 	}
 	return;
 }
@@ -68,6 +72,7 @@ int plugin_multiplexer_struct::get_plugin_to_controller(int plugin_index)
 	else 
 		return 0;
 }
+
 int plugin_multiplexer_struct::get_controller_to_plugin(int controller_index)
 {
 	if (controller_index < this->plugin_multiplexer_from_controller.size())
@@ -114,10 +119,8 @@ void plugin_multiplexer_struct::initialize_plugin_multiplexer()
 		plugin_multiplexer.at(temp_plugin_index).plugin_name = plugin_name;
 
 		std::ifstream file(file_location);
-		int parameter_index = 0;
 		while (std::getline(file, line)) {
-			parameter_index++;
-			plugin_multiplexer.at(temp_plugin_index).from_controller.push_back(std::array<int, 2>{parameter_index, std::stoi(line)});
+			plugin_multiplexer.at(temp_plugin_index).from_controller.push_back(std::stoi(line));
 		}
 
 		temp_plugin_index++;

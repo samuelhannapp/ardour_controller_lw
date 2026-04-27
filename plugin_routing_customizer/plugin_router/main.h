@@ -5,11 +5,13 @@
 #include <thread>
 #include <vector>
 #include "wxOscReceiveThread.h"
-
+#include "PluginMultiplexer.hpp"
+/*
 struct plugin_routing {
 	std::string plugin_name;
 	std::string routing_list[32];
 };
+*/
 
 class App : public wxApp {
 public:
@@ -41,8 +43,10 @@ public:
 	void reset_table_function();
 	void save_plugin_function(wxCommandEvent& event);
 
-	std::vector<plugin_routing> plugin_routing_list;
-	void init_plugin_routing();
+	struct plugin_multiplexer_struct *plugin_multiplexer_obj;
+
+	//std::vector<plugin_routing> plugin_routing_list;
+	//void init_plugin_routing();
 	void reset_plugin_parameter_list();
 };
 

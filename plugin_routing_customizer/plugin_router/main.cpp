@@ -11,7 +11,10 @@
 #define TABLE_COLS 8
 
 bool App::OnInit() {
-	init_plugin_routing();
+	plugin_multiplexer_obj = new plugin_multiplexer_struct;
+	plugin_multiplexer_obj->initialize_plugin_multiplexer();
+	plugin_multiplexer_obj->initialize_plugin_multiplexer_from_controller_and_from_plugin();
+	//init_plugin_routing();
 	window = new wxFrame(NULL, wxID_ANY, "Plugin Router", wxDefaultPosition, wxSize(800, 400));
 	button_layout = new wxBoxSizer(wxHORIZONTAL);
 	main_layout = new wxBoxSizer(wxVERTICAL);
@@ -99,17 +102,17 @@ void App::OnThreadUpdate(wxThreadEvent& event)
 		std::string string(message.get_string(0));
 		plugin_name->SetLabel(string);
 			
-		for (plugin_routing plugin : plugin_routing_list)
+		for (plugin_routing plugin : plugin_multiplexer_obj->plugin_multiplexer)
 			if (!string.compare(plugin.plugin_name)) {
 				break;
 			}
 			else
 				ctr++;
 
-		if (ctr != plugin_routing_list.size())
+		if (ctr != plugin_multiplexer_obj->plugin_multiplexer.size())
 			for (int r = 0; r < TABLE_ROWS; r++)
 				for (int c = 0; c < TABLE_COLS; c++)
-					table->SetCellValue(wxGridCellCoords(r, c), plugin_routing_list.at(ctr).routing_list[(r * TABLE_COLS) + c]);
+					table->SetCellValue(wxGridCellCoords(r, c), std::to_string(plugin_multiplexer_obj->plugin_multiplexer.at(ctr).from_controller[(r * TABLE_COLS) + c]));
 	}
 }
 
@@ -196,12 +199,13 @@ void App::save_plugin_function(wxCommandEvent& event)
 	file << plugin_data;
 
 	file.close();
-
-	init_plugin_routing();
+	plugin_multiplexer_obj->initialize_plugin_multiplexer();
+	plugin_multiplexer_obj->initialize_plugin_multiplexer_from_controller_and_from_plugin();
 }
 
 //we need a version of this function wich initializes a specific plugin, after it was saved...
 //another version would be, every time a new plugin is called we look it up on the disc...
+/*
 void App::init_plugin_routing()
 {
 	if(plugin_routing_list.size())
@@ -244,3 +248,4 @@ void App::init_plugin_routing()
 	}
 	return;
 }
+*/

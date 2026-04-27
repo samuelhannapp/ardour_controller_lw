@@ -30,9 +30,15 @@
     <ClCompile Include="..\..\Osc-Sender-Receiver\wxOscReceiveThread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\PluginMultiplexer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\PluginMultiplexer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

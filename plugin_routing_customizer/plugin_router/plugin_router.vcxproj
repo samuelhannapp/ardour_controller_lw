@@ -105,7 +105,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Samuel\Software\arduor_controller_lw\Osc-Sender-Receiver;C:\Users\Samuel\software\ardour_controller_lw\plugin_routing_customizer;C:\Users\Samuel\software\ardour_controller_lw;$(WXWIN)\include\msvc;$(WXWIN)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Samuel\Software\arduor_controller_lw\Osc-Sender-Receiver;C:\Users\Samuel\Software\ardour_controller_lw\plugin_routing_customizer;C:\Users\Samuel\Software\arduor_controller_lw;$(WXWIN)\include\msvc;$(WXWIN)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -136,9 +136,11 @@
     <ClCompile Include="..\..\Osc-Sender-Receiver\OscSenderReceiver.cpp" />
     <ClCompile Include="..\..\Osc-Sender-Receiver\UdpSenderReceiver.cpp" />
     <ClCompile Include="..\..\Osc-Sender-Receiver\wxOscReceiveThread.cpp" />
+    <ClCompile Include="..\..\PluginMultiplexer.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\PluginMultiplexer.hpp" />
     <ClInclude Include="main.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
