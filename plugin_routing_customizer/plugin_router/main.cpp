@@ -17,6 +17,8 @@ bool App::OnInit() {
 	button_layout = new wxBoxSizer(wxHORIZONTAL);
 	main_layout = new wxBoxSizer(wxVERTICAL);
 
+	rgb_mixer = new rgb_control_set(window);
+
 	selected_cell = wxGridCellCoords(0, 0);
 
 	plugin_name = new wxStaticText(window, wxID_ANY, "plugin_name\t\t");
@@ -39,6 +41,8 @@ bool App::OnInit() {
 	reset_table->Bind(wxEVT_BUTTON, &App::reset_table_function, this);
 	save_plugin->Bind(wxEVT_BUTTON, &App::save_plugin_function, this);
 
+	rgb_mixer->set_color_button->Bind(wxEVT_BUTTON, &App::color_selected, this);
+
 	button_layout->Add(plugin_name, 1);
 	button_layout->Add(plugin_down, 1);
 	button_layout->Add(plugin_up, 1);
@@ -49,6 +53,7 @@ bool App::OnInit() {
 	table = new wxGrid(window, wxID_ANY);
 	table->CreateGrid(TABLE_ROWS, TABLE_COLS);
 	main_layout->Add(button_layout);
+	main_layout->Add(rgb_mixer->rgb_layout);
 	main_layout->Add(plugin_parameter_list, 1);
 	main_layout->Add(table);
 	window->SetSizerAndFit(main_layout);
@@ -124,7 +129,6 @@ void App::plugin_parameter_selected(wxCommandEvent& event)
 	table->SetGridCursor(selected_cell);
 }
 
-
 void App::cell_selected(wxGridEvent& event)
 {
 	selected_cell = wxGridCellCoords(event.GetRow(), event.GetCol());
@@ -180,17 +184,35 @@ void App::save_plugin_function(wxCommandEvent& event)
 	std::string plugin_data;
 	for(int r = 0; r < TABLE_ROWS; r++)
 		for (int c = 0; c < TABLE_COLS; c++) {
+
 			std::string content(table->GetCellValue(wxGridCellCoords(r, c)).c_str());
+
 			if (content.size())
 				plugin_data.append(content);
 			else
 				plugin_data.push_back('0');
+			
+			int data[3];
+			this->rgb_mixer->get_rgb(data);
+
+			plugin_data.push_back(' ');
+			plugin_data.append(std::to_string(data[0]));
+			plugin_data.push_back(' ');
+			plugin_data.append(std::to_string(data[1]));
+			plugin_data.push_back(' ');
+			plugin_data.append(std::to_string(data[2]));
+
 			plugin_data.push_back('\n');
 		}
 	file << plugin_data;
 
 	file.close();
 	//here has to be a reinitialisation of the object...
+}
+
+void App::color_selected(wxCommandEvent& event)
+{
+	table->SetCellBackgroundColour(this->selected_cell.GetRow(), this->selected_cell.GetCol(),  this->rgb_mixer->set_color_button->GetBackgroundColour());
 }
 
 //we need a version of this function wich initializes a specific plugin, after it was saved...

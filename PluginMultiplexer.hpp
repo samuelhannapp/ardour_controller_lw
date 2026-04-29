@@ -19,13 +19,6 @@ struct plugin_parameter{
 
 struct plugin_routing{
 	std::string plugin_name;
-	//why do we actually need to contain the index in this struct????
-	//I think it's unnecessary because each controller has a defined knob count...
-	//that means, this list saved on the disk (from_controller), the index of the knob is
-	//the line number where the corresponding plugin_parameter_index is written in the file...
-	//in case there is no plugin_parameter corresponding to the respective knob, we just write 0...
-	//per line we can add than also other parameters as knob color, panel color, text background color, knob or switch mode...
-	//and for that we need multiple dimensions, but not for the index...
 	std::vector<int> from_controller; 
 	std::vector<int> knob_colour;
 	std::vector<int> panel_color;
@@ -44,7 +37,7 @@ public:
 private:
 	std::vector<unsigned char> plugin_multiplexer_from_plugin;
 	std::vector<unsigned char> plugin_multiplexer_from_controller;
-	
+
 	std::vector<plugin_routing> plugin_multiplexer;
 
 	void initialize_plugin_multiplexer();
