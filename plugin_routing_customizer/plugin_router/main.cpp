@@ -106,9 +106,15 @@ void App::OnThreadUpdate(wxThreadEvent& event)
 
 		plugin_multiplexer_obj->setup(plugin_name_string);
 
+
 		for (int r = 0; r < TABLE_ROWS; r++)
-			for (int c = 0; c < TABLE_COLS; c++)
-				table->SetCellValue(wxGridCellCoords(r, c), std::to_string(plugin_multiplexer_obj->get_controller_to_plugin((r * TABLE_COLS) + c)));
+			for (int c = 0; c < TABLE_COLS; c++) {
+				int index = (r * TABLE_COLS) + c;
+				table->SetCellValue(wxGridCellCoords(r, c), std::to_string(plugin_multiplexer_obj->get_controller_to_plugin(index)));
+				struct rgb_colour colour = plugin_multiplexer_obj->get_knob_colour(index);
+				wxColour wx_colour(colour.r, colour.g, colour.b);
+				table->SetCellBackgroundColour(r, c, wx_colour);
+			}
 	}
 }
 
@@ -175,7 +181,7 @@ void App::save_plugin_function(wxCommandEvent& event)
 	file_location.append("/");
 	#endif
 	#ifdef _WIN64
-	std::string file_location("plugin_data"); 
+	std::string file_location("C:\\Users\\Samuel\\Software\\ArdourOscController_Build\\windows_build\\plugin_data"); 
 	file_location.append("\\");
 	#endif
 	file_location.append(plugin_name->GetLabelText());
@@ -193,21 +199,21 @@ void App::save_plugin_function(wxCommandEvent& event)
 				plugin_data.push_back('0');
 			
 			int data[3];
-			this->rgb_mixer->get_rgb(data);
-
+			//this->rgb_mixer->get_rgb(data);
+			wxColour cell_colour = table->GetCellBackgroundColour(r, c);
 			plugin_data.push_back(' ');
-			plugin_data.append(std::to_string(data[0]));
+			plugin_data.append(std::to_string(cell_colour.Red()));
 			plugin_data.push_back(' ');
-			plugin_data.append(std::to_string(data[1]));
+			plugin_data.append(std::to_string(cell_colour.Green()));
 			plugin_data.push_back(' ');
-			plugin_data.append(std::to_string(data[2]));
+			plugin_data.append(std::to_string(cell_colour.Blue()));
 
 			plugin_data.push_back('\n');
 		}
 	file << plugin_data;
 
 	file.close();
-	//here has to be a reinitialisation of the object...
+	this->plugin_multiplexer_obj->initialize_plugin_multiplexer();
 }
 
 void App::color_selected(wxCommandEvent& event)

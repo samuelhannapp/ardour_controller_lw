@@ -23,6 +23,8 @@ void plugin_multiplexer_c::setup(std::string plugin_name)
 	////////////////////////////////////////////////////////////////////////////
 	plugin_multiplexer_from_plugin.clear();
 	plugin_multiplexer_from_controller.clear();
+	knob_colour.clear();
+
 
 	////////////////////////////////////////////////////////////////////////////////
 	bool plugin_routing_does_not_exist = plugin_index == plugin_multiplexer.size();
@@ -52,6 +54,13 @@ void plugin_multiplexer_c::setup(std::string plugin_name)
 	int from_controller_size = plugin_multiplexer.at(plugin_index).from_controller.size();
 	plugin_multiplexer_from_controller.resize(from_controller_size + 1, 0);
 
+	int knob_colour_size = plugin_multiplexer.at(plugin_index).knob_colour.size();
+	struct rgb_colour standart_colour;
+	standart_colour.r = 255;
+	standart_colour.g = 255;
+	standart_colour.b = 255;
+	this->knob_colour.resize(knob_colour_size + 1, standart_colour);
+
 	////////////////////////////////////////////////////////////////////////////////////////////
 	for(int i = 0; i < plugin_multiplexer.at(plugin_index).from_controller.size(); i++){
 		plugin_multiplexer_from_controller[i] = plugin_multiplexer.at(plugin_index).from_controller[i];
@@ -60,21 +69,33 @@ void plugin_multiplexer_c::setup(std::string plugin_name)
 	for (int i = 0; i < from_controller_size; i++) {
 		plugin_multiplexer_from_plugin[plugin_multiplexer_from_controller[i]] = i + 1;
 	}
+
+	for (int i = 0; i < knob_colour_size; i++)
+		knob_colour.at(i) = plugin_multiplexer.at(plugin_index).knob_colour[i];
+
 	return;
 }
 
-int plugin_multiplexer_c::get_plugin_to_controller(int plugin_index)
+int plugin_multiplexer_c::get_plugin_to_controller(int plugin_parameter_index)
 {
-	if (plugin_index < this->plugin_multiplexer_from_plugin.size())
-		return this->plugin_multiplexer_from_plugin[plugin_index];
+	if (plugin_parameter_index < this->plugin_multiplexer_from_plugin.size())
+		return this->plugin_multiplexer_from_plugin[plugin_parameter_index];
 	else 
 		return 0;
 }
 
-int plugin_multiplexer_c::get_controller_to_plugin(int controller_index)
+struct rgb_colour plugin_multiplexer_c::get_knob_colour(int controller_parameter_index)
 {
-	if (controller_index < this->plugin_multiplexer_from_controller.size())
-		return this->plugin_multiplexer_from_controller[controller_index];
+	if(this->knob_colour.size() > 1)
+		return this->knob_colour.at(controller_parameter_index);
+
+	return this->knob_colour[0];
+}
+
+int plugin_multiplexer_c::get_controller_to_plugin(int controller_knob_index)
+{
+	if (controller_knob_index < this->plugin_multiplexer_from_controller.size())
+		return this->plugin_multiplexer_from_controller[controller_knob_index];
 	else 
 		return 0;
 }
@@ -83,9 +104,23 @@ int plugin_multiplexer_c::get_controller_size()
 {
 	return this->plugin_multiplexer_from_controller.size();
 }
+
 int plugin_multiplexer_c::get_plugin_size()
 {
 	return this->plugin_multiplexer_from_plugin.size();
+}
+
+std::vector<int> plugin_multiplexer_c::split_string(std::string line)
+{
+	std::vector<int> list;
+	std::size_t chars_processed = 1;
+
+	while (line.size()) {
+		list.push_back(std::stoi(line, &chars_processed));
+		line.erase(0, int(chars_processed));
+	}
+
+	return list;
 }
 
 void plugin_multiplexer_c::initialize_plugin_multiplexer()
@@ -101,9 +136,13 @@ void plugin_multiplexer_c::initialize_plugin_multiplexer()
 	std::vector<std::string> file_locations;
 	for (const auto& entry : std::filesystem::directory_iterator(path))
 		file_locations.push_back(entry.path().string());
+	
+	plugin_multiplexer.erase(plugin_multiplexer.begin(), plugin_multiplexer.end());
 
 	struct plugin_routing temp;
 	plugin_multiplexer.resize(file_locations.size(), temp);
+
+
 
 	std::string line;
 	int temp_plugin_index = 0;
@@ -127,7 +166,17 @@ void plugin_multiplexer_c::initialize_plugin_multiplexer()
 
 		std::ifstream file(file_location);
 		while (std::getline(file, line)) {
+			std::vector<int> list = split_string(line);
 			plugin_multiplexer.at(temp_plugin_index).from_controller.push_back(std::stoi(line));
+
+			if (list.size() == 4) {
+				struct rgb_colour temp_knob_colour;
+				temp_knob_colour.r = list[1];
+				temp_knob_colour.g = list[2];
+				temp_knob_colour.b = list[3];
+				plugin_multiplexer.at(temp_plugin_index).knob_colour.push_back(temp_knob_colour);
+			}
+						
 		}
 
 		temp_plugin_index++;
