@@ -61,5 +61,6 @@ public:
 	std::string selected_plugin_name;
 	std::vector<std::string> plugin_list;
 	void OnRotary_Knob_Event(wxCommandEvent& event);
+	void reset_controller();
 	wxDECLARE_EVENT_TABLE();
 };

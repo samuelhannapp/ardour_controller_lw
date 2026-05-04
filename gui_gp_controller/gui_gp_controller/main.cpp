@@ -112,6 +112,8 @@ void MyFrame::update_controller()
 	for (int i = 0; i < CONTROLLER_SIZE; i++) {
 		controller[i].rotary_knob->set_text(this->selected_plugin[i + (CONTROLLER_SIZE * bank) + 1].name);
 		controller[i].rotary_knob->set_value(this->selected_plugin[i + (CONTROLLER_SIZE * bank) + 1].value);
+		struct rgb_colour colour = plugin_multiplexer->get_knob_colour(i + (CONTROLLER_SIZE * bank) + 1);
+		controller[i].rotary_knob->set_knob_colour(wxColour(colour.r, colour.g, colour.b));
 	}
 }
 
@@ -168,12 +170,17 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 
 		int plugin_parameter_id_routed = this->plugin_multiplexer->get_plugin_to_controller(plugin_parameter_id);
 		this->selected_plugin[plugin_parameter_id_routed].value = plugin_parameter_value;
+		
 
 		if (plugin_parameter_id_routed <= 0)
 			return;
 
-		if ((plugin_parameter_id_routed / CONTROLLER_SIZE) == bank )
+		if ((plugin_parameter_id_routed / CONTROLLER_SIZE) == bank) {
 			this->controller[(plugin_parameter_id_routed - 1) % CONTROLLER_SIZE].rotary_knob->set_value(plugin_parameter_value);
+			//I update here the knob colour at the same time of the plugin_parameter
+			struct rgb_colour colour = plugin_multiplexer->get_knob_colour(plugin_parameter_id_routed);
+			controller[plugin_parameter_id_routed - 1].rotary_knob->set_knob_colour(wxColour(colour.r, colour.g, colour.b));
+		}
 	}
 	else if (!osc_message.GetAddress().compare("/wxSlider")) {
 		int index = osc_message.get_int(0);
@@ -198,9 +205,19 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		if (this->selected_plugin_name == plugin_name) //everything is already setup...
 			return;
 		this->selected_plugin_name = plugin_name;
-		
+		this->reset_controller();
 	}
 	return;
+}
+
+void MyFrame::reset_controller()
+{
+	for (int i = 0; i < CONTROLLER_SIZE; i++) {
+		this->controller[i].rotary_knob->set_value(0.5);
+		this->controller[i].rotary_knob->set_text(" ");
+		this->controller[i].rotary_knob->set_knob_colour(wxColour(255, 255, 255));
+	}
+
 }
 
 void MyFrame::OnRotary_Knob_Event(wxCommandEvent& event)

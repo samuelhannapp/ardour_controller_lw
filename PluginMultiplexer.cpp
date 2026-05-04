@@ -92,6 +92,11 @@ struct rgb_colour plugin_multiplexer_c::get_knob_colour(int controller_parameter
 	return this->knob_colour[0];
 }
 
+std::vector<struct rgb_colour> plugin_multiplexer_c::get_knob_colour_list()
+{
+	return this->knob_colour;
+}
+
 int plugin_multiplexer_c::get_controller_to_plugin(int controller_knob_index)
 {
 	if (controller_knob_index < this->plugin_multiplexer_from_controller.size())

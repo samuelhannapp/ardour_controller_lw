@@ -35,6 +35,7 @@ public:
 	void initialize_plugin_multiplexer();
 	int get_plugin_to_controller(int plugin_parameter_index);
 	struct rgb_colour get_knob_colour(int controller_parameter_index);
+	std::vector<struct rgb_colour> get_knob_colour_list();
 	int get_controller_to_plugin(int controller_index);
 	void setup(std::string plugin_name);
 	int get_controller_size();
