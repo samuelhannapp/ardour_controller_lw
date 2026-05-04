@@ -116,6 +116,8 @@ public:
 	void save_plugin_function(wxCommandEvent& event);
 	void color_selected(wxCommandEvent& event);
 
+	void increment_seleced_cell();
+
 	struct plugin_multiplexer_c *plugin_multiplexer_obj;
 
 	//std::vector<plugin_routing> plugin_routing_list;

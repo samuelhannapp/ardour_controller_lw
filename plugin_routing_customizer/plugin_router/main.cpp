@@ -125,14 +125,19 @@ void App::reset_plugin_parameter_list()
 			//plugin_parameter_list->Append("default\t\t");
 }
 
-void App::plugin_parameter_selected(wxCommandEvent& event)
+void App::increment_seleced_cell()
 {
-	table->SetCellValue(selected_cell, event.GetString());
 	int nr = (selected_cell.GetRow() * TABLE_COLS) + selected_cell.GetCol();
 	nr++;
 	selected_cell.SetRow(nr / TABLE_COLS);
 	selected_cell.SetCol(nr % TABLE_COLS);
 	table->SetGridCursor(selected_cell);
+}
+
+void App::plugin_parameter_selected(wxCommandEvent& event)
+{
+	table->SetCellValue(selected_cell, event.GetString());
+	increment_seleced_cell();
 }
 
 void App::cell_selected(wxGridEvent& event)
@@ -219,6 +224,7 @@ void App::save_plugin_function(wxCommandEvent& event)
 void App::color_selected(wxCommandEvent& event)
 {
 	table->SetCellBackgroundColour(this->selected_cell.GetRow(), this->selected_cell.GetCol(),  this->rgb_mixer->set_color_button->GetBackgroundColour());
+	increment_seleced_cell();
 }
 
 //we need a version of this function wich initializes a specific plugin, after it was saved...

@@ -136,6 +136,7 @@ void plugin_multiplexer_c::initialize_plugin_multiplexer()
 
 #ifdef _WIN64
 	std::string path = "C:\\Users\\Samuel\\Software\\ArdourOscController_Build\\windows_build\\plugin_data";
+	//std::string path = "plugin_data";
 #endif
 
 	std::vector<std::string> file_locations;

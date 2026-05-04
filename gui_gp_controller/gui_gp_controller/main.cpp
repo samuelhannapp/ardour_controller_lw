@@ -109,10 +109,11 @@ void MyFrame::plugin_down_function(wxCommandEvent& event)
 
 void MyFrame::update_controller()
 {
+	this->reset_controller();
 	for (int i = 0; i < CONTROLLER_SIZE; i++) {
 		controller[i].rotary_knob->set_text(this->selected_plugin[i + (CONTROLLER_SIZE * bank) + 1].name);
 		controller[i].rotary_knob->set_value(this->selected_plugin[i + (CONTROLLER_SIZE * bank) + 1].value);
-		struct rgb_colour colour = plugin_multiplexer->get_knob_colour(i + (CONTROLLER_SIZE * bank) + 1);
+		struct rgb_colour colour = plugin_multiplexer->get_knob_colour(i + (CONTROLLER_SIZE * bank));
 		controller[i].rotary_knob->set_knob_colour(wxColour(colour.r, colour.g, colour.b));
 	}
 }
@@ -178,7 +179,7 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		if ((plugin_parameter_id_routed / CONTROLLER_SIZE) == bank) {
 			this->controller[(plugin_parameter_id_routed - 1) % CONTROLLER_SIZE].rotary_knob->set_value(plugin_parameter_value);
 			//I update here the knob colour at the same time of the plugin_parameter
-			struct rgb_colour colour = plugin_multiplexer->get_knob_colour(plugin_parameter_id_routed);
+			struct rgb_colour colour = plugin_multiplexer->get_knob_colour(plugin_parameter_id_routed - 1);
 			controller[plugin_parameter_id_routed - 1].rotary_knob->set_knob_colour(wxColour(colour.r, colour.g, colour.b));
 		}
 	}
@@ -198,7 +199,7 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		std::string plugin_name = osc_message.get_string(0);
 		if (plugin_name.size() == 1)
 			return;
-	
+		this->clear_cache();
 		this->plugin_multiplexer->setup(plugin_name);
 
 		this->plugin_name->SetLabel(plugin_name);
@@ -210,6 +211,7 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 	return;
 }
 
+//thats guis data
 void MyFrame::reset_controller()
 {
 	for (int i = 0; i < CONTROLLER_SIZE; i++) {
@@ -217,8 +219,18 @@ void MyFrame::reset_controller()
 		this->controller[i].rotary_knob->set_text(" ");
 		this->controller[i].rotary_knob->set_knob_colour(wxColour(255, 255, 255));
 	}
-
 }
+
+//thats local data
+void MyFrame::clear_cache()
+{
+	for (int i = 0; i < MAX_PLUGIN_PARAMETERS; i++){
+		this->selected_plugin[i].name = std::string(" ");
+		this->selected_plugin[i].value = 0;
+}
+}
+
+
 
 void MyFrame::OnRotary_Knob_Event(wxCommandEvent& event)
 {
