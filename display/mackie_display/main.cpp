@@ -127,7 +127,7 @@ MyFrame::MyFrame(std::string udp_port_in, std::string udp_port_out)
 	file_name_scaling = std::string("/home/samuel/Documents/display_scaling.txt");
 	#endif
 	#ifdef _WIN64
-	file_name_scaling = std::string("C:\\Users\\Samuel\\Documents\\display_scaling.txt");
+	file_name_scaling = std::string("display_scaling.txt");
 	#endif
 	std::ifstream file(file_name_scaling);
 	if (file.is_open()) {
