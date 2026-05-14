@@ -72,9 +72,23 @@ void start_encoder(int encoder_nr)
 	encoder[encoder_nr]->CR1 |= TIM_CR1_CEN;
 }
 
+int there_was_enough_time_since_the_last_transmission()
+{
+	static int previous_tick_value = 0;
+	int temp_tick_value = HAL_GetTick();
+	int difference = temp_tick_value - previous_tick_value;
+
+	if(difference > 20){
+		previous_tick_value = temp_tick_value;
+		return 1;
+	}
+
+	return 0;
+}
+
 int did_encoder_change(int encoder_nr)
 {
-	uint16_t previous_encoder_value[ENCODER_QUANTITY] = {0};
+	static uint16_t previous_encoder_value[ENCODER_QUANTITY] = {0};
 	uint16_t temp_encoder_value = encoder[encoder_nr]->CNT;
 
 	if(temp_encoder_value == previous_encoder_value[encoder_nr])
@@ -160,10 +174,13 @@ int main(void)
 
   while (1)
   {
+	  counter++;
 	  int encoder_nr = counter % ENCODER_QUANTITY;
 
+
 	  if(did_encoder_change(encoder_nr))
-		  send_new_value(encoder_nr);
+		  if(there_was_enough_time_since_the_last_transmission())
+			  send_new_value(encoder_nr);
 
     /* USER CODE END WHILE */
 

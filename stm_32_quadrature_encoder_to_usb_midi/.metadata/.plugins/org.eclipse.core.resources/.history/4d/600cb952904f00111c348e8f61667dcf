@@ -65,7 +65,47 @@ static void MX_TIM4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+TIM_TypeDef *encoder[ENCODER_QUANTITY];
 
+void start_encoder(int encoder_nr)
+{
+	encoder[encoder_nr]->CR1 |= TIM_CR1_CEN;
+}
+
+int did_encoder_change(int encoder_nr)
+{
+	uint16_t previous_encoder_value[ENCODER_QUANTITY] = {0};
+	uint16_t temp_encoder_value = encoder[encoder_nr]->CNT;
+
+	if(temp_encoder_value == previous_encoder_value[encoder_nr])
+		return 0;
+
+	previous_encoder_value[encoder_nr] = temp_encoder_value;
+	return 1;
+}
+
+void send_new_value(int encoder_nr)
+{
+	int encoder_value = encoder[encoder_nr]->CNT;
+	uint8_t cable = 0;
+	uint8_t code = 0xE;
+	uint8_t message = 0xE;
+	uint8_t channel = encoder_nr;
+	uint8_t data_1 = (encoder_value & 0b11111110000000) >> 7;
+	uint8_t data_2 = encoder_value & 0b00000001111111;
+	uint8_t packetsBuffer[4] = {
+		// cable - represents the physical/virtual input port number (0 - 15) of the device
+		// code - in general cases is equal to the midi message
+		(cable << 4) | code,
+		(message << 4) | channel,
+		data_2,
+		data_1
+	};
+
+	  while (USBD_MIDI_GetState(&hUsbDeviceFS) != MIDI_IDLE) {};
+	  USBD_MIDI_SendPackets(&hUsbDeviceFS, packetsBuffer, 4);
+	  return;
+}
 /* USER CODE END 0 */
 
 /**
@@ -103,41 +143,28 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
-  TIM1->CR1 |= TIM_CR1_CEN;
+  encoder[0] = TIM1;
+  encoder[1] = TIM2;
+  encoder[2] = TIM3;
+  encoder[3] = TIM4;
+  for(int encoder_nr = 0; encoder_nr < ENCODER_QUANTITY; encoder_nr++)
+	  start_encoder(encoder_nr);
+
+  int counter = 0;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  int counter = 0;
-  int previous_value[4];
+
+
   while (1)
   {
-	  if(did_encoder_change(TIM_1)){
+	  int encoder_nr = counter % ENCODER_QUANTITY;
 
-	  }
-	  }
-	  int encoder_value = TIM1->CNT;
-	  if(encoder_value == 20)
-		  continue;
-	  uint8_t cable = 0;
-	  uint8_t code = 0xE;
-	  uint8_t message = 0xE;
-	  uint8_t channel = 0;
-	  uint8_t data_1 = (encoder_value & 0b11111110000000) >> 7;
-	  uint8_t data_2 = encoder_value & 0b00000001111111;
-	  uint8_t packetsBuffer[4] = {
-		  // cable - represents the physical/virtual input port number (0 - 15) of the device
-		  // code - in general cases is equal to the midi message
-		  (cable << 4) | code,
-		  (message << 4) | channel,
-		  data_2,
-		  data_1
-	  };
-
-	  if(!(counter++ % 10000)){
-		  while (USBD_MIDI_GetState(&hUsbDeviceFS) != MIDI_IDLE) {};
-		  USBD_MIDI_SendPackets(&hUsbDeviceFS, packetsBuffer, 4);
-	  }
+	  if(did_encoder_change(encoder_nr))
+		  ;
+		  //send_new_value(encoder_nr);
 
     /* USER CODE END WHILE */
 

@@ -1,18 +1,10 @@
-18:01:49 **** Incremental Build of configuration Debug for project quadrature_to_usb_midi ****
+15:05:45 **** Incremental Build of configuration Debug for project quadrature_to_usb_midi ****
 make -j28 all 
-arm-none-eabi-gcc "../USB_DEVICE/Target/usbd_conf.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I"C:/Users/Samuel/Software/arduor_controller_lw/stm_32_quadrature_encoder_to_usb_midi/quadrature_to_usb_midi/Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc" -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I../USB_DEVICE/App -I../USB_DEVICE/Target -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"USB_DEVICE/Target/usbd_conf.d" -MT"USB_DEVICE/Target/usbd_conf.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "USB_DEVICE/Target/usbd_conf.o"
-arm-none-eabi-gcc "../USB_DEVICE/App/usb_device.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I"C:/Users/Samuel/Software/arduor_controller_lw/stm_32_quadrature_encoder_to_usb_midi/quadrature_to_usb_midi/Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc" -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I../USB_DEVICE/App -I../USB_DEVICE/Target -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"USB_DEVICE/App/usb_device.d" -MT"USB_DEVICE/App/usb_device.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "USB_DEVICE/App/usb_device.o"
-arm-none-eabi-gcc -o "quadrature_to_usb_midi.elf" @"objects.list"   -mcpu=cortex-m3 -T"C:\Users\Samuel\Software\arduor_controller_lw\stm_32_quadrature_encoder_to_usb_midi\quadrature_to_usb_midi\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="quadrature_to_usb_midi.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Finished building target: quadrature_to_usb_midi.elf
- 
 arm-none-eabi-size  quadrature_to_usb_midi.elf 
-arm-none-eabi-objdump -h -S quadrature_to_usb_midi.elf  > "quadrature_to_usb_midi.list"
    text	   data	    bss	    dec	    hex	filename
-  31100	    244	   3908	  35252	   89b4	quadrature_to_usb_midi.elf
+  31156	    244	   3924	  35324	   89fc	quadrature_to_usb_midi.elf
 Finished building: default.size.stdout
  
-Finished building: quadrature_to_usb_midi.list
- 
 
-18:01:50 Build Finished. 0 errors, 0 warnings. (took 1s.119ms)
+15:05:46 Build Finished. 0 errors, 0 warnings. (took 414ms)
 
