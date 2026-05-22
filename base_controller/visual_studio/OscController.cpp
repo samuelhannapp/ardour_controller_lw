@@ -20,6 +20,7 @@ OscController::OscController(std::string destination_ip_address, unsigned int ud
     this->ardour_sender_receiver = ArdourSenderReceiver(destination_ip_address, udp_port_in, udp_port_out);
 #ifdef MACKIE_CONTROL_MIDI_VERSION
 	this->mackie_sender_receiver = new MackieControl(midi_port_in, midi_port_out);
+
 #endif
 #ifdef MACKIE_CONTROL_UDP_VERSION
 	this->mackie_sender_receiver = new MackieControl("127.0.0.1", midi_port_in, midi_port_out);
@@ -208,7 +209,7 @@ void OscController::process_midi(MidiMessage message)
 		break;
 	case 0xC0: // Patch change
 	case 0xD0: // Channel Pressure
-	case 0xE0: // Pitch bend
+	case 0xE0: // Pitch bend (fader)
 		fader_nr = message.data[0] & 0xf;
 		value_14_bit = message.data[1] | (message.data[2] << 7);
 		value_float = float(value_14_bit / float(MAX_14_BIT));
@@ -219,7 +220,7 @@ void OscController::process_midi(MidiMessage message)
 		}
 		if(this->mode == PluginMode){
 			msg = OscMessage("/select/plugin/parameter");
-			int plugin_parameter_number = plugin_multiplexer->get_controller_to_plugin(fader_nr + 1 + STRIPS_PER_CONTROLLER * this->local_strip_data.selected_strip.plugin_bank);
+			int plugin_parameter_number = plugin_multiplexer->get_controller_to_plugin(fader_nr + STRIPS_PER_CONTROLLER * this->local_strip_data.selected_strip.plugin_bank);
 			if(!plugin_parameter_number)
                 break;
 			msg.PushInt(plugin_parameter_number);
@@ -386,7 +387,7 @@ void OscController::ardour_receive_thread()
 			int plugin_parameter_id = message.get_int(0);
 			float plugin_parameter_value = message.initialize_type_list().at(1) == 'f' ? message.get_float(1) : message.get_double(1);
 			local_strip_data.selected_strip.update_selected_strip(controller::PLUGIN_PARAMETER_VALUE, plugin_parameter_id, plugin_parameter_value);
-			if (plugin_parameter_id < plugin_multiplexer->get_controller_size()) {
+			if (plugin_parameter_id < plugin_multiplexer->get_plugin_size()) {
 				int fader_id = plugin_multiplexer->get_plugin_to_controller(plugin_parameter_id);
 				if (local_strip_data.selected_strip.controller_channel_nr_is_within_plugin_bank(fader_id) && (this->mode == PluginMode)) {
 					mackie_sender_receiver->send_data(controller::PLUGIN_PARAMETER_VALUE, fader_id, plugin_parameter_value);

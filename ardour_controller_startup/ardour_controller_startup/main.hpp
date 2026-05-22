@@ -42,6 +42,7 @@ public:
     
     const std::string plugin_routing_customizer_string = "plugin routing customizer";
     const std::string gp_controller_string = "gp controller";
+    const std::string gp_controller_midi_string = "STM32 Human interface";
     const std::string sp_controller_string = "sp controller";
     const std::string mackie_controller_gui_version_string = "mackie controller gui";
 

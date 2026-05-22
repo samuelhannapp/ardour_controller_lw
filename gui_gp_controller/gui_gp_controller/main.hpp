@@ -7,6 +7,8 @@
 #include "PluginMultiplexer.hpp"
 #include <vector>
 #include "rotary_knob_modul.hpp"
+#include "MidiSenderReceiver.hpp"
+#include "wxMidiReceiveThread.hpp"
 
 #define CHANNEL_COUNT 8
 #define MAX_PLUGIN_PARAMETERS 200
@@ -37,7 +39,7 @@ struct instance {
 class MyFrame : public wxFrame
 {
 public:
-	MyFrame(std::string udp_input_port, std::string udp_output_port);
+	MyFrame(std::string udp_input_port, std::string udp_output_port, std::string midi_port_in, std::string midi_port_out);
 	wxStaticText* plugin_name;
 	wxButton* bank_up;
 	wxButton* bank_down;
@@ -52,7 +54,9 @@ public:
 	wxBoxSizer* fader_layout;
 	wxBoxSizer* main_layout;
 	OscSenderReceiver* osc_sender_receiver;
+	MidiSenderReceiver* midi_receiver;
 	wxOscReceiveThread* receive_thread;
+	wxMidiReceiveThread* midi_receive_thread;
 	void OnThreadUpdate(wxThreadEvent& event);
 	plugin_parameter selected_plugin[MAX_PLUGIN_PARAMETERS];
 	instance controller[CONTROLLER_SIZE];
@@ -60,6 +64,7 @@ public:
 	plugin_multiplexer_c* plugin_multiplexer;
 	std::string selected_plugin_name;
 	std::vector<std::string> plugin_list;
+	int previous_value[CONTROLLER_SIZE * BANK_SIZE] = { 0 };
 	void OnRotary_Knob_Event(wxCommandEvent& event);
 	void reset_controller();
 	void clear_cache();

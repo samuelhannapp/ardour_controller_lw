@@ -97,8 +97,11 @@ if (result != MMSYSERR_NOERROR) {
 MidiSenderReceiver::MidiSenderReceiver(int port_in, int port_out)
 {
 	MMRESULT result;
+	int nMidiDeviceNum = midiInGetNumDevs();
+
 	//MidiSenderReceiver::PrintMidiDevices();//if there are none, later they have to be selected previously in the gui...
 	result = midiInOpen(&MidiDeviceIn, port_in, (DWORD_PTR)(void*)MidiInProc, 0, CALLBACK_FUNCTION);  
+	printf("result is %d", result);
 	struct midi_input temp;
 	temp.device = MidiDeviceIn;
 	midi_input_buffer.push_back(temp);

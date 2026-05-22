@@ -132,9 +132,11 @@
     <ClInclude Include="..\..\..\PluginMultiplexer.hpp" />
     <ClInclude Include="..\..\rotary_knob_modul.hpp" />
     <ClInclude Include="..\..\rot_knob_v2.hpp" />
+    <ClInclude Include="..\..\wxMidiReceiveThread.hpp" />
     <ClInclude Include="main.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\MidiSenderReceiver.cpp" />
     <ClCompile Include="..\..\Osc-Sender-Receiver\OscMessage.cpp" />
     <ClCompile Include="..\..\Osc-Sender-Receiver\OscSenderReceiver.cpp" />
     <ClCompile Include="..\..\Osc-Sender-Receiver\UdpSenderReceiver.cpp" />
@@ -142,6 +144,7 @@
     <ClCompile Include="..\..\PluginMultiplexer.cpp" />
     <ClCompile Include="..\..\rotary_knob_modul.cpp" />
     <ClCompile Include="..\..\rot_knob_v2.cpp" />
+    <ClCompile Include="..\..\wxMidiReceiveThread.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

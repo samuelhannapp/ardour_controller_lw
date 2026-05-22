@@ -33,6 +33,10 @@ struct MidiMessage {
 			this->data[i] = midi_data[i];
 		this->length = data_length;
 	}
+	MidiMessage() {
+		this->length = 0;
+		this->data[0] = 0;
+	}
 	unsigned char data[120];//max 120 for sysx of mackie control...
 	int length;
 };

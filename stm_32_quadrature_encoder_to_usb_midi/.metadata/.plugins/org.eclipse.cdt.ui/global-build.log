@@ -933,3 +933,154 @@ arm-none-eabi-size  quadrature_to_usb_midi.elf
   31156	    244	   3924	  35324	   89fc	quadrature_to_usb_midi.elf
 Finished building: default.size.stdout
  
+18:25:13 **** Build of configuration Debug for project quadrature_to_usb_midi ****
+make -j28 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I"C:/Users/Samuel/Software/arduor_controller_lw/stm_32_quadrature_encoder_to_usb_midi/quadrature_to_usb_midi/Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc" -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I../USB_DEVICE/App -I../USB_DEVICE/Target -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'store_new_value_as_previous':
+../Core/Src/main.c:132:6: warning: type of 'encoder_nr' defaults to 'int' [-Wimplicit-int]
+  132 | void store_new_value_as_previous(encoder_nr)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+arm-none-eabi-gcc -o "quadrature_to_usb_midi.elf" @"objects.list"   -mcpu=cortex-m3 -T"C:\Users\Samuel\Software\arduor_controller_lw\stm_32_quadrature_encoder_to_usb_midi\quadrature_to_usb_midi\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="quadrature_to_usb_midi.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: quadrature_to_usb_midi.elf
+ 
+arm-none-eabi-size  quadrature_to_usb_midi.elf 
+arm-none-eabi-objdump -h -S quadrature_to_usb_midi.elf  > "quadrature_to_usb_midi.list"
+   text	   data	    bss	    dec	    hex	filename
+  31260	    244	   3924	  35428	   8a64	quadrature_to_usb_midi.elf
+Finished building: default.size.stdout
+ 
+Finished building: quadrature_to_usb_midi.list
+ 
+18:25:32 **** Incremental Build of configuration Debug for project quadrature_to_usb_midi ****
+make -j28 all 
+arm-none-eabi-size  quadrature_to_usb_midi.elf 
+   text	   data	    bss	    dec	    hex	filename
+  31260	    244	   3924	  35428	   8a64	quadrature_to_usb_midi.elf
+Finished building: default.size.stdout
+ 
+18:28:31 **** Incremental Build of configuration Debug for project quadrature_to_usb_midi ****
+make -j28 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I"C:/Users/Samuel/Software/arduor_controller_lw/stm_32_quadrature_encoder_to_usb_midi/quadrature_to_usb_midi/Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc" -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I../USB_DEVICE/App -I../USB_DEVICE/Target -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'store_new_value_as_previous':
+../Core/Src/main.c:132:6: warning: type of 'encoder_nr' defaults to 'int' [-Wimplicit-int]
+  132 | void store_new_value_as_previous(encoder_nr)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+arm-none-eabi-gcc -o "quadrature_to_usb_midi.elf" @"objects.list"   -mcpu=cortex-m3 -T"C:\Users\Samuel\Software\arduor_controller_lw\stm_32_quadrature_encoder_to_usb_midi\quadrature_to_usb_midi\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="quadrature_to_usb_midi.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: quadrature_to_usb_midi.elf
+ 
+arm-none-eabi-size  quadrature_to_usb_midi.elf 
+arm-none-eabi-objdump -h -S quadrature_to_usb_midi.elf  > "quadrature_to_usb_midi.list"
+   text	   data	    bss	    dec	    hex	filename
+  31004	    244	   3924	  35172	   8964	quadrature_to_usb_midi.elf
+Finished building: default.size.stdout
+ 
+Finished building: quadrature_to_usb_midi.list
+ 
+18:32:02 **** Incremental Build of configuration Debug for project quadrature_to_usb_midi ****
+make -j28 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I"C:/Users/Samuel/Software/arduor_controller_lw/stm_32_quadrature_encoder_to_usb_midi/quadrature_to_usb_midi/Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc" -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I../USB_DEVICE/App -I../USB_DEVICE/Target -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'send_new_value':
+../Core/Src/main.c:108:27: error: 'encoder_nr' undeclared (first use in this function); did you mean 'encoder'?
+  108 |         uint8_t channel = encoder_nr;
+      |                           ^~~~~~~~~~
+      |                           encoder
+../Core/Src/main.c:108:27: note: each undeclared identifier is reported only once for each function it appears in
+../Core/Src/main.c: In function 'store_new_value_as_previous':
+../Core/Src/main.c:131:6: warning: type of 'encoder_nr' defaults to 'int' [-Wimplicit-int]
+  131 | void store_new_value_as_previous(encoder_nr)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+make: *** [Core/Src/subdir.mk:34: Core/Src/main.o] Error 1
+"make -j28 all" terminated with exit code 2. Build might be incomplete.
+18:32:29 **** Incremental Build of configuration Debug for project quadrature_to_usb_midi ****
+make -j28 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I"C:/Users/Samuel/Software/arduor_controller_lw/stm_32_quadrature_encoder_to_usb_midi/quadrature_to_usb_midi/Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc" -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I../USB_DEVICE/App -I../USB_DEVICE/Target -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'send_new_value':
+../Core/Src/main.c:108:17: error: 'channel' redeclared as different kind of symbol
+  108 |         uint8_t channel = encoder_nr;
+      |                 ^~~~~~~
+../Core/Src/main.c:103:25: note: previous definition of 'channel' with type 'int'
+  103 | void send_new_value(int channel, int value)
+      |                     ~~~~^~~~~~~
+../Core/Src/main.c:108:27: error: 'encoder_nr' undeclared (first use in this function); did you mean 'encoder'?
+  108 |         uint8_t channel = encoder_nr;
+      |                           ^~~~~~~~~~
+      |                           encoder
+../Core/Src/main.c:108:27: note: each undeclared identifier is reported only once for each function it appears in
+../Core/Src/main.c: In function 'store_new_value_as_previous':
+../Core/Src/main.c:131:6: warning: type of 'encoder_nr' defaults to 'int' [-Wimplicit-int]
+  131 | void store_new_value_as_previous(encoder_nr)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+make: *** [Core/Src/subdir.mk:34: Core/Src/main.o] Error 1
+"make -j28 all" terminated with exit code 2. Build might be incomplete.
+18:32:39 **** Incremental Build of configuration Debug for project quadrature_to_usb_midi ****
+make -j28 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I"C:/Users/Samuel/Software/arduor_controller_lw/stm_32_quadrature_encoder_to_usb_midi/quadrature_to_usb_midi/Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc" -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I../USB_DEVICE/App -I../USB_DEVICE/Target -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'store_new_value_as_previous':
+../Core/Src/main.c:130:6: warning: type of 'encoder_nr' defaults to 'int' [-Wimplicit-int]
+  130 | void store_new_value_as_previous(encoder_nr)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+arm-none-eabi-gcc -o "quadrature_to_usb_midi.elf" @"objects.list"   -mcpu=cortex-m3 -T"C:\Users\Samuel\Software\arduor_controller_lw\stm_32_quadrature_encoder_to_usb_midi\quadrature_to_usb_midi\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="quadrature_to_usb_midi.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: quadrature_to_usb_midi.elf
+ 
+arm-none-eabi-size  quadrature_to_usb_midi.elf 
+arm-none-eabi-objdump -h -S quadrature_to_usb_midi.elf  > "quadrature_to_usb_midi.list"
+   text	   data	    bss	    dec	    hex	filename
+  31244	    244	   3924	  35412	   8a54	quadrature_to_usb_midi.elf
+Finished building: default.size.stdout
+ 
+Finished building: quadrature_to_usb_midi.list
+ 
+18:33:10 **** Incremental Build of configuration Debug for project quadrature_to_usb_midi ****
+make -j28 all 
+arm-none-eabi-size  quadrature_to_usb_midi.elf 
+   text	   data	    bss	    dec	    hex	filename
+  31244	    244	   3924	  35412	   8a54	quadrature_to_usb_midi.elf
+Finished building: default.size.stdout
+ 
+18:35:07 **** Incremental Build of configuration Debug for project quadrature_to_usb_midi ****
+make -j28 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I"C:/Users/Samuel/Software/arduor_controller_lw/stm_32_quadrature_encoder_to_usb_midi/quadrature_to_usb_midi/Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc" -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I../USB_DEVICE/App -I../USB_DEVICE/Target -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'send_new_value':
+../Core/Src/main.c:110:17: warning: unused variable 'packetsBuffer' [-Wunused-variable]
+  110 |         uint8_t packetsBuffer[4] = {
+      |                 ^~~~~~~~~~~~~
+../Core/Src/main.c: In function 'store_new_value_as_previous':
+../Core/Src/main.c:130:6: warning: type of 'encoder_nr' defaults to 'int' [-Wimplicit-int]
+  130 | void store_new_value_as_previous(encoder_nr)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+arm-none-eabi-gcc -o "quadrature_to_usb_midi.elf" @"objects.list"   -mcpu=cortex-m3 -T"C:\Users\Samuel\Software\arduor_controller_lw\stm_32_quadrature_encoder_to_usb_midi\quadrature_to_usb_midi\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="quadrature_to_usb_midi.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: quadrature_to_usb_midi.elf
+ 
+arm-none-eabi-size  quadrature_to_usb_midi.elf 
+arm-none-eabi-objdump -h -S quadrature_to_usb_midi.elf  > "quadrature_to_usb_midi.list"
+   text	   data	    bss	    dec	    hex	filename
+  31120	    244	   3924	  35288	   89d8	quadrature_to_usb_midi.elf
+Finished building: default.size.stdout
+ 
+Finished building: quadrature_to_usb_midi.list
+ 
+18:35:24 **** Incremental Build of configuration Debug for project quadrature_to_usb_midi ****
+make -j28 all 
+arm-none-eabi-size  quadrature_to_usb_midi.elf 
+   text	   data	    bss	    dec	    hex	filename
+  31120	    244	   3924	  35288	   89d8	quadrature_to_usb_midi.elf
+Finished building: default.size.stdout
+ 
+18:39:24 **** Incremental Build of configuration Debug for project quadrature_to_usb_midi ****
+make -j28 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I"C:/Users/Samuel/Software/arduor_controller_lw/stm_32_quadrature_encoder_to_usb_midi/quadrature_to_usb_midi/Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc" -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I../USB_DEVICE/App -I../USB_DEVICE/Target -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'store_new_value_as_previous':
+../Core/Src/main.c:130:6: warning: type of 'encoder_nr' defaults to 'int' [-Wimplicit-int]
+  130 | void store_new_value_as_previous(encoder_nr)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+arm-none-eabi-gcc -o "quadrature_to_usb_midi.elf" @"objects.list"   -mcpu=cortex-m3 -T"C:\Users\Samuel\Software\arduor_controller_lw\stm_32_quadrature_encoder_to_usb_midi\quadrature_to_usb_midi\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="quadrature_to_usb_midi.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: quadrature_to_usb_midi.elf
+ 
+arm-none-eabi-size  quadrature_to_usb_midi.elf 
+arm-none-eabi-objdump -h -S quadrature_to_usb_midi.elf  > "quadrature_to_usb_midi.list"
+   text	   data	    bss	    dec	    hex	filename
+  31244	    244	   3924	  35412	   8a54	quadrature_to_usb_midi.elf
+Finished building: default.size.stdout
+ 
+Finished building: quadrature_to_usb_midi.list
+ 

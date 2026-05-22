@@ -375,6 +375,8 @@ void MyFrame::start_gui_controller(int index)
     std::string controller_name = this->controllers.at(index)->GetStringSelection().ToStdString();
     if(!controller_name.compare(this->gp_controller_string))
         start_gp_controller(index);
+    if(!controller_name.compare(this->gp_controller_midi_string))
+        start_gp_controller(index);
     if(!controller_name.compare(this->sp_controller_string))
         start_sp_controller(index);
     if (!controller_name.compare(this->plugin_routing_customizer_string))
@@ -394,9 +396,16 @@ void MyFrame::start_gp_controller(int index)
     int ardour_controller_in_port = receive_port_from_ardour.at(index)->GetValue();
 	int ardour_controller_out_port = send_port_to_ardour.at(index)->GetValue();
 
+    std::string controller_name = this->controllers.at(index)->GetStringSelection().ToStdString();
+
+	int midi_in_nr = this->get_midi_in(controller_name);
+	int midi_out_nr = this->get_midi_out(controller_name);
+
     std::vector<std::string> gp_controller_arguments;
 	gp_controller_arguments.push_back(std::to_string(ardour_controller_in_port));
 	gp_controller_arguments.push_back(std::to_string(ardour_controller_out_port));
+    gp_controller_arguments.push_back(std::to_string(midi_in_nr));
+    gp_controller_arguments.push_back(std::to_string(midi_out_nr));
     start_process(gp_controller_gui_version_exe_path, gp_controller_arguments);
 
     return;
@@ -452,7 +461,10 @@ void MyFrame::OnStartController(wxCommandEvent& event)
             continue;
         }
         
-        start_base_controller_midi(i);
+        if (!controller_name.compare(this->gp_controller_midi_string))
+            start_gp_controller(i);
+        else
+            start_base_controller_midi(i);
     }
 
     if(controller_exist == false)

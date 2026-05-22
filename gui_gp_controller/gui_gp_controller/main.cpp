@@ -10,21 +10,22 @@ bool MyApp::OnInit()
 {
 
 	MyFrame* frame;
-	if (wxApp::argc != 3) {
-		printf("arguments have to be: udp port in, udp port out, EXIT\n");
+	if (wxApp::argc != 5) {
+		printf("arguments have to be: udp port in, udp port out, midi_port_in, midi_port_out, EXIT\n");
 		exit(0);
-		frame = new MyFrame(std::string(std::to_string(30)), std::string(std::to_string(3819)));
 	}
 	else {
 		std::string arg_1(wxApp::argv[1]);
 		std::string arg_2(wxApp::argv[2]);
-		frame = new MyFrame(arg_1, arg_2);
+		std::string arg_3(wxApp::argv[3]);
+		std::string arg_4(wxApp::argv[4]);
+		frame = new MyFrame(arg_1, arg_2, arg_3, arg_4);
 	}
 	frame->Show();
 	return true;
 }
 
-MyFrame::MyFrame(std::string udp_input_port, std::string udp_output_port)
+MyFrame::MyFrame(std::string udp_input_port, std::string udp_output_port, std::string midi_port_in, std::string midi_port_out)
 	: wxFrame(nullptr, wxID_ANY, "General Purpose Controller (gp_controller)", wxDefaultPosition, wxSize(800, 400))
 {
 	main_layout = new wxBoxSizer(wxVERTICAL);
@@ -65,6 +66,10 @@ MyFrame::MyFrame(std::string udp_input_port, std::string udp_output_port)
 	this->receive_thread = new wxOscReceiveThread(this, this->osc_sender_receiver);
 	receive_thread->Run();
 	Bind(wxEVT_THREAD, &MyFrame::OnThreadUpdate, this);
+
+	midi_receiver = new MidiSenderReceiver(std::stoi(midi_port_in), std::stoi(midi_port_out));
+	midi_receive_thread = new wxMidiReceiveThread(this, this->midi_receiver);
+	midi_receive_thread->Run();
 
 	this->plugin_multiplexer = new plugin_multiplexer_c();
 
@@ -136,11 +141,37 @@ void instance::OnSlider(wxCommandEvent& event)
 	wxQueueEvent(handler, event_1.Clone());
 }
 
+
 void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 {
 	// SAFE: runs on GUI thread
 	OscMessage osc_message = event.GetPayload<OscMessage>();
 
+	if (!osc_message.GetAddress().compare("/quadrature_rotary_encoder")) {
+		int encoder_id = osc_message.get_int(0)  + (bank * CONTROLLER_SIZE);
+		short increment = (osc_message.get_int(1) << 2);
+		increment /= 4;
+		
+		previous_value[encoder_id] += increment;
+		if (previous_value[encoder_id] < 0)
+			previous_value[encoder_id] = 0;
+		if (previous_value[encoder_id] > 1800)
+			previous_value[encoder_id] = 1800;
+		float result = previous_value[encoder_id] / 1800.0;
+		if (result > 1)
+			result = 1;
+		//this->controller[encoder_id].rotary_knob->set_value(result);
+
+	int plugin_parameter_id_routed = this->plugin_multiplexer->get_controller_to_plugin(encoder_id);
+	OscMessage osc_message("/select/plugin/parameter");
+	
+	osc_message.PushInt(plugin_parameter_id_routed);
+	osc_message.PushFloat(result);
+
+	//this should be automatically done every time something is pushed...
+	osc_message.FormatOscMessage(); 
+	this->osc_sender_receiver->send_data(osc_message);
+	}
 	if (!osc_message.GetAddress().compare("/select/plugin/parameter/name")) {
 		int plugin_parameter_id = osc_message.get_int(0);
 		std::string plugin_parameter_name = osc_message.get_string(1);
@@ -172,15 +203,16 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		int plugin_parameter_id_routed = this->plugin_multiplexer->get_plugin_to_controller(plugin_parameter_id);
 		this->selected_plugin[plugin_parameter_id_routed].value = plugin_parameter_value;
 		
-
 		if (plugin_parameter_id_routed <= 0)
 			return;
+
+		this->previous_value[(plugin_parameter_id_routed) - 1] = plugin_parameter_value * 1800;
 
 		if ((plugin_parameter_id_routed / CONTROLLER_SIZE) == bank) {
 			this->controller[(plugin_parameter_id_routed - 1) % CONTROLLER_SIZE].rotary_knob->set_value(plugin_parameter_value);
 			//I update here the knob colour at the same time of the plugin_parameter
 			struct rgb_colour colour = plugin_multiplexer->get_knob_colour(plugin_parameter_id_routed - 1);
-			controller[plugin_parameter_id_routed - 1].rotary_knob->set_knob_colour(wxColour(colour.r, colour.g, colour.b));
+			controller[(plugin_parameter_id_routed - 1) % CONTROLLER_SIZE].rotary_knob->set_knob_colour(wxColour(colour.r, colour.g, colour.b));
 		}
 	}
 	else if (!osc_message.GetAddress().compare("/wxSlider")) {
