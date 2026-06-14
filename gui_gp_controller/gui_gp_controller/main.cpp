@@ -151,13 +151,17 @@ void MyFrame::OnThreadUpdate(wxThreadEvent& event)
 		int encoder_id = osc_message.get_int(0)  + (bank * CONTROLLER_SIZE);
 		short increment = (osc_message.get_int(1) << 2);
 		increment /= 4;
+
+		if (encoder_id == 1)
+			increment *= 30;
 		
 		previous_value[encoder_id] += increment;
 		if (previous_value[encoder_id] < 0)
 			previous_value[encoder_id] = 0;
 		if (previous_value[encoder_id] > 1800)
 			previous_value[encoder_id] = 1800;
-		float result = previous_value[encoder_id] / 1800.0;
+		float result = 0;
+		result = previous_value[encoder_id] / 1800.0;
 		if (result > 1)
 			result = 1;
 		//this->controller[encoder_id].rotary_knob->set_value(result);

@@ -57,6 +57,8 @@ void Error_Handler(void);
 #define MIDI_OUT_PORTS_NUM 1
 
 #define ENCODER_QUANTITY 4
+
+#define MASTER_MODUL 1
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

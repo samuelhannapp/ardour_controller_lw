@@ -1,4 +1,14 @@
+autoIndent=false
+closeAngularBrackets=false
+closeBraces=false
+closeBrackets=false
+closeStrings=false
+content_assist_proposals_timeout=5000
 eclipse.preferences.version=1
+scalability.detect=false
+smartPaste=false
+smart_tab=false
 spelling_locale_initialized=true
 useAnnotationsPrefPage=true
 useQuickDiffPrefPage=true
+wrapStrings=false

@@ -43,13 +43,16 @@ extern USBD_HandleTypeDef hUsbDeviceFS;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c1;
+
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
-
+uint8_t data_buffer[10];
+uint8_t RxData[10];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,6 +62,7 @@ static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -66,6 +70,8 @@ static void MX_TIM4_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 TIM_TypeDef *encoder[ENCODER_QUANTITY];
+
+uint8_t RX_Buffer = 0;
 
 void start_encoder(int encoder_nr)
 {
@@ -116,8 +122,8 @@ void send_new_value(int channel, int value)
 		data_1
 	};
 
-	  while (USBD_MIDI_GetState(&hUsbDeviceFS) != MIDI_IDLE) {};
-	  USBD_MIDI_SendPackets(&hUsbDeviceFS, packetsBuffer, 4);
+	while (USBD_MIDI_GetState(&hUsbDeviceFS) != MIDI_IDLE) {};
+		USBD_MIDI_SendPackets(&hUsbDeviceFS, packetsBuffer, 4);
 	  return;
 }
 
@@ -132,12 +138,63 @@ void store_new_value_as_previous(encoder_nr)
 	previous_encoder_value[encoder_nr] = encoder[encoder_nr]->CNT;
 	return;
 }
+
+int count = 0;
+
+void receive_i2c_data_from_slave()
+{
+	//HAL_I2C_Slave_Receive_IT(&hi2c1 ,(uint8_t *)&RX_Buffer, 1); //Receiving in Interrupt mode
+	uint8_t test_data = (uint8_t)33;
+	HAL_I2C_Master_Receive(&hi2c1, (1<<1), data_buffer, 1, 1000);
+	HAL_Delay(1000);
+	//HAL_I2C_Master_Receive(&hi2c1, 1, data_buffer, 1, 10);
+	return;
+}
+
+void send_data_to_master()
+{
+	HAL_I2C_EnableListen_IT(&hi2c1);
+
+	//HAL_I2C_Slave_Transmit(&hi2c1, data_buffer, 1, 10);
+}
+
+void HAL_I2C_ListenCpltCallback (I2C_HandleTypeDef *hi2c)
+{
+	HAL_I2C_EnableListen_IT(hi2c);
+}
+
+void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode)
+{
+	//I2C_DIRECTION_RECEIVE
+	if(TransferDirection == I2C_DIRECTION_TRANSMIT)  // if the master wants to transmit the data
+	{
+		HAL_I2C_Slave_Sequential_Receive_IT(hi2c, RxData, 1, I2C_FIRST_AND_LAST_FRAME);
+	}
+	uint8_t test_data = 13;
+	if(TransferDirection == I2C_DIRECTION_RECEIVE)
+	{
+		HAL_I2C_Slave_Transmit(hi2c, &test_data, 1, 1000);
+	}
+	else  // master requesting the data is not supported yet
+	{
+		Error_Handler();
+	}
+}
+
+void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+	count++;
+}
+
 /* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
   * @retval int
   */
+#define SLAVE
+//#define MASTER
+
 int main(void)
 {
 
@@ -168,6 +225,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_TIM4_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   encoder[0] = TIM1;
   encoder[1] = TIM2;
@@ -182,19 +240,26 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
+	#ifdef SLAVE
+	  data_buffer[0] = 2002;
+	  send_data_to_master();
+	#endif
 
   while (1)
   {
 	  counter++;
 	  int encoder_nr = counter % ENCODER_QUANTITY;
 
-
+/*
 	  if(did_encoder_change(encoder_nr))
 		  if(there_was_enough_time_since_the_last_transmission()){
 			  send_new_value(encoder_nr, get_difference(encoder_nr));
 			  store_new_value_as_previous(encoder_nr);
 		  }
+		  */
+#ifdef MASTER
+	  receive_i2c_data_from_slave();
+#endif
 
     /* USER CODE END WHILE */
 
@@ -246,6 +311,40 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 2;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**

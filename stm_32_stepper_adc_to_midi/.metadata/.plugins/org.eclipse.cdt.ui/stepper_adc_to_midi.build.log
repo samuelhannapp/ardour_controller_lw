@@ -1,0 +1,26 @@
+19:22:36 **** Incremental Build of configuration Debug for project stepper_adc_to_midi ****
+make -j28 all 
+arm-none-eabi-gcc "../Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src/usbd_midi.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F407xx -c -I../Core/Inc -I"C:/Users/Samuel/Software/arduor_controller_lw/stm_32_stepper_adc_to_midi/stepper_adc_to_midi/Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc" -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -I../USB_DEVICE/App -I../USB_DEVICE/Target -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/HID/Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src/usbd_midi.d" -MT"Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src/usbd_midi.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src/usbd_midi.o"
+In file included from ../Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src/usbd_midi.c:68:
+C:/Users/Samuel/Software/arduor_controller_lw/stm_32_stepper_adc_to_midi/stepper_adc_to_midi/Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc/usbd_midi.h:74:66: error: 'MIDI_OUT_PORTS_NUM' undeclared here (not in a function); did you mean 'MIDI_IN_PORTS_NUM'?
+   74 | #define USB_MIDI_INTERFACE_DESC_SIZE   (MIDI_IN_PORTS_NUM * 16 + MIDI_OUT_PORTS_NUM * 16 + 33)
+      |                                                                  ^~~~~~~~~~~~~~~~~~
+C:/Users/Samuel/Software/arduor_controller_lw/stm_32_stepper_adc_to_midi/stepper_adc_to_midi/Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Inc/usbd_midi.h:75:41: note: in expansion of macro 'USB_MIDI_INTERFACE_DESC_SIZE'
+   75 | #define USB_MIDI_CONFIG_DESC_SIZE      (USB_MIDI_INTERFACE_DESC_SIZE + USB_MIDI_CLASS_DESC_SHIFT)
+      |                                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src/usbd_midi.c:152:48: note: in expansion of macro 'USB_MIDI_CONFIG_DESC_SIZE'
+  152 | __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE]  __ALIGN_END =
+      |                                                ^~~~~~~~~~~~~~~~~~~~~~~~~
+../Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src/usbd_midi.c: In function 'USBD_MIDI_GetCfgDesc':
+../Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src/usbd_midi.c:820:1: warning: control reaches end of non-void function [-Wreturn-type]
+  820 | }
+      | ^
+../Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src/usbd_midi.c: At top level:
+../Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src/usbd_midi.c:152:30: warning: 'USBD_MIDI_CfgDesc' defined but not used [-Wunused-variable]
+  152 | __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE]  __ALIGN_END =
+      |                              ^~~~~~~~~~~~~~~~~
+make: *** [Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src/subdir.mk:19: Middlewares/ST/STM32_USB_Device_Library/Class/MIDI/Src/usbd_midi.o] Error 1
+"make -j28 all" terminated with exit code 2. Build might be incomplete.
+
+19:22:37 Build Failed. 2 errors, 2 warnings. (took 617ms)
+
