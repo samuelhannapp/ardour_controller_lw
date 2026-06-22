@@ -51,8 +51,10 @@ TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
-uint8_t data_buffer[10];
-uint8_t RxData[10];
+uint8_t TxData[4];
+uint8_t I2C_RxData[4];
+uint8_t UART_1_RxData[4];
+uint8_t UART_2_RxData[4];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -121,9 +123,12 @@ void send_new_value(int channel, int value)
 		data_2,
 		data_1
 	};
-
+#ifdef MASTER_MODUL
 	while (USBD_MIDI_GetState(&hUsbDeviceFS) != MIDI_IDLE) {};
 		USBD_MIDI_SendPackets(&hUsbDeviceFS, packetsBuffer, 4);
+#else
+	send_data_to_master_modul(channel, value);
+#endif
 	  return;
 }
 
@@ -139,28 +144,57 @@ void store_new_value_as_previous(encoder_nr)
 	return;
 }
 
-int count = 0;
-
-void receive_i2c_data_from_slave()
+#ifdef I2C_MODUL
+void send_data_to_master_modul(int channel, int value)
 {
-	//HAL_I2C_Slave_Receive_IT(&hi2c1 ,(uint8_t *)&RX_Buffer, 1); //Receiving in Interrupt mode
-	uint8_t test_data = (uint8_t)33;
-	HAL_I2C_Master_Receive(&hi2c1, (1<<1), data_buffer, 1, 1000);
-	HAL_Delay(1000);
-	//HAL_I2C_Master_Receive(&hi2c1, 1, data_buffer, 1, 10);
-	return;
+	HAL_I2C_Master_Transmit(&hi2c1, (SLAVE_ADDRESS_7BIT << 1), TxData, 4, 1000);
 }
 
-void send_data_to_master()
+//this signifies that the previous transmit has finished
+void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c) {
+    if (hi2c->Instance == I2C1) {
+        // Transmission finished
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+    }
+}
+#endif
+#ifdef UART_MODUL_1
+void send_data_to_master_modul(int channel, int value)
+{
+	HAL_UART_Transmit_IT(&huart1, TxData, 4);
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+
+}
+#endif
+#ifdef UART_MODUL_2
+void send_data_to_master_modul(int channel, int value)
+{
+	HAL_UART_Transmit_IT(&huart2, TxData, 4);
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+
+}
+#endif
+#ifdef MASTER_MODUL
+void receive_data_from_i2c_side_modul()
 {
 	HAL_I2C_EnableListen_IT(&hi2c1);
-
-	//HAL_I2C_Slave_Transmit(&hi2c1, data_buffer, 1, 10);
 }
 
-void HAL_I2C_ListenCpltCallback (I2C_HandleTypeDef *hi2c)
+
+void receive_data_from_uart_1_side_modul()
 {
-	HAL_I2C_EnableListen_IT(hi2c);
+	HAL_UART_Receive_IT(&huart1, UART_1_RxData, 4);
+}
+
+void receive_data_from_uart_2_side_modul()
+{
+	HAL_UART_Receive_IT(&huart2, UART_2_RxData, 4);
 }
 
 void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode)
@@ -168,23 +202,33 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
 	//I2C_DIRECTION_RECEIVE
 	if(TransferDirection == I2C_DIRECTION_TRANSMIT)  // if the master wants to transmit the data
 	{
-		HAL_I2C_Slave_Sequential_Receive_IT(hi2c, RxData, 1, I2C_FIRST_AND_LAST_FRAME);
+		HAL_I2C_Slave_Seq_Receive_IT(hi2c, I2C_RxData, 4, I2C_FIRST_FRAME);
 	}
-	uint8_t test_data = 13;
-	if(TransferDirection == I2C_DIRECTION_RECEIVE)
-	{
-		HAL_I2C_Slave_Transmit(hi2c, &test_data, 1, 1000);
-	}
-	else  // master requesting the data is not supported yet
-	{
-		Error_Handler();
-	}
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	send_new_value();
+	if(huart ==  &huart1)
+		HAL_UART_Receive_IT(&huart, UART_1_RxData, 4);
+	if(huart ==  &huart2)
+		HAL_UART_Receive_IT(&huart, UART_2_RxData, 4);
 }
 
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-	count++;
+	int channel, value;
+	send_new_value(channel, value);
+	//should this be here or really in ListenCpltCallback?...
+	//HAL_I2C_EnableListen_IT(hi2c);
 }
+
+void HAL_I2C_ListenCpltCallback (I2C_HandleTypeDef *hi2c)
+{
+	HAL_I2C_EnableListen_IT(hi2c);
+}
+
+#endif
 
 /* USER CODE END 0 */
 
@@ -192,9 +236,6 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
   * @brief  The application entry point.
   * @retval int
   */
-#define SLAVE
-//#define MASTER
-
 int main(void)
 {
 
@@ -240,27 +281,21 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	#ifdef SLAVE
-	  data_buffer[0] = 2002;
-	  send_data_to_master();
-	#endif
-
+#ifdef MASTER_MODUL
+  receive_data_from_i2c_side_modul();
+  receive_data_from_uart_1_side_modul();
+  receive_data_from_uart_2_side_modul();
+#endif
   while (1)
   {
 	  counter++;
 	  int encoder_nr = counter % ENCODER_QUANTITY;
 
-/*
 	  if(did_encoder_change(encoder_nr))
 		  if(there_was_enough_time_since_the_last_transmission()){
 			  send_new_value(encoder_nr, get_difference(encoder_nr));
 			  store_new_value_as_previous(encoder_nr);
 		  }
-		  */
-#ifdef MASTER
-	  receive_i2c_data_from_slave();
-#endif
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -331,7 +366,7 @@ static void MX_I2C1_Init(void)
   hi2c1.Instance = I2C1;
   hi2c1.Init.ClockSpeed = 100000;
   hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
-  hi2c1.Init.OwnAddress1 = 2;
+  hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
   hi2c1.Init.OwnAddress2 = 0;

@@ -58,7 +58,11 @@ void Error_Handler(void);
 
 #define ENCODER_QUANTITY 4
 
-#define MASTER_MODUL 1
+#define MASTER_MODUL
+//#define I2C_MODUL
+//#define UART_MODUL_1
+//#define UART_MODUL_2
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
